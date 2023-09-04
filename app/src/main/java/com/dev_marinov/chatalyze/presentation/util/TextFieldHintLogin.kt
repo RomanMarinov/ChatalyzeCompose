@@ -15,10 +15,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.util.ShowToastHelper
 
 @Composable
 fun TextFieldHintLogin(
@@ -45,8 +47,8 @@ fun TextFieldHintLogin(
             start.linkTo(parent.start)
             end.linkTo(viewBasicTextField.start)
             bottom.linkTo(parent.bottom)
-            width = Dimension.value(20.dp)
-            height = Dimension.value(20.dp)
+            width = Dimension.value(16.dp)
+            height = Dimension.value(16.dp)
         }
 
         constrain(viewBasicTextField) {
@@ -68,8 +70,7 @@ fun TextFieldHintLogin(
         Icon(
             imageVector = icon,
             contentDescription = "",
-            modifier = Modifier
-                .layoutId("viewIcon")
+            modifier = Modifier.layoutId("viewIcon")
         )
         BasicTextField(
             value = value,
@@ -82,12 +83,11 @@ fun TextFieldHintLogin(
 
                     // Проверяем количество символов и показываем Toast
                     if (newValue.length == 25) {
-                        Toast.makeText(
-                            context,
-                            message,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        ShowToastHelper.createToast(
+                            message = message,
+                            context = context)
                     }
+
                 } else {
                     // Если превышен лимит символов, не обновляем значение
                     onValueChanged(value)
@@ -115,6 +115,7 @@ fun TextFieldHintLogin(
                                 modifier = Modifier,
                                 text = if (isFocusedLogin) "" else hintText,
                                 style = textStyle,
+                                fontSize = 14.sp,
                                 color = LocalContentColor.current.copy(alpha = ContentAlpha.medium),
                             )
                         }

@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.ui.auth_screen
+package com.dev_marinov.chatalyze.ui.signup_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,17 +9,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthScreenViewModel @Inject constructor(
+class SignUpScreenViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-
-    fun getToken(login: String, password: String) {
+    fun registerUser(login: String, email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = authRepository.signInUser(
-                login = login, password = password
+            val response = authRepository.registerUser(
+                login = login, password = password, email = email
             )
-
         }
     }
 }

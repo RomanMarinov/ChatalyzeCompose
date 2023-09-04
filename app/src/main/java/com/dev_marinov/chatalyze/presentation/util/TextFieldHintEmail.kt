@@ -19,6 +19,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.util.ShowToastHelper
 
 @Composable
 fun TextFieldHintEmail(
@@ -82,11 +83,9 @@ fun TextFieldHintEmail(
 
                     // Проверяем количество символов и показываем Toast
                     if (newValue.length == 25) {
-                        Toast.makeText(
-                            context,
-                            message,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        ShowToastHelper.createToast(
+                            message = message,
+                            context = context)
                     }
                 } else {
                     // Если превышен лимит символов, не обновляем значение

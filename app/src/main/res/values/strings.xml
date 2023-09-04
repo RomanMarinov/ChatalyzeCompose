@@ -2,11 +2,17 @@
     <string name="app_name">Chatalyze</string>
 
 
-
-<!--    auth screen-->
+    <!--    auth screen-->
     <string name="auth_bt_sign_in">Sign in</string>
     <string name="auth_bt_sign_up">Sign up</string>
     <string name="password_length">The password must contain no more than 10 characters</string>
     <string name="login_length">The login must contain no more than 25 characters</string>
     <string name="email_length">The email must contain no more than 25 characters</string>
+
+    <string name="login_warning">Login must be more than 5 characters</string>
+    <string name="email_warning">Invalid Email format</string>
+    <string name="password_warning">Password must be more than 5 characters</string>
+    <string name="login_password_warning">Login and Password must be more than 5 characters</string>
+    <string name="login_password_email_warning">Login, Email and Password must be more than 5 characters</string>
+
 </resources>

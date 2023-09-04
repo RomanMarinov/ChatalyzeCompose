@@ -1,7 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.util
 
 import android.text.TextUtils
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,10 +23,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.util.ShowToastHelper
 
 
 @Composable
@@ -57,8 +58,8 @@ fun TextFieldHintPassword(
             start.linkTo(parent.start)
             end.linkTo(viewBasicTextField.start)
             bottom.linkTo(parent.bottom)
-            width = Dimension.value(20.dp)
-            height = Dimension.value(20.dp)
+            width = Dimension.value(16.dp)
+            height = Dimension.value(16.dp)
 
         }
         constrain(viewBasicTextField) {
@@ -74,8 +75,8 @@ fun TextFieldHintPassword(
             start.linkTo(viewBasicTextField.end)
             end.linkTo(parent.end)
             bottom.linkTo(parent.bottom)
-            width = Dimension.value(20.dp)
-            height = Dimension.value(20.dp)
+            width = Dimension.value(16.dp)
+            height = Dimension.value(16.dp)
         }
     }
 
@@ -95,18 +96,17 @@ fun TextFieldHintPassword(
             value = value,
             onValueChange = { newValue ->
 
-                if (newValue.length <= 10) {
+                if (newValue.length <= 25) {
                     // Сохраняем новое значение в state
                     onValueChanged(newValue)
                     valuePassword = newValue
 
                     // Проверяем количество символов и показываем Toast
-                    if (newValue.length == 10) {
-                        Toast.makeText(
-                            context,
-                            message,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    if (newValue.length == 25) {
+
+                        ShowToastHelper.createToast(
+                            message = message,
+                            context = context)
                     }
                 } else {
                     // Если превышен лимит символов, не обновляем значение
@@ -136,6 +136,7 @@ fun TextFieldHintPassword(
                                 modifier = Modifier,
                                 text = if (isFocusedPassword) "" else hintText,
                                 style = textStyle,
+                                fontSize = 14.sp,
                                 color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
                             )
                         }
@@ -158,9 +159,3 @@ fun TextFieldHintPassword(
         )
     }
 }
-
-@Composable
-fun ShowToast() {
-
-}
-
