@@ -30,7 +30,8 @@ fun TextFieldHintLogin(
     hintText: String = "",
     textStyle: TextStyle = MaterialTheme.typography.body1,
     maxLines: Int = 1,
-    icon: ImageVector
+    icon: ImageVector,
+    isFocus: (Boolean) -> Unit
 ) {
 
     var isFocusedLogin by remember { mutableStateOf(false) }

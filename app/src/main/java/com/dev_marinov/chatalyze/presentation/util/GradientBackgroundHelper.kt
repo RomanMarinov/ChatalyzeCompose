@@ -1,25 +1,21 @@
 package com.dev_marinov.chatalyze.presentation.util
 
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.colorResource
 import com.dev_marinov.chatalyze.R
 
+
 object GradientBackgroundHelper {
     @Composable
-    fun GradientBackground() {
+    fun SetGradientBackground() {
         val colorAnimation = rememberInfiniteTransition()
         val color1 by colorAnimation.animateColor(
             initialValue = colorResource(id = R.color.main_violet),
@@ -59,5 +55,38 @@ object GradientBackgroundHelper {
         ) {
             // содержимое, как текст, изображения и т. д.
         }
+    }
+
+    @Composable
+    fun SetMonochromeBackground() {
+
+        val colorAnimation = rememberInfiniteTransition()
+        val color1 by colorAnimation.animateColor(
+            initialValue = colorResource(id = R.color.main_violet_light),
+            targetValue = colorResource(id = R.color.main_violet_light),
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 5000),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+        val colorStops = listOf(
+            color1 to 0.0f,
+            color1 to 1.0f
+        )
+
+        val colors = colorStops.map { it.first }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = colors,
+                        start = Offset.Zero,
+                        end = Offset.Infinite
+                    )
+                )
+        )
     }
 }
