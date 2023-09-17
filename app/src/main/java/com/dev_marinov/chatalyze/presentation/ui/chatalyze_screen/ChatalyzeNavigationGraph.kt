@@ -7,8 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.presentation.ui.call_screen.CallScreen
-import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreen3
-import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreen4
+import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreen
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.ChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.setting_screen.SettingScreen
 import com.dev_marinov.chatalyze.util.ScreenRoute
@@ -31,8 +30,8 @@ fun ChatalyzeNavigationGraph(
         }
 
         composable(route = ScreenRoute.ChatScreen.route) {
-            //ChatScreen3(navHostController = navHostController)
-            ChatScreen4(navHostController = navHostController)
+            ChatScreen(navHostController = navHostController)
+            //ChatScreen4(navHostController = navHostController)
         }
     }
 
