@@ -142,7 +142,7 @@ fun ChatScreen(
                 constraintSet = constraintsTop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 16.dp)
+                    .padding(top = 8.dp, bottom = 8.dp)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back_to_prev_screen),
@@ -188,9 +188,12 @@ fun ChatScreen(
 
                 IconButton(
                     modifier = Modifier
+                        .width(40.dp)
+                        .height(40.dp)
                         .layoutId("iconVideoCall")
                         //  .background(Color.Blue)
-                        .size(35.dp),
+                        .size(35.dp)
+                        .padding(start = 8.dp, end = 8.dp),
                     onClick = {
 
                     }) {
@@ -203,16 +206,19 @@ fun ChatScreen(
 
                 IconButton(
                     modifier = Modifier
+                        .width(35.dp)
+                        .height(35.dp)
                         .layoutId("iconCall")
                         // .background(Color.Gray)
-                        .size(35.dp),
+                        .size(35.dp)
+                        .padding(8.dp),
                     onClick = {
 
                     }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_call),
                         contentDescription = "",
-                        tint = Color.White,
+                        tint = Color.White
                     )
                 }
             }
@@ -308,7 +314,7 @@ fun ChatScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .imePadding()
-                        .padding(8.dp)
+                        .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
                         .layoutId("bottomControl")
                 ) {
                     Row(
