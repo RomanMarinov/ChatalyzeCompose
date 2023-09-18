@@ -1,3 +1,38 @@
 <resources>
     <string name="app_name">Chatalyze</string>
+
+
+    <!--    auth screen-->
+    <string name="auth_bt_sign_in">Sign in</string>
+    <string name="auth_bt_sign_up">Sign up</string>
+    <string name="password_length">The password must contain no more than 10 characters</string>
+    <string name="login_length">The login must contain no more than 25 characters</string>
+    <string name="email_length">The email must contain no more than 25 characters</string>
+    <string name="login">login</string>
+    <string name="forgot_password">forgot password</string>
+    <string name="password">password</string>
+
+<!--    sign up screen-->
+    <string name="login_warning">Login must be more than 5 characters</string>
+    <string name="email_warning">Invalid Email format</string>
+    <string name="password_warning">Password must be more than 5 characters</string>
+    <string name="login_password_warning">Login and Password must be more than 5 characters</string>
+    <string name="login_password_email_warning">Login, Email and Password must be more than 5 characters</string>
+    <string name="email">email</string>
+
+<!--    forgot screen-->
+    <string name="header_forgot_screen">Enter the email address you provided when registering earlier. We will ship to you now</string>
+    <string name="get_password">Get password</string>
+
+<!--    chat screen-->
+    <string name="chat_screen_chats">Chats</string>
+
+<!--    new chat screen-->
+    <string name="header_new_chat_screen">New chat</string>
+
+
+
+
+    <string name="hide">show</string>
+
 </resources>

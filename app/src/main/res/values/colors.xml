@@ -7,4 +7,25 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+
+    <color name="main_violet">#AB76AD</color>
+    <color name="main_violet_dark">#CF54D6</color>
+    <color name="main_violet_light">#A282A3</color>
+    <color name="main_yellow">#D3D371</color>
+    <color name="main_green">#13FF0B</color>
+
+
+    <!--    auth screen-->
+    <color name="auth_color_bt_sign_in">#754677</color>
+
+
+    <!--    splash screen-->
+    <color name="main_yellow_splash_screen">#FAFAC9</color>
+
+    <!--    new chat screen -->
+
+
+<!--    new chat screen -->
+    <color name="main_yellow_new_chat_screen">#FAFAC9</color>
 </resources>

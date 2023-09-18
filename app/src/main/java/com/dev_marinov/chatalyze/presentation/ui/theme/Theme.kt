@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.ui.theme
+package com.dev_marinov.chatalyze.presentation.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
