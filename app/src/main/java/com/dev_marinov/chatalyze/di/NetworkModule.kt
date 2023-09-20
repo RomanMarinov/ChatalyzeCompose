@@ -1,6 +1,7 @@
 package com.dev_marinov.chatalyze.di
 
-import com.dev_marinov.chatalyze.data.ApiService
+import com.dev_marinov.chatalyze.data.auth.AuthApiService
+import com.dev_marinov.chatalyze.data.chat.ChatApiService
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -12,6 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -22,9 +24,24 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
+    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
+        return retrofit.create(AuthApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideChatApiService(retrofit: Retrofit) : ChatApiService {
+        return retrofit.create(ChatApiService::class.java)
+    }
+
+
+//    @Provides
+//    @Singleton
+//    fun provideApiService(
+//        retrofit: Retrofit
+//    ): ApiService = retrofit.create()
+
+
 //http://0.0.0.0:8080/register
     @Singleton
     @Provides

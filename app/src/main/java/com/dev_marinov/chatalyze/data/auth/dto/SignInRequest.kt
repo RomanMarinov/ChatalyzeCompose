@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.data.model.auth
+package com.dev_marinov.chatalyze.data.auth.dto
 
 data class SignInRequest(
     val login: String,

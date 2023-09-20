@@ -21,6 +21,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreenViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun TextFieldHintWriteMessage(
@@ -28,7 +31,8 @@ fun TextFieldHintWriteMessage(
     onValueChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.body1,
-    maxLines: Int = 20
+    maxLines: Int = 20,
+    viewModel: ChatScreenViewModel
 ) {
     var messageText by remember { mutableStateOf("") }
     var isFocusedMessage by remember { mutableStateOf(false) }
@@ -110,8 +114,25 @@ fun TextFieldHintWriteMessage(
                 .clip(RoundedCornerShape(20))
                 .clickable {
 
+                    val currentDateTime = getCurrentDateTime()
+
+
+                    viewModel.sendMessage(
+                        messageText = messageText,
+                        currentDateTime = currentDateTime
+                    )
+
+
+
                 }
                 .layoutId("viewIcon")
         )
     }
+}
+
+
+fun getCurrentDateTime(): String {
+    val currentDateTime = Date()
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    return dateFormat.format(currentDateTime)
 }

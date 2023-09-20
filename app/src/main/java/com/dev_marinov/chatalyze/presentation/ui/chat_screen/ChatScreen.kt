@@ -264,6 +264,15 @@ fun ChatScreen(
                                     state = it
                                 ) {
                                     items(listItems) { item ->
+                                        // add object message
+
+
+
+
+
+
+
+
                                         Text(text = item)
                                     }
                                     // Добавьте другие элементы списка здесь
@@ -347,6 +356,7 @@ fun ChatScreen(
                                 .height(IntrinsicSize.Min)
                                 .clip(RoundedCornerShape(20))
                                 .background(MaterialTheme.colors.surface),
+                            viewModel = viewModel
                         )
                     }
                 }

@@ -1,24 +1,25 @@
 package com.dev_marinov.chatalyze.data.auth
 
 import android.util.Log
-import com.dev_marinov.chatalyze.data.ApiService
-import com.dev_marinov.chatalyze.data.model.auth.RegisterRequest
-import com.dev_marinov.chatalyze.data.model.auth.SignInRequest
+import com.dev_marinov.chatalyze.data.auth.dto.RegisterRequest
+import com.dev_marinov.chatalyze.data.auth.dto.SignInRequest
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    private val apiService: ApiService
+    private val authApiService: AuthApiService
 ) : AuthRepository {
 
     override suspend fun registerUser(login: String, password: String, email: String) {
-        val response = apiService.registerUser(RegisterRequest(
+        val response = authApiService.registerUser(
+            RegisterRequest(
             login = login,
             password = password,
             email = email
-        ))
+        )
+        )
 
         when (response.code()) {
             200 -> {
@@ -39,7 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun signInUser(login: String, password: String) {
-        val response = apiService.signInUser(
+        val response = authApiService.signInUser(
             SignInRequest(
                 login = login, password = password
             )

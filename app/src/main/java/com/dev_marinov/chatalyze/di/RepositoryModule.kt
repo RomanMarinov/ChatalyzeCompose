@@ -1,8 +1,10 @@
 package com.dev_marinov.chatalyze.di
 
 import com.dev_marinov.chatalyze.data.auth.AuthRepositoryImpl
+import com.dev_marinov.chatalyze.data.chat.ChatRepositoryImpl
 import com.dev_marinov.chatalyze.data.chatalyze.local.ChatalyzeRepositoryImpl
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
+import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatalyzeRepository
 import dagger.Binds
 import dagger.Module
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindChatalyzeRepository(chatalyzeRepositoryImpl: ChatalyzeRepositoryImpl): ChatalyzeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindChatRepository(chatRepositoryImpl: ChatRepositoryImpl) : ChatRepository
 }
