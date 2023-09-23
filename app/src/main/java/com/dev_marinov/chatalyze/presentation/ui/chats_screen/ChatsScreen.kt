@@ -1,6 +1,7 @@
 package com.dev_marinov.chatalyze.presentation.ui.chats_screen
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.CheckPermissionAndGetContacts
@@ -35,6 +37,7 @@ import com.dev_marinov.chatalyze.presentation.util.rememberContacts
 import com.dev_marinov.chatalyze.util.ScreenRoute
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 import kotlinx.coroutines.*
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -48,10 +51,10 @@ fun ChatsScreen(
     SystemUiControllerHelper.SetStatusBarColor()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
     //SystemUiControllerHelper.SetStatusBarColorNoGradient()
-   GradientBackgroundHelper.SetMonochromeBackground()
+    GradientBackgroundHelper.SetMonochromeBackground()
+   // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
-
+    // viewModel.onClickHideNavigationBar(false)
     val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
 
     val sheetState = rememberModalBottomSheetState(
@@ -70,7 +73,7 @@ fun ChatsScreen(
             contactsFlow.collect {
                 viewModel.transferContacts(it)
             }
-           // Log.d("4444", " разрешение есть")
+            // Log.d("4444", " разрешение есть")
         }
     } else {
         Log.d("4444", " разрешения нет")
@@ -80,7 +83,7 @@ fun ChatsScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-          //  .background(colorResource(id = R.color.main_violet_light))
+        //  .background(colorResource(id = R.color.main_violet_light))
         //  .systemBarsPadding()
     ) {
 
@@ -142,9 +145,8 @@ fun ChatsScreen(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_create_new_chat),
                     contentDescription = "",
-                    tint = Color.White,
-
-                    )
+                    tint = Color.White
+                )
             }
         }
 
@@ -183,6 +185,44 @@ fun ChatsScreen(
                     }
                 }) {
 
+            }
+        }
+    }
+
+    CustomBackStackOnlyBottomSheetInChatsScreen(
+        navController = navController,
+        isSheetOpen = isSheetOpen,
+        onSheetOpenChanged = { isOpen ->
+            isSheetOpen = isOpen
+            if (!isOpen) {
+                viewModel.onClickHideNavigationBar(isHide = false)
+            }
+        },
+        sheetState = sheetState
+    )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun CustomBackStackOnlyBottomSheetInChatsScreen(
+    navController: NavHostController,
+    isSheetOpen: Boolean,
+    onSheetOpenChanged: (Boolean) -> Unit,
+    sheetState: ModalBottomSheetState
+) {
+    val scope = rememberCoroutineScope()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    BackHandler(enabled = currentRoute != null) {
+        if (currentRoute == ScreenRoute.ChatsScreen.route) {
+            if (isSheetOpen) {
+                onSheetOpenChanged(false)
+                scope.launch {
+                    withContext(Dispatchers.Main) {
+                        sheetState.hide()
+                    }
+                }
+            } else {
+                 exitProcess(0)
             }
         }
     }

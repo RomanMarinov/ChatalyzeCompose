@@ -116,11 +116,11 @@ fun TextFieldHintWriteMessage(
 
                     val currentDateTime = getCurrentDateTime()
 
-
-                    viewModel.sendMessage(
-                        messageText = messageText,
-                        currentDateTime = currentDateTime
-                    )
+//
+//                    viewModel.sendMessage(
+//                        messageText = messageText,
+//                        currentDateTime = currentDateTime
+//                    )
 
 
 

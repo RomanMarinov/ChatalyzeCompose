@@ -27,6 +27,12 @@
 <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
 
+    <!--    call screen-->
+    <string name="call_screen_calls">Calls</string>
+
+    <!--    setting screen-->
+    <string name="setting_screen_setting">Setting</string>
+
 <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>
 
