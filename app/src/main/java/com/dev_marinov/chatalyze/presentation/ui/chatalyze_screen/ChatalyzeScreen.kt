@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -24,20 +25,22 @@ fun ChatalyzeScreen(
      viewModel: ChatalyzeScreenViewModel = hiltViewModel()
 ) {
     //val backStackEntry = navController.currentBackStackEntryAsState()
-    viewModel.saveHideNavigationBar(false)
+
 
     val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(false)
 
+    viewModel.saveHideNavigationBar(false)
   //  viewModel.onMovieClickedHideNavigationBar(false)
     val navController = rememberNavController()
+
 
     Scaffold(
         modifier = Modifier.navigationBarsPadding(),
         bottomBar = {
+          //  Log.d("4444", " isHideBottomBar=" + isHideBottomBar)
             ChatalyzeBottomNavigationBar(
                 modifier = Modifier
                    // .animateContentSize(animationSpec = tween(durationMillis = 800))
-//                    .height(height = if (isHideBottomBar.value == true) 0.dp else 70.dp),
                     .height(height = if (isHideBottomBar == true) 0.dp else 70.dp),
                 items = listOf(
                     ChatalyzeBottomNavItem(

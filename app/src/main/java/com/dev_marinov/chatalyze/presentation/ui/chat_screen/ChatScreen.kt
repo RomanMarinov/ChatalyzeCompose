@@ -1,9 +1,11 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,14 +31,18 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.distinctUntilChanged
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import com.dev_marinov.chatalyze.util.ScreenRoute
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalComposeUiApi::class, FlowPreview::class)
 @Composable
@@ -45,23 +51,27 @@ fun ChatScreen(
     navHostController: NavHostController
 ) {
 
+    GradientBackgroundHelper.SetMonochromeBackground()
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
-    val chatName = "Маринов Роман"
-    viewModel.getChatPosition(userName = chatName)
-    val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
-    var textMessage by remember { mutableStateOf("") }
-
-    val lazyListState = chatPosition?.let {
-        rememberLazyListState(
-            initialFirstVisibleItemIndex = it
-        )
-    }
-
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
-    val listItems = mutableListOf<String>()
-    for (i in 0..150) {
-        listItems.add(i, i.toString())
+    val chatName = "Маринов Роман"
+//
+    viewModel.getChatPosition(userName = chatName)
+
+    val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
+
+    val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
+
+    var textMessage by remember { mutableStateOf("") }
+    var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
+
+    val lazyListState: LazyListState = if (chatPosition != 0) {
+        rememberLazyListState(
+            initialFirstVisibleItemIndex = chatPosition
+        )
+    } else {
+        rememberLazyListState()
     }
 
     Column(
@@ -76,7 +86,6 @@ fun ChatScreen(
                 }
             )
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -153,6 +162,8 @@ fun ChatScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             navHostController.navigate(ScreenRoute.ChatsScreen.route)
+                           // viewModel.saveHideNavigationBar(false)
+
                         }
                         .layoutId("back")
                 )
@@ -256,28 +267,24 @@ fun ChatScreen(
                     )
                     {
                         BoxWithConstraints {
-                            lazyListState?.let {
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(start = 8.dp, end = 8.dp),
-                                    state = it
-                                ) {
-                                    items(listItems) { item ->
-                                        // add object message
+//                            if (lazyListState == null) {
+//                                isInitOpenVisibleChatList = true
+//                            }
+//                            if (isInitOpenVisibleChatList) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(start = 8.dp, end = 8.dp),
+                                state = lazyListState
+                            ) {
+                                items(chatMessage) { item ->
+                                    // add object message
 
-
-
-
-
-
-
-
-                                        Text(text = item)
-                                    }
-                                    // Добавьте другие элементы списка здесь
+                                    Text(text = item)
                                 }
+                                // Добавьте другие элементы списка здесь
                             }
+                           // }
                         }
 
                         LaunchedEffect(lazyListState) {
@@ -287,7 +294,7 @@ fun ChatScreen(
                                 .debounce(500L)
                                 .collectLatest { firstIndex ->
                                     firstIndex?.let {
-//                                    Log.d(" lastVisibleIndex =" + lastVisibleIndex)
+                                    Log.d("4444", " lastVisibleIndex =" + it)
                                         viewModel.saveScrollChatPosition(
                                             keyUserName = chatName,
                                             position = it
@@ -328,7 +335,7 @@ fun ChatScreen(
                 ) {
                     Row(
                         modifier = Modifier
-                           // .width(200.dp)
+                            // .width(200.dp)
 
                             .background(colorResource(id = R.color.main_violet_light))
                             .layoutId("writeMessage"),
