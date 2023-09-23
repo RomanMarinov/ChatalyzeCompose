@@ -1,6 +1,7 @@
 package com.dev_marinov.chatalyze.data.auth
 
 import android.util.Log
+import com.dev_marinov.chatalyze.data.auth.dto.ForgotPasswordRequest
 import com.dev_marinov.chatalyze.data.auth.dto.RegisterRequest
 import com.dev_marinov.chatalyze.data.auth.dto.SignInRequest
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
@@ -59,5 +60,9 @@ class AuthRepositoryImpl @Inject constructor(
                 Log.d("4444", " signInUser 404 response.body()=" + response.body())
             }
         }
+    }
+
+    override suspend fun sendEmail(email: String) {
+        authApiService.sendEmail(ForgotPasswordRequest(email = email))
     }
 }

@@ -144,17 +144,17 @@ fun AuthScreen(
             OutlinedButton(
                 onClick = {
 
-                          navController.navigate(ScreenRoute.ChatalyzeScreen.route)
+                          //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
 
-//                    checkLengthAndSendAuthRequest(
-//                        textLoginState = textLoginState,
-//                        textPasswordState = textPasswordState,
-//                        context = context,
-//                        messageLogin = messageLogin,
-//                        messagePassword = messagePassword,
-//                        messageLoginPassword = messageLoginPassword,
-//                        viewModel = viewModel
-//                    )
+                    checkLengthAndSendAuthRequest(
+                        textLoginState = textLoginState,
+                        textPasswordState = textPasswordState,
+                        context = context,
+                        messageLogin = messageLogin,
+                        messagePassword = messagePassword,
+                        messageLoginPassword = messageLoginPassword,
+                        viewModel = viewModel
+                    )
                 },
                 shape = RoundedCornerShape(100),
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet)),
@@ -215,34 +215,43 @@ fun checkLengthAndSendAuthRequest(
     viewModel: AuthScreenViewModel
 ) {
 
-    if ((textLoginState.length in 1..4) && (textPasswordState.length in 1..4)) {
-        ShowToastHelper.createToast(
-            message = messageLoginPassword,
-            context = context
-        )
-    } else if (textLoginState.isEmpty() && textPasswordState.isEmpty()) {
-        ShowToastHelper.createToast(
-            message = messageLoginPassword,
-            context = context
-        )
-    } else if (textLoginState.isEmpty() || (textLoginState.length in 1..4)) {
-        ShowToastHelper.createToast(
-            message = messageLogin,
-            context = context
-        )
-    } else if (textPasswordState.isEmpty() || (textPasswordState.length in 1..4)) {
-        ShowToastHelper.createToast(
-            message = messagePassword,
-            context = context
-        )
-    } else {
-        ShowToastHelper.createToast(
-            message = "выполняем запрос на вход",
-            context = context
-        )
-        viewModel.getToken(
-            login = textLoginState,
-            password = textPasswordState
-        )
-    }
+//    if ((textLoginState.length in 1..4) && (textPasswordState.length in 1..4)) {
+//        ShowToastHelper.createToast(
+//            message = messageLoginPassword,
+//            context = context
+//        )
+//    } else if (textLoginState.isEmpty() && textPasswordState.isEmpty()) {
+//        ShowToastHelper.createToast(
+//            message = messageLoginPassword,
+//            context = context
+//        )
+//    } else if (textLoginState.isEmpty() || (textLoginState.length in 1..4)) {
+//        ShowToastHelper.createToast(
+//            message = messageLogin,
+//            context = context
+//        )
+//    } else if (textPasswordState.isEmpty() || (textPasswordState.length in 1..4)) {
+//        ShowToastHelper.createToast(
+//            message = messagePassword,
+//            context = context
+//        )
+//    } else {
+//        ShowToastHelper.createToast(
+//            message = "выполняем запрос на вход",
+//            context = context
+//        )
+//        viewModel.getToken(
+//            login = textLoginState,
+//            password = textPasswordState
+//        )
+//    }
+
+    ShowToastHelper.createToast(
+        message = "выполняем запрос на вход",
+        context = context
+    )
+    viewModel.getToken(
+        login = "12345",
+        password = "12345"
+    )
 }
