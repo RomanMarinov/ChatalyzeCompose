@@ -181,38 +181,39 @@ fun checkLengthAndSendRegisterRequest(
     val containsRu = textEmailState.contains(".ru")
     val containsGmailRu = textEmailState.contains("gmail.ru")
 
-    Log.d(
-        "4444", " isEmpty" + isEmpty + " isEmailValid=" + isEmailValid
-                + " containsCom=" + containsCom + " containsRu=" + containsRu
-    )
-
-    if (textEmailState.length in 1..4) {
-        ShowToastHelper.createToast(
-            message = messageEmail,
-            context = context
-        )
-    } else if (textEmailState.isEmpty()) {
-        ShowToastHelper.createToast(
-            message = messageEmail,
-            context = context
-        )
-    } else if (isEmpty || ((isEmailValid && !containsCom) && (isEmailValid && !containsGmailCom) && (isEmailValid && !containsRu))
-        || ((!isEmailValid && !containsCom) && (!isEmailValid && !containsGmailCom) && (!isEmailValid && !containsRu))
-        || (containsGmailCom && containsRu) || (containsGmailRu)
-    ) {
-        ShowToastHelper.createToast(
-            message = messageEmail,
-            context = context
-        )
-    } else {
-        ShowToastHelper.createToast(
-            message = "выполняем отправку пароля",
-            context = context
-        )
-//        viewModel.registerUser(
-//            login = textLoginState,
-//            email = textEmailState,
-//            password = textPasswordState
+//    Log.d(
+//        "4444", " isEmpty" + isEmpty + " isEmailValid=" + isEmailValid
+//                + " containsCom=" + containsCom + " containsRu=" + containsRu
+//    )
+//
+//    if (textEmailState.length in 1..4) {
+//        ShowToastHelper.createToast(
+//            message = messageEmail,
+//            context = context
 //        )
-    }
+//    } else if (textEmailState.isEmpty()) {
+//        ShowToastHelper.createToast(
+//            message = messageEmail,
+//            context = context
+//        )
+//    } else if (isEmpty || ((isEmailValid && !containsCom) && (isEmailValid && !containsGmailCom) && (isEmailValid && !containsRu))
+//        || ((!isEmailValid && !containsCom) && (!isEmailValid && !containsGmailCom) && (!isEmailValid && !containsRu))
+//        || (containsGmailCom && containsRu) || (containsGmailRu)
+//    ) {
+//        ShowToastHelper.createToast(
+//            message = messageEmail,
+//            context = context
+//        )
+//    } else {
+//        ShowToastHelper.createToast(
+//            message = "выполняем проверку",
+//            context = context
+//        )
+//        viewModel.sendEmail(email = textEmailState)
+//    }
+    ShowToastHelper.createToast(
+        message = "выполняем проверку",
+        context = context
+    )
+    viewModel.sendEmail(email = "marinov37@mail.ru")
 }
