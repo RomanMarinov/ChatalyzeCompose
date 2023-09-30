@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
@@ -13,28 +14,35 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Mail
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.layoutId
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
-import com.dev_marinov.chatalyze.presentation.util.TextFieldHintLogin
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
+import com.dev_marinov.chatalyze.util.CheckEmailPasswordTextFieldHelper
 import com.dev_marinov.chatalyze.util.ShowToastHelper
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
     navController: NavHostController,
@@ -44,212 +52,214 @@ fun SignUpScreen(
     SystemUiControllerHelper.SetStatusBarColor()
     GradientBackgroundHelper.SetGradientBackground()
 
-    Image(
-        painter = painterResource(id = R.drawable.ic_back_to_prev_screen),
-        contentDescription = "back",
-        modifier = Modifier
-            .padding(start = 8.dp, top = 16.dp)
-            .systemBarsPadding() // Добавить отступ от скрытого статус-бара
-            .size(30.dp)
-            .clip(RoundedCornerShape(50))
-            .clickable {
-                navController.popBackStack("auth_screen", false)
-            }
-    )
-
-    var textLoginState by remember { mutableStateOf("") }
+//    var textUserNameState by remember { mutableStateOf("") }
     var textEmailState by remember { mutableStateOf("") }
     var textPasswordState by remember { mutableStateOf("") }
-    val messageLogin = stringResource(id = R.string.login_warning)
     val messagePassword = stringResource(id = R.string.password_warning)
     val messageEmail = stringResource(id = R.string.email_warning)
-    val messageLoginEmailPassword = stringResource(id = R.string.login_password_email_warning)
+    val messageEmailPassword = stringResource(id = R.string.email_password_warning)
+    val successfulRegistration = stringResource(id = R.string.successful_registration)
     val context = LocalContext.current
     var isFocusTextField by remember { mutableStateOf(false) }
 
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
+
+    val scope = rememberCoroutineScope()
+
+    val notice by viewModel.notice.collectAsStateWithLifecycle()
+    val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
+
+    if (notice.isNotEmpty()) {
+        ShowToastHelper.createToast(message = notice, context = context)
+        // очистить notice в viewModel
+
+    }
+
+    if (hasToken.isNotEmpty()) {
+        //navController.navigate(ScreenRoute.AuthScreen.route)
+        navController.navigateUp()
+        LaunchedEffect(successfulRegistration) {
+            ShowToastHelper.createToast(message = successfulRegistration, context = context)
+        }
+    }
+
     Column(
         modifier = Modifier
+            .imePadding()
             .fillMaxSize()
-            .padding(top = 200.dp)
-            //.imePadding()
-        ,
-        verticalArrangement = Arrangement.Center
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {
+                    softwareKeyboardController?.hide()
+                }
+            ),
+        //.padding(top = 200.dp)
+        //.imePadding()
+        //verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            TextFieldHintLogin(
-                value = textLoginState,
-                onValueChanged = { textLoginState = it },
-                hintText = stringResource(id = R.string.login),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(20))
-                    .background(MaterialTheme.colors.surface)
-                    .padding(start = 8.dp, end = 16.dp),
-                icon = Icons.Rounded.Person,
-                isFocus = {
-                    isFocusTextField = it
-                    Log.d("4444", " click isFocusTextField =" +isFocusTextField )
-                }
-            )
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            TextFieldHintEmail(
-                value = textEmailState,
-                onValueChanged = { textEmailState = it },
-                hintText = stringResource(id = R.string.email),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(20))
-                    .background(MaterialTheme.colors.surface)
-                    .padding(start = 8.dp, end = 16.dp),
-                icon = Icons.Rounded.Mail
-            )
-        }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth().imePadding()
-                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            TextFieldHintPassword(
-                value = textPasswordState,
-                onValueChanged = { textPasswordState = it },
-                hintText = stringResource(id = R.string.password),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(20))
-                    .background(MaterialTheme.colors.surface)
-                    .padding(start = 8.dp, end = 8.dp),
-                icon = Icons.Rounded.Lock
-            )
-        }
-        Log.d("4444", " isFocusTextField =" +isFocusTextField )
-        if (!isFocusTextField) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                OutlinedButton(
-                    modifier = Modifier
-                        .width(300.dp)
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                        .clip(RoundedCornerShape(100.dp))
-                        .border(
-                            border = BorderStroke(1.dp, Color.White),
-                            shape = RoundedCornerShape(100.dp)
-                        ),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
-                    onClick = {
+        val constraintsTop = ConstraintSet {
 
-                        checkLengthAndSendRegisterRequest(
-                            textLoginState = textLoginState,
-                            textEmailState = textEmailState,
-                            textPasswordState = textPasswordState,
-                            messageLogin = messageLogin,
-                            messagePassword = messagePassword,
-                            messageLoginEmailPassword = messageLoginEmailPassword,
-                            messageEmail = messageEmail,
-                            context = context,
-                            viewModel = viewModel
-                        )
-                    }
-                ) {
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = stringResource(id = R.string.auth_bt_sign_up),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+            val img_back = createRefFor("img_back")
+            val email = createRefFor("email")
+            val password = createRefFor("password")
+            val bt_sign_up = createRefFor("bt_sign_up")
+
+            constrain(img_back) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+            }
+
+            constrain(email) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom)
+//                width = Dimension.value(40.dp)
+//                height = Dimension.wrapContent
+            }
+
+            constrain(password) {
+                top.linkTo(email.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+//                bottom.linkTo(parent.bottom)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
+            }
+
+            constrain(bt_sign_up) {
+                top.linkTo(password.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                // bottom.linkTo(parent.bottom)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
             }
         }
 
+        ConstraintLayout(
+            constraintSet = constraintsTop,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 8.dp, bottom = 8.dp)
+        ) {
 
-    }
-}
+            Image(
+                painter = painterResource(id = R.drawable.ic_back_to_prev_screen),
+                contentDescription = "back",
+                modifier = Modifier
+                    .layoutId("img_back")
+                    .padding(start = 8.dp, top = 16.dp)
+                    .systemBarsPadding() // Добавить отступ от скрытого статус-бара
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable {
+                        navController.popBackStack("auth_screen", false)
+                    }
+            )
 
-fun checkLengthAndSendRegisterRequest(
-    textLoginState: String,
-    textEmailState: String,
-    textPasswordState: String,
-    messageLogin: String,
-    messagePassword: String,
-    messageLoginEmailPassword: String,
-    messageEmail: String,
-    context: Context,
-    viewModel: SignUpScreenViewModel
-) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
+                    .layoutId("email"),
+                contentAlignment = Alignment.Center
 
-    val isEmpty = textEmailState.isEmpty()
-    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(textEmailState).matches()
-    val containsCom = textEmailState.contains(".com")
-    val containsGmailCom = textEmailState.contains("@gmail.com")
-    val containsRu = textEmailState.contains(".ru")
-    val containsGmailRu = textEmailState.contains("gmail.ru")
+            ) {
+                TextFieldHintEmail(
+                    value = textEmailState,
+                    onValueChanged = { textEmailState = it },
+                    hintText = stringResource(id = R.string.email),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(20))
+                        .background(MaterialTheme.colors.surface)
+                        .padding(start = 8.dp, end = 16.dp),
+                    icon = Icons.Rounded.Mail
+                )
+            }
 
-    Log.d("4444", " isEmpty" + isEmpty + " isEmailValid=" + isEmailValid
-    + " containsCom=" + containsCom + " containsRu=" + containsRu)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+                    .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp)
+                    .layoutId("password"),
+                contentAlignment = Alignment.Center
+            ) {
+                TextFieldHintPassword(
+                    value = textPasswordState,
+                    onValueChanged = { textPasswordState = it },
+                    hintText = stringResource(id = R.string.password),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(20))
+                        .background(MaterialTheme.colors.surface)
+                        .padding(start = 8.dp, end = 8.dp),
+                    icon = Icons.Rounded.Lock
+                )
+            }
 
-    if ((textLoginState.length in 1..4)
-        && (textPasswordState.length in 1..4)
-        && (messageLoginEmailPassword.length in 1..4)
-    ) {
-        ShowToastHelper.createToast(
-            message = messageLoginEmailPassword,
-            context = context
-        )
-    } else if (textLoginState.isEmpty()
-        && textPasswordState.isEmpty()
-        && textEmailState.isEmpty()
-    ) {
-        ShowToastHelper.createToast(
-            message = messageLoginEmailPassword,
-            context = context
-        )
-    } else if (textLoginState.isEmpty() || (textLoginState.length in 1..4)) {
-        ShowToastHelper.createToast(
-            message = messageLogin,
-            context = context
-        )
-    } else if (isEmpty || ((isEmailValid && !containsCom) && (isEmailValid && !containsGmailCom) && (isEmailValid && !containsRu))
-        || ((!isEmailValid && !containsCom) && (!isEmailValid && !containsGmailCom) && (!isEmailValid && !containsRu))
-        || (containsGmailCom && containsRu) || (containsGmailRu)) {
-        ShowToastHelper.createToast(
-            message = messageEmail,
-            context = context
-        )
-    } else if (textPasswordState.isEmpty() || (textPasswordState.length in 1..4)) {
-        ShowToastHelper.createToast(
-            message = messagePassword,
-            context = context
-        )
-    } else {
-        ShowToastHelper.createToast(
-            message = "выполняем запрос на регистрацию",
-            context = context
-        )
-//        viewModel.registerUser(
-//            login = textLoginState,
-//            email = textEmailState,
-//            password = textPasswordState
-//        )
+            Log.d("4444", " isFocusTextField =" + isFocusTextField)
+            if (!isFocusTextField) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .layoutId("bt_sign_up"),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier
+                            .width(300.dp)
+                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                            .clip(RoundedCornerShape(100.dp))
+                            .border(
+                                border = BorderStroke(1.dp, Color.White),
+                                shape = RoundedCornerShape(100.dp)
+                            ),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+                        onClick = {
+
+                            val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
+                                textEmailState = textEmailState,
+                                textPasswordState = textPasswordState,
+                                messagePassword = messagePassword,
+                                messageEmailPassword = messageEmailPassword,
+                                messageEmail = messageEmail,
+                                context = context,
+                            )
+                            if (emailPasswordIsValid) {
+                                ShowToastHelper.createToast(
+                                    message = "выполняем запрос на регистрацию",
+                                    context = context
+                                )
+//                                viewModel.registerUser(
+//                                    email = textEmailState,
+//                                    password = textPasswordState
+//                                )
+//                                viewModel.registerUser(
+//                                    email = "m@yandex.ru",
+//                                    password = "12345"
+//                                )
+                            }
+                        }
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = stringResource(id = R.string.auth_bt_sign_up),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
     }
 }

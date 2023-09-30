@@ -1,7 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.util
 
 import android.text.TextUtils
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
@@ -32,8 +31,8 @@ fun TextFieldHintEmail(
     icon: ImageVector
 ) {
 
-    var isFocusedLogin by remember { mutableStateOf(false) }
-    var valueLogin by remember { mutableStateOf("") }
+    var isFocusedEmail by remember { mutableStateOf(false) }
+    var valueEmail by remember { mutableStateOf("") }
     val context = LocalContext.current
     val message = stringResource(id = R.string.email_length)
 
@@ -55,7 +54,7 @@ fun TextFieldHintEmail(
             start.linkTo(viewIcon.end)
             end.linkTo(parent.end)
             bottom.linkTo(parent.bottom)
-            width = Dimension.matchParent // Заполнить доступное пространство
+            width = Dimension.matchParent
             height = Dimension.matchParent
         }
     }
@@ -79,7 +78,7 @@ fun TextFieldHintEmail(
                 if (newValue.length <= 25) {
                     // Сохраняем новое значение в state
                     onValueChanged(newValue)
-                    valueLogin = newValue
+                    valueEmail = newValue
 
                     // Проверяем количество символов и показываем Toast
                     if (newValue.length == 25) {
@@ -90,7 +89,7 @@ fun TextFieldHintEmail(
                 } else {
                     // Если превышен лимит символов, не обновляем значение
                     onValueChanged(value)
-                    valueLogin = value
+                    valueEmail = value
                 }
             },
             textStyle = textStyle,
@@ -112,7 +111,7 @@ fun TextFieldHintEmail(
                         if (TextUtils.isEmpty(value)) {
                             Text(
                                 modifier = Modifier,
-                                text = if (isFocusedLogin) "" else hintText,
+                                text = if (isFocusedEmail) "" else hintText,
                                 style = textStyle,
                                 color = LocalContentColor.current.copy(alpha = ContentAlpha.medium),
                             )
@@ -122,7 +121,7 @@ fun TextFieldHintEmail(
                 }
             },
             modifier = Modifier.onFocusChanged { focusState ->
-                isFocusedLogin = focusState.isFocused
+                isFocusedEmail = focusState.isFocused
             }
         )
     }

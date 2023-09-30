@@ -14,10 +14,10 @@ class AuthScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
 
-    fun getToken(login: String, password: String) {
+    fun getToken(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = authRepository.signInUser(
-                login = login, password = password
+                email = email, password = password
             )
 
         }
