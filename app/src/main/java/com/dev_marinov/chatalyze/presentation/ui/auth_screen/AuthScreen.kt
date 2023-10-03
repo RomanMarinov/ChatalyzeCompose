@@ -1,6 +1,5 @@
 package com.dev_marinov.chatalyze.presentation.ui.auth_screen
 
-import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,12 +28,12 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.layoutId
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
-import com.dev_marinov.chatalyze.util.CheckEmailPasswordTextFieldHelper
 import com.dev_marinov.chatalyze.util.ShowToastHelper
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 
@@ -49,6 +48,8 @@ fun AuthScreen(
     GradientBackgroundHelper.SetGradientBackground()
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
+    val isGoToChatsScreen by viewModel.isGoToChatsScreen.collectAsStateWithLifecycle()
+    val notice by viewModel.notice.collectAsStateWithLifecycle()
 
     var textEmailState by remember { mutableStateOf("") }
     var textPasswordState by remember { mutableStateOf("") }
@@ -59,6 +60,18 @@ fun AuthScreen(
     var isFocusTextFiled by remember { mutableStateOf(false) }
 
     var isClicked by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isGoToChatsScreen) {
+        if (isGoToChatsScreen) {
+            navController.navigate("chatalyze_screen")
+        }
+    }
+
+    LaunchedEffect(notice) {
+        if (notice.isNotEmpty()) {
+            ShowToastHelper.createToast(message = notice, context = context)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -206,29 +219,34 @@ fun AuthScreen(
                 OutlinedButton(
                     onClick = {
 
-                        //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
-                        val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
-                            textEmailState = textEmailState,
-                            textPasswordState = textPasswordState,
-                            messagePassword = messagePassword,
-                            messageEmailPassword = messageEmailPassword,
-                            messageEmail = messageEmail,
-                            context = context,
+                        viewModel.signInAndSaveTokenSignIn(
+                            email = "mn@yandex.ru",
+                            password = "12345"
                         )
-                        if (emailPasswordIsValid) {
-                            ShowToastHelper.createToast(
-                                message = "выполняем проверку на вход",
-                                context = context
-                            )
-//                                viewModel.registerUser(
-//                                    email = textEmailState,
-//                                    password = textPasswordState
-//                                )
-//                                viewModel.registerUser(
-//                                    email = "m@yandex.ru",
-//                                    password = "12345"
-//                                )
-                        }
+
+                        //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
+//                        val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
+//                            textEmailState = textEmailState,
+//                            textPasswordState = textPasswordState,
+//                            messagePassword = messagePassword,
+//                            messageEmailPassword = messageEmailPassword,
+//                            messageEmail = messageEmail,
+//                            context = context,
+//                        )
+//                        if (emailPasswordIsValid) {
+//                            ShowToastHelper.createToast(
+//                                message = "выполняем проверку на вход",
+//                                context = context
+//                            )
+////                                viewModel.registerUser(
+////                                    email = textEmailState,
+////                                    password = textPasswordState
+////                                )
+////                                viewModel.registerUser(
+////                                    email = "m@yandex.ru",
+////                                    password = "12345"
+////                                )
+//                        }
                     },
                     shape = RoundedCornerShape(100),
                     colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet)),

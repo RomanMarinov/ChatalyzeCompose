@@ -75,13 +75,13 @@ fun TextFieldHintEmail(
             value = value,
             onValueChange = { newValue ->
 
-                if (newValue.length <= 25) {
+                if (newValue.length <= 30) {
                     // Сохраняем новое значение в state
                     onValueChanged(newValue)
                     valueEmail = newValue
 
                     // Проверяем количество символов и показываем Toast
-                    if (newValue.length == 25) {
+                    if (newValue.length == 30) {
                         ShowToastHelper.createToast(
                             message = message,
                             context = context)

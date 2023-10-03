@@ -5,6 +5,7 @@ import com.dev_marinov.chatalyze.data.auth.dto.ForgotPasswordRequestDTO
 import com.dev_marinov.chatalyze.data.auth.dto.RegisterRequestDTO
 import com.dev_marinov.chatalyze.data.auth.dto.SignInRequestDTO
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
+import kotlinx.coroutines.flow.Flow
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_CONFLICT
 import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
@@ -57,25 +58,30 @@ class AuthRepositoryImpl @Inject constructor(
         return responseBody.toString()
     }
 
-    override suspend fun signInUser(email: String, password: String) {
+    override suspend fun signInUser(email: String, password: String) : String? {
         val response = authApiService.signInUser(
             SignInRequestDTO(
                 email = email, password = password
             )
         )
-        when (response.code()) {
-            200 -> { // выполнить переход на страницу чатов
-                Log.d("4444", " signInUser 200 response.body()=" + response.body())
+        return when (response.code()) {
+            HTTP_OK -> {
+                response.body()?.message
             }
-            400 -> { // показать сообщение что введенные данные не правильные
-                Log.d("4444", " signInUser 400 response.body()=" + response.body())
+            HTTP_CONFLICT -> {
+                response.body()?.message
             }
-            403 -> {
-                Log.d("4444", " signInUser 403 response.body()=" + response.body())
+            HTTP_BAD_REQUEST -> {
+                response.body()?.message
             }
-            404 -> {
-                Log.d("4444", " signInUser 404 response.body()=" + response.body())
+            HTTP_INTERNAL_SERVER_ERROR -> {
+                response.body()?.message
             }
+            else -> {
+                Log.d("4444", " jbkbkbkbkbkbkbkbkbkbkb")
+                ""
+            }
+
         }
     }
 

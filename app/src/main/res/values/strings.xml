@@ -6,7 +6,7 @@
     <string name="auth_bt_sign_in">Sign in</string>
     <string name="auth_bt_sign_up">Sign up</string>
     <string name="password_length">The password must contain no more than 10 characters</string>
-    <string name="email_length">The email must contain no more than 25 characters</string>
+    <string name="email_length">The email must contain no more than 30 characters</string>
     <string name="username">username</string>
     <string name="forgot_password">forgot password</string>
     <string name="password">password</string>
@@ -28,8 +28,8 @@
     <!--    call screen-->
     <string name="call_screen_calls">Calls</string>
 
-    <!--    setting screen-->
-    <string name="setting_screen_setting">Setting</string>
+    <!--    profile screen-->
+    <string name="profile_screen_setting">Profile</string>
 
 <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>

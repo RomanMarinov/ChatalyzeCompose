@@ -9,7 +9,7 @@ sealed class ScreenRoute(val route: String) {
     object ChatalyzeScreen : ScreenRoute("chatalyze_screen")
     object ChatsScreen : ScreenRoute("chats_screen")
     object CallScreen : ScreenRoute("call_screen")
-    object SettingScreen : ScreenRoute("setting_screen")
+    object ProfileScreen : ScreenRoute("profile_screen")
 
     object ChatScreen : ScreenRoute("chat_screen")
 }

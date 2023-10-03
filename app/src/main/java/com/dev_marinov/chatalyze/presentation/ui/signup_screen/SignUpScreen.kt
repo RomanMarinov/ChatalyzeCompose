@@ -71,13 +71,12 @@ fun SignUpScreen(
 
     if (notice.isNotEmpty()) {
         ShowToastHelper.createToast(message = notice, context = context)
-        // очистить notice в viewModel
-
     }
 
     if (hasToken.isNotEmpty()) {
         //navController.navigate(ScreenRoute.AuthScreen.route)
-        navController.navigateUp()
+        //navController.navigateUp()
+        navController.popBackStack("auth_screen", false)
         LaunchedEffect(successfulRegistration) {
             ShowToastHelper.createToast(message = successfulRegistration, context = context)
         }
@@ -226,28 +225,28 @@ fun SignUpScreen(
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
                         onClick = {
 
-                            val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
-                                textEmailState = textEmailState,
-                                textPasswordState = textPasswordState,
-                                messagePassword = messagePassword,
-                                messageEmailPassword = messageEmailPassword,
-                                messageEmail = messageEmail,
-                                context = context,
-                            )
-                            if (emailPasswordIsValid) {
-                                ShowToastHelper.createToast(
-                                    message = "выполняем запрос на регистрацию",
-                                    context = context
+//                            val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
+//                                textEmailState = textEmailState,
+//                                textPasswordState = textPasswordState,
+//                                messagePassword = messagePassword,
+//                                messageEmailPassword = messageEmailPassword,
+//                                messageEmail = messageEmail,
+//                                context = context,
+//                            )
+//                            if (emailPasswordIsValid) {
+//                                ShowToastHelper.createToast(
+//                                    message = "выполняем запрос на регистрацию",
+//                                    context = context
+//                                )
+////                                viewModel.registerUser(
+////                                    email = textEmailState,
+////                                    password = textPasswordState
+////                                )
+                                viewModel.registerUserAndSaveToken(
+                                    email = "mn@yandex.ru",
+                                    password = "12345"
                                 )
-//                                viewModel.registerUser(
-//                                    email = textEmailState,
-//                                    password = textPasswordState
-//                                )
-//                                viewModel.registerUser(
-//                                    email = "m@yandex.ru",
-//                                    password = "12345"
-//                                )
-                            }
+                          //  }
                         }
                     ) {
                         Text(

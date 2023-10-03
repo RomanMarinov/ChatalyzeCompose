@@ -14,7 +14,7 @@ interface AuthApiService {
     suspend fun registerUser(@Body registerRequestDTO: RegisterRequestDTO) : Response<MessageResponseDTO>
 
     @POST("signin")
-    suspend fun signInUser(@Body signInRequestDTO: SignInRequestDTO): Response<String>
+    suspend fun signInUser(@Body signInRequestDTO: SignInRequestDTO): Response<MessageResponseDTO>
 
     @POST("password")
     suspend fun sendEmail(@Body forgotPasswordRequestDTO: ForgotPasswordRequestDTO)

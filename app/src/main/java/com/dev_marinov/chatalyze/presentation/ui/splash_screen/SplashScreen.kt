@@ -9,22 +9,38 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.dev_marinov.chatalyze.util.ScreenRoute
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
-    startAnimationLogo(navController = navController)
+fun SplashScreen(
+    navController: NavController,
+    viewModel: SplashScreenViewModel = hiltViewModel()
+) {
+    StartAnimationLogoAndCheckTokenSignIn(
+        navController = navController,
+        viewModel = viewModel
+    )
 }
 
 @Composable
-fun startAnimationLogo(navController: NavController) {
+fun StartAnimationLogoAndCheckTokenSignIn(
+    navController: NavController,
+    viewModel: SplashScreenViewModel
+) {
+    val getTokenSignIn by viewModel.getTokenSignIn.collectAsStateWithLifecycle("")
+
     val scale = remember {
         Animatable(0f)
     }
@@ -40,7 +56,12 @@ fun startAnimationLogo(navController: NavController) {
             )
         )
         delay(1000L)
-        navController.navigate("auth_screen")
+
+       if (getTokenSignIn.isNotEmpty()) {
+           navController.navigate(ScreenRoute.ChatalyzeScreen.route)
+       } else {
+           navController.navigate(ScreenRoute.AuthScreen.route)
+       }
     }
 
     Box(

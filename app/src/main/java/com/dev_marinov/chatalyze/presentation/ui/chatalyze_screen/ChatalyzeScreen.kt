@@ -1,38 +1,36 @@
 package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen.model.ChatalyzeBottomNavItem
 import com.dev_marinov.chatalyze.util.ScreenRoute
 
 @Composable
 fun ChatalyzeScreen(
-     viewModel: ChatalyzeScreenViewModel = hiltViewModel()
+    viewModel: ChatalyzeScreenViewModel = hiltViewModel(),
+    authNavController: NavHostController
 ) {
     //val backStackEntry = navController.currentBackStackEntryAsState()
-
+    val navController = rememberNavController()
 
     val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(false)
 
     viewModel.saveHideNavigationBar(false)
   //  viewModel.onMovieClickedHideNavigationBar(false)
-    val navController = rememberNavController()
-
 
     Scaffold(
         modifier = Modifier.navigationBarsPadding(),
@@ -56,9 +54,9 @@ fun ChatalyzeScreen(
                         badgeCount = 4
                     ),
                     ChatalyzeBottomNavItem(
-                        name = "Setting",
-                        route = ScreenRoute.SettingScreen.route,
-                        icon = Icons.Default.Settings,
+                        name = "Profile",
+                        route = ScreenRoute.ProfileScreen.route,
+                        icon = Icons.Default.Person,
 //                                badgeCount =
                     ),
                 ),
@@ -72,7 +70,10 @@ fun ChatalyzeScreen(
     ) { paddingValues ->
         // передаем падинг чтобы список BottomNavigationBar не накладывался по поверх списка
         Box(modifier = Modifier.padding(paddingValues = paddingValues)) {
-            ChatalyzeNavigationGraph(navHostController = navController, viewModel = viewModel)
+            ChatalyzeNavigationGraph(
+                navHostController = navController,
+                authHostController = authNavController,
+                viewModel = viewModel)
         }
     }
 }

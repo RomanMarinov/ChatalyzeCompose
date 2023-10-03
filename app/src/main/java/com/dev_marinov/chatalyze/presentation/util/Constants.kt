@@ -4,5 +4,8 @@ class Constants {
     companion object {
         const val HIDE_BOTTOM_BAR = "HIDE_BOTTOM_BAR"
         const val CHANGE_IS_SHEET_OPEN = "CHANGE_IS_SHEET_OPEN"
+
+        const val KEY_TOKEN_REGISTER = "KEY_TOKEN_REGISTER"
+        const val KEY_TOKEN_SIGN_IN = "KEY_TOKEN_SIGN_IN"
     }
 }

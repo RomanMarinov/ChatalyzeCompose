@@ -8,4 +8,11 @@ interface DataStoreRepository {
 
     suspend fun getScrollChatPosition(keyUserName: String) : Flow<Int?>
     suspend fun saveScrollChatPosition(key: String, position: Int)
+
+    val getTokenRegister: Flow<String>
+    suspend fun saveTokenRegister(keyTokenRegister: String, tokenRegister: String)
+
+    val getTokenSignIn: Flow<String>
+    suspend fun saveTokenSignIn(keyTokenSignIn: String, tokenSignIn: String)
+    suspend fun logout(keyTokenSignIn: String)
 }

@@ -2,7 +2,6 @@ package com.dev_marinov.chatalyze
 
 import android.os.Bundle
 import android.util.Log
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -58,7 +57,7 @@ fun SetNavigation() {
             ForgotPasswordScreen(navController = navController)
         }
         composable(ScreenRoute.ChatalyzeScreen.route) {
-            ChatalyzeScreen()
+            ChatalyzeScreen(authNavController = navController)
         }
     }
 }
