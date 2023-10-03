@@ -19,6 +19,7 @@ class ChatalyzeScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     val isHideBottomBar = dataStoreRepository.getHideBottomBar
+    val getTokenSignIn = dataStoreRepository.getTokenSignIn
 
     fun saveHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
@@ -37,7 +38,7 @@ class ChatalyzeScreenViewModel @Inject constructor(
         if (currentRoute == ScreenRoute.CallScreen.route) {
             navHostController.navigate(ScreenRoute.ChatsScreen.route)
         }
-        if (currentRoute == ScreenRoute.SettingScreen.route) {
+        if (currentRoute == ScreenRoute.ProfileScreen.route) {
             navHostController.navigate(ScreenRoute.ChatsScreen.route)
         }
     }

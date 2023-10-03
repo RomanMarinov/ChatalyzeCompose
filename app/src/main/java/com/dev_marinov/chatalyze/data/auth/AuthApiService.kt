@@ -1,8 +1,9 @@
 package com.dev_marinov.chatalyze.data.auth
 
-import com.dev_marinov.chatalyze.data.auth.dto.ForgotPasswordRequest
-import com.dev_marinov.chatalyze.data.auth.dto.RegisterRequest
-import com.dev_marinov.chatalyze.data.auth.dto.SignInRequest
+import com.dev_marinov.chatalyze.data.auth.dto.ForgotPasswordRequestDTO
+import com.dev_marinov.chatalyze.data.auth.dto.MessageResponseDTO
+import com.dev_marinov.chatalyze.data.auth.dto.RegisterRequestDTO
+import com.dev_marinov.chatalyze.data.auth.dto.SignInRequestDTO
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -10,11 +11,11 @@ import retrofit2.http.POST
 interface AuthApiService {
 
     @POST("register")
-    suspend fun registerUser(@Body registerRequest: RegisterRequest): Response<String>
+    suspend fun registerUser(@Body registerRequestDTO: RegisterRequestDTO) : Response<MessageResponseDTO>
 
-    @POST("login")
-    suspend fun signInUser(@Body signInRequest: SignInRequest): Response<String>
+    @POST("signin")
+    suspend fun signInUser(@Body signInRequestDTO: SignInRequestDTO): Response<MessageResponseDTO>
 
     @POST("password")
-    suspend fun sendEmail(@Body forgotPasswordRequest: ForgotPasswordRequest)
+    suspend fun sendEmail(@Body forgotPasswordRequestDTO: ForgotPasswordRequestDTO)
 }
