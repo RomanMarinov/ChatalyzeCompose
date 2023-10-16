@@ -2,7 +2,7 @@ package com.dev_marinov.chatalyze.presentation.ui.chats_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.domain.repository.DataStoreRepository
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatsScreenViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository
 ) : ViewModel() {
 
     private var _contacts: MutableStateFlow<List<Contact>> = MutableStateFlow(listOf())
@@ -21,7 +21,7 @@ class ChatsScreenViewModel @Inject constructor(
 
     fun onClickHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
-            dataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
+            preferencesDataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
         }
     }
 

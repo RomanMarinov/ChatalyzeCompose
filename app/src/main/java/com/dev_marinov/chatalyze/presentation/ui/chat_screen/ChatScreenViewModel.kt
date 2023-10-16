@@ -1,11 +1,8 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.domain.model.chat.ChatMessage
-import com.dev_marinov.chatalyze.domain.repository.DataStoreRepository
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatScreenViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository,
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
@@ -39,7 +36,7 @@ class ChatScreenViewModel @Inject constructor(
 
     fun saveHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
-            dataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
+            preferencesDataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
         }
     }
 
@@ -66,7 +63,7 @@ class ChatScreenViewModel @Inject constructor(
 
     fun getChatPosition(userName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val result = dataStoreRepository.getScrollChatPosition(keyUserName = userName)
+            val result = preferencesDataStoreRepository.getScrollChatPosition(keyUserName = userName)
             result.collectLatest { position ->
                 position?.let {
 
@@ -79,7 +76,7 @@ class ChatScreenViewModel @Inject constructor(
 
     fun saveScrollChatPosition(keyUserName: String, position: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            dataStoreRepository.saveScrollChatPosition(key = keyUserName, position = position)
+            preferencesDataStoreRepository.saveScrollChatPosition(key = keyUserName, position = position)
         }
     }
 

@@ -30,6 +30,7 @@
 
     <!--    profile screen-->
     <string name="profile_screen_setting">Profile</string>
+    <string name="try_again_later">Try again later</string>
 
 <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>

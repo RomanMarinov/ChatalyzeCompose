@@ -1,10 +1,12 @@
 package com.dev_marinov.chatalyze.di
 
 import android.content.Context
-import com.dev_marinov.chatalyze.data.chatalyze.local.ChatalyzeRepositoryImpl
-import com.dev_marinov.chatalyze.data.data_store.DataStoreRepositoryImpl
-import com.dev_marinov.chatalyze.domain.repository.ChatalyzeRepository
-import com.dev_marinov.chatalyze.domain.repository.DataStoreRepository
+import androidx.datastore.core.DataStore
+import com.dev_marinov.chatalyze.data.auth.dataStore
+import com.dev_marinov.chatalyze.data.auth.dto.PairTokensDTO
+import com.dev_marinov.chatalyze.data.data_store.PreferencesDataStoreRepositoryImpl
+import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,6 +20,12 @@ class DataStoreModule {
 
     @Singleton
     @Provides
-    fun providePreferences(@ApplicationContext context: Context): DataStoreRepository =
-        DataStoreRepositoryImpl(context)
+    fun providePreferences(@ApplicationContext context: Context): PreferencesDataStoreRepository =
+        PreferencesDataStoreRepositoryImpl(context)
+
+    @Singleton
+    @Provides
+    fun provideDataStore(@ApplicationContext context: Context) : DataStore<PairTokensDTO> {
+        return context.dataStore
+    }
 }
