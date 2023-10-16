@@ -165,7 +165,7 @@ fun ForgotPasswordScreen(
                         .height(50.dp)
                         .clip(RoundedCornerShape(20))
                         .background(MaterialTheme.colors.surface)
-                        .padding(start = 8.dp, end = 16.dp),
+                        .padding(start = 12.dp, end = 16.dp),
                     icon = Icons.Rounded.Mail,
 //                isFocus = {
 //
@@ -198,6 +198,13 @@ fun ForgotPasswordScreen(
 //                            context = context,
 //                            viewModel = viewModel
 //                        )
+
+                        ShowToastHelper.createToast(
+                            message = "выполняем проверку",
+                            context = context
+                        )
+                        viewModel.sendEmail(email = "marinov37@mail.ru")
+
                     }
                 ) {
                     Text(

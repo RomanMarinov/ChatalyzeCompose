@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.forgot_password_screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
@@ -13,8 +14,8 @@ class ForgotPasswordScreenViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-
     fun sendEmail(email: String) {
+        Log.d("4444", " ForgotPasswordScreenViewModel sendEmail")
         viewModelScope.launch(Dispatchers.IO) {
             authRepository.sendEmail(email = email)
         }

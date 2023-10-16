@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,11 +20,13 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.layoutId
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.util.ScreenRoute
+import com.dev_marinov.chatalyze.util.ShowToastHelper
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 
 @Composable
@@ -44,6 +48,18 @@ fun ProfileScreen(
     //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     // viewModel.onClickHideNavigationBar(false)
 
+    val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
+
+    val tryAgainLater = stringResource(id = R.string.try_again_later)
+
+    LaunchedEffect(statusCode) {
+        if (statusCode == 200) {
+            authHostController.navigate(ScreenRoute.AuthScreen.route)
+        } else if (statusCode != 0) {
+            ShowToastHelper.createToast(message = tryAgainLater, context = context)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,6 +71,7 @@ fun ProfileScreen(
         val constraints = ConstraintSet {
             val headerChatText = createRefFor("header_profile_text")
             val btLogOut = createRefFor("bt_log_out")
+            val btDeleteProfile = createRefFor("bt_delete_profile")
 
             constrain(headerChatText) {
                 top.linkTo(parent.top)
@@ -66,6 +83,15 @@ fun ProfileScreen(
 
             constrain(btLogOut) {
                 top.linkTo(headerChatText.bottom)
+                start.linkTo(parent.start)
+                //end.linkTo(createChatIcon.start)
+                //bottom.linkTo(parent.bottom)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
+            }
+
+            constrain(btDeleteProfile) {
+                top.linkTo(btLogOut.bottom)
                 start.linkTo(parent.start)
                 //end.linkTo(createChatIcon.start)
                 //bottom.linkTo(parent.bottom)
@@ -96,9 +122,16 @@ fun ProfileScreen(
                 modifier = Modifier.layoutId("bt_log_out"),
                 onClick = {
                     viewModel.executeLogout()
-                    authHostController.navigate(ScreenRoute.AuthScreen.route)
                 }) {
                 Text(text = "Logout")
+            }
+
+            Button(
+                modifier = Modifier.layoutId("bt_delete_profile"),
+                onClick = {
+                    viewModel.executeDeleteProfile()
+                }) {
+                Text(text = "Delete profile")
             }
 
         }

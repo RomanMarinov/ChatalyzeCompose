@@ -1,29 +1,25 @@
 package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.dev_marinov.chatalyze.domain.repository.DataStoreRepository
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.util.ScreenRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatalyzeScreenViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository
 ) : ViewModel() {
 
-    val isHideBottomBar = dataStoreRepository.getHideBottomBar
-    val getTokenSignIn = dataStoreRepository.getTokenSignIn
+    val isHideBottomBar = preferencesDataStoreRepository.getHideBottomBar
 
     fun saveHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
-            dataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
+            preferencesDataStoreRepository.saveHideNavigationBar(Constants.HIDE_BOTTOM_BAR, isHide = isHide)
         }
     }
 

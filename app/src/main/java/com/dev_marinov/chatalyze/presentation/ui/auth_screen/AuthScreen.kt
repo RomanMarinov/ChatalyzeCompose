@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.auth_screen
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
+import com.dev_marinov.chatalyze.util.ScreenRoute
 import com.dev_marinov.chatalyze.util.ShowToastHelper
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 
@@ -48,7 +50,7 @@ fun AuthScreen(
     GradientBackgroundHelper.SetGradientBackground()
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
-    val isGoToChatsScreen by viewModel.isGoToChatsScreen.collectAsStateWithLifecycle()
+    val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
     val notice by viewModel.notice.collectAsStateWithLifecycle()
 
     var textEmailState by remember { mutableStateOf("") }
@@ -60,10 +62,12 @@ fun AuthScreen(
     var isFocusTextFiled by remember { mutableStateOf(false) }
 
     var isClicked by remember { mutableStateOf(false) }
+    Log.d("4444", " refreshToken=" + refreshToken)
 
-    LaunchedEffect(isGoToChatsScreen) {
-        if (isGoToChatsScreen) {
-            navController.navigate("chatalyze_screen")
+    LaunchedEffect(refreshToken) {
+        Log.d("4444", " refreshToken=" + refreshToken)
+        if (refreshToken.isNotEmpty()) {
+            navController.navigate(ScreenRoute.ChatalyzeScreen.route)
         }
     }
 
@@ -158,7 +162,7 @@ fun AuthScreen(
                         .height(50.dp)
                         .clip(RoundedCornerShape(20))
                         .background(MaterialTheme.colors.surface)
-                        .padding(start = 8.dp, end = 16.dp),
+                        .padding(start = 12.dp, end = 16.dp),
                     icon = Icons.Rounded.Mail
                 )
             }
@@ -218,12 +222,10 @@ fun AuthScreen(
             ) {
                 OutlinedButton(
                     onClick = {
-
                         viewModel.signInAndSaveTokenSignIn(
-                            email = "mn@yandex.ru",
-                            password = "12345"
+                            email = "marinov37@mail.ru",
+                            password = "2"
                         )
-
                         //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
 //                        val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
 //                            textEmailState = textEmailState,

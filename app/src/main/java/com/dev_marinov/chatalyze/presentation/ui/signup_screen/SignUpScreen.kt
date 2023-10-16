@@ -1,8 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.signup_screen
 
-import android.content.Context
 import android.util.Log
-import android.util.Patterns
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -38,7 +36,7 @@ import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
-import com.dev_marinov.chatalyze.util.CheckEmailPasswordTextFieldHelper
+import com.dev_marinov.chatalyze.util.ScreenRoute
 import com.dev_marinov.chatalyze.util.ShowToastHelper
 import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
 
@@ -67,18 +65,17 @@ fun SignUpScreen(
     val scope = rememberCoroutineScope()
 
     val notice by viewModel.notice.collectAsStateWithLifecycle()
-    val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
+    val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
 
-    if (notice.isNotEmpty()) {
-        ShowToastHelper.createToast(message = notice, context = context)
+    LaunchedEffect(notice) {
+        if (notice.isNotEmpty()) {
+            ShowToastHelper.createToast(message = notice, context = context)
+        }
     }
 
-    if (hasToken.isNotEmpty()) {
-        //navController.navigate(ScreenRoute.AuthScreen.route)
-        //navController.navigateUp()
-        navController.popBackStack("auth_screen", false)
-        LaunchedEffect(successfulRegistration) {
-            ShowToastHelper.createToast(message = successfulRegistration, context = context)
+    LaunchedEffect(notice) {
+        if (statusCode == 200) {
+            navController.popBackStack(ScreenRoute.AuthScreen.route, false)
         }
     }
 
@@ -177,7 +174,7 @@ fun SignUpScreen(
                         .height(50.dp)
                         .clip(RoundedCornerShape(20))
                         .background(MaterialTheme.colors.surface)
-                        .padding(start = 8.dp, end = 16.dp),
+                        .padding(start = 12.dp, end = 16.dp),
                     icon = Icons.Rounded.Mail
                 )
             }
@@ -204,7 +201,6 @@ fun SignUpScreen(
                 )
             }
 
-            Log.d("4444", " isFocusTextField =" + isFocusTextField)
             if (!isFocusTextField) {
                 Box(
                     modifier = Modifier
@@ -242,11 +238,11 @@ fun SignUpScreen(
 ////                                    email = textEmailState,
 ////                                    password = textPasswordState
 ////                                )
-                                viewModel.registerUserAndSaveToken(
-                                    email = "mn@yandex.ru",
-                                    password = "12345"
-                                )
-                          //  }
+                            viewModel.registerUser(
+                                email = "marinov37@mail.ru",
+                                password = "2"
+                            )
+                            //  }
                         }
                     ) {
                         Text(

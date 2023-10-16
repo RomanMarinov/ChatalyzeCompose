@@ -39,7 +39,7 @@ fun StartAnimationLogoAndCheckTokenSignIn(
     navController: NavController,
     viewModel: SplashScreenViewModel
 ) {
-    val getTokenSignIn by viewModel.getTokenSignIn.collectAsStateWithLifecycle("")
+    val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
 
     val scale = remember {
         Animatable(0f)
@@ -57,7 +57,7 @@ fun StartAnimationLogoAndCheckTokenSignIn(
         )
         delay(1000L)
 
-       if (getTokenSignIn.isNotEmpty()) {
+       if (refreshToken.isNotEmpty()) {
            navController.navigate(ScreenRoute.ChatalyzeScreen.route)
        } else {
            navController.navigate(ScreenRoute.AuthScreen.route)
