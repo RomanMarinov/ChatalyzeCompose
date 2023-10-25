@@ -1,6 +1,10 @@
-package com.dev_marinov.chatalyze.presentation.ui.signup_screen
+package com.dev_marinov.chatalyze.presentation.ui.create_password_screen
 
-import androidx.compose.foundation.*
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,7 +14,6 @@ import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Mail
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -33,113 +36,101 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
-import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
-import com.dev_marinov.chatalyze.presentation.util.CheckEmailPasswordTextFieldHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.ShowToastHelper
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SignUpScreen(
+fun CreatePasswordScreen(
     navController: NavHostController,
-    viewModel: SignUpScreenViewModel = hiltViewModel()
+    viewModel: CreatePasswordViewModel = hiltViewModel()
 ) {
     SystemUiControllerHelper.SetSystemBars(false)
     SystemUiControllerHelper.SetStatusBarColor()
     GradientBackgroundHelper.SetGradientBackground()
 
-//    var textUserNameState by remember { mutableStateOf("") }
-    var textEmailState by remember { mutableStateOf("") }
-    var textPasswordState by remember { mutableStateOf("") }
-    val messagePassword = stringResource(id = R.string.password_warning)
-    val messageEmail = stringResource(id = R.string.email_warning)
-    val emailPasswordInvalid = stringResource(id = R.string.email_password_invalid)
-
-    val messageEmailPassword = stringResource(id = R.string.email_password_warning)
-    val successfulRegistration = stringResource(id = R.string.successful_registration)
-    val context = LocalContext.current
-    var isFocusTextField by remember { mutableStateOf(false) }
-
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
-    val scope = rememberCoroutineScope()
-
-    val notice by viewModel.notice.collectAsStateWithLifecycle()
     val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
+    val notice by viewModel.notice.collectAsStateWithLifecycle()
 
-    LaunchedEffect(notice) {
-        if (notice.isNotEmpty()) {
-            ShowToastHelper.createToast(message = notice, context = context)
-        }
-    }
+    var textPasswordState by remember { mutableStateOf("") }
+    var textPasswordConfirmState by remember { mutableStateOf("") }
+    val passwordMismatch = stringResource(id = R.string.password_mismatch)
+    val messagePassword = stringResource(id = R.string.password_warning)
+    val messageEmailPassword = stringResource(id = R.string.email_password_warning)
+    val context = LocalContext.current
+    var isFocusTextFiled by remember { mutableStateOf(false) }
 
-    LaunchedEffect(notice) {
-        if (statusCode == 200) {
-            navController.popBackStack(ScreenRoute.AuthScreen.route, false)
+    var isClicked by remember { mutableStateOf(false) }
+
+    LaunchedEffect(statusCode) {
+        when (statusCode) {
+            200 -> {
+                navController.popBackStack(ScreenRoute.AuthScreen.route, false)
+            }
+            500 -> {
+                ShowToastHelper.createToast(message = notice, context = context)
+            }
+            400 -> {
+                ShowToastHelper.createToast(message = notice, context = context)
+            }
         }
     }
 
     Column(
         modifier = Modifier
-            .imePadding()
             .fillMaxSize()
+            .imePadding()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
                     softwareKeyboardController?.hide()
                 }
-            ),
-        //.padding(top = 200.dp)
-        //.imePadding()
-        //verticalArrangement = Arrangement.Center
+            )
     ) {
 
-
-        val constraintsTop = ConstraintSet {
+        val constraints = ConstraintSet {
 
             val img_back = createRefFor("img_back")
-            val email = createRefFor("email")
             val password = createRefFor("password")
-            val bt_sign_up = createRefFor("bt_sign_up")
+            val password_confirm = createRefFor("password_confirm")
+            val create_password = createRefFor("create_password")
 
             constrain(img_back) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
             }
 
-            constrain(email) {
+            constrain(password) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
                 bottom.linkTo(parent.bottom)
-//                width = Dimension.value(40.dp)
-//                height = Dimension.wrapContent
             }
 
-            constrain(password) {
-                top.linkTo(email.bottom)
+            constrain(password_confirm) {
+                top.linkTo(password.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-//                bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
 
-            constrain(bt_sign_up) {
-                top.linkTo(password.bottom)
+            constrain(create_password) {
+                top.linkTo(password_confirm.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-                // bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
         }
 
         ConstraintLayout(
-            constraintSet = constraintsTop,
+            constraintSet = constraints,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 8.dp, bottom = 8.dp)
@@ -155,39 +146,19 @@ fun SignUpScreen(
                     .size(30.dp)
                     .clip(RoundedCornerShape(50))
                     .clickable {
-                        navController.popBackStack("auth_screen", false)
+                        Log.d("4444", " clidk back")
+                        navController.popBackStack(ScreenRoute.ForgotPasswordScreen.route, false)
                     }
             )
 
             Box(
                 modifier = Modifier
+                    // .imePadding()
                     .fillMaxWidth()
                     .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
-                    .layoutId("email"),
-                contentAlignment = Alignment.Center
-
-            ) {
-                TextFieldHintEmail(
-                    value = textEmailState,
-                    onValueChanged = { textEmailState = it },
-                    hintText = stringResource(id = R.string.email),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .clip(RoundedCornerShape(20))
-                        .background(MaterialTheme.colors.surface)
-                        .padding(start = 12.dp, end = 16.dp),
-                    icon = Icons.Rounded.Mail
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .imePadding()
-                    .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp)
                     .layoutId("password"),
                 contentAlignment = Alignment.Center
+
             ) {
                 TextFieldHintPassword(
                     value = textPasswordState,
@@ -203,55 +174,60 @@ fun SignUpScreen(
                 )
             }
 
-            if (!isFocusTextField) {
-                Box(
+            Box(
+                modifier = Modifier
+                    // .imePadding()
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp)
+                    .layoutId("password_confirm"),
+                contentAlignment = Alignment.Center
+            ) {
+                TextFieldHintPassword(
+                    value = textPasswordConfirmState,
+                    onValueChanged = { textPasswordConfirmState = it },
+                    hintText = stringResource(id = R.string.password_confirm),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .layoutId("bt_sign_up"),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    OutlinedButton(
-                        modifier = Modifier
-                            .width(300.dp)
-                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                            .clip(RoundedCornerShape(100.dp))
-                            .border(
-                                border = BorderStroke(1.dp, Color.White),
-                                shape = RoundedCornerShape(100.dp)
-                            ),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
-                        onClick = {
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(20))
+                        .background(MaterialTheme.colors.surface)
+                        .padding(start = 8.dp, end = 8.dp),
+                    icon = Icons.Rounded.Lock
+                )
+            }
 
-                            val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
-                                textEmailState = textEmailState,
-                                textPasswordState = textPasswordState,
-                                messagePassword = messagePassword,
-                                messageEmailPassword = messageEmailPassword,
-                                messageEmail = messageEmail,
-                                context = context,
-                            )
-                            if (emailPasswordIsValid) {
-                                viewModel.registerUser(
-                                    email = textEmailState,
-                                    password = textPasswordState
-                                )
-                            } else {
-                                ShowToastHelper.createToast(
-                                    message = emailPasswordInvalid,
-                                    context = context
-                                )
-                            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .width(250.dp)
+                    .height(50.dp)
+                    .layoutId("create_password"),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        if (textPasswordState == textPasswordConfirmState) {
+                            viewModel.sendRefreshPassword(password = textPasswordState)
+                        } else {
+                            ShowToastHelper.createToast(message = passwordMismatch, context = context)
                         }
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = stringResource(id = R.string.auth_bt_sign_up),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
+                    },
+                    shape = RoundedCornerShape(100),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+                    border = BorderStroke(1.dp, Color.White),
+                    modifier = Modifier
+                        .width(250.dp)
+                        .height(50.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+                        text = stringResource(id = R.string.create_password),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         }

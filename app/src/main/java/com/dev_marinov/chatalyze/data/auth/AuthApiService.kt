@@ -16,8 +16,14 @@ interface AuthApiService {
     @POST("logout")
     suspend fun logoutUser(@Body logoutRequestDTO: LogoutRequestDTO): Response<MessageResponseDTO>
 
-    @POST("password")
-    suspend fun sendEmail(@Body forgotPasswordRequestDTO: ForgotPasswordRequestDTO): Response<MessageResponseDTO>
+    @POST("forgot_password/email")
+    suspend fun sendEmail(@Body forgotPasswordEmailDTO: ForgotPasswordEmailDTO): Response<MessageResponseDTO>
+
+    @POST("forgot_password/code")
+    suspend fun sendCode(@Body forgotPasswordCodeDTO: ForgotPasswordCodeDTO): Response<MessageResponseDTO>
+
+    @POST("forgot_password/password")
+    suspend fun sendPassword(@Body forgotPasswordPasswordDTO: ForgotPasswordPasswordDTO): Response<MessageResponseDTO>
 
     @POST("delete_profile")
     suspend fun deleteProfile(@Body deleteProfileDTO: DeleteProfileDTO): Response<MessageResponseDTO>

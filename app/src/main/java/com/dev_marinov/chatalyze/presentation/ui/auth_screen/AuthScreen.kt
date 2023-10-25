@@ -35,9 +35,10 @@ import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
-import com.dev_marinov.chatalyze.util.ScreenRoute
-import com.dev_marinov.chatalyze.util.ShowToastHelper
-import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
+import com.dev_marinov.chatalyze.presentation.util.CheckEmailPasswordTextFieldHelper
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.ShowToastHelper
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -56,6 +57,7 @@ fun AuthScreen(
     var textEmailState by remember { mutableStateOf("") }
     var textPasswordState by remember { mutableStateOf("") }
     val messageEmail = stringResource(id = R.string.email_warning)
+    val emailOrPasswordInvalid = stringResource(id = R.string.email_password_invalid)
     val messagePassword = stringResource(id = R.string.password_warning)
     val messageEmailPassword = stringResource(id = R.string.email_password_warning)
     val context = LocalContext.current
@@ -202,7 +204,9 @@ fun AuthScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             isClicked = !isClicked
-                            navController.navigate("forgot_password_screen")
+//                            navController.navigate(ScreenRoute.ForgotPasswordScreen.route)
+                            navController.navigate(ScreenRoute.ForgotPasswordScreen.route)
+
                         },
                     color = Color.White,
                     fontSize = 14.sp,
@@ -222,33 +226,36 @@ fun AuthScreen(
             ) {
                 OutlinedButton(
                     onClick = {
-                        viewModel.signInAndSaveTokenSignIn(
-                            email = "marinov37@mail.ru",
-                            password = "2"
-                        )
+
                         //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
-//                        val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
-//                            textEmailState = textEmailState,
-//                            textPasswordState = textPasswordState,
-//                            messagePassword = messagePassword,
-//                            messageEmailPassword = messageEmailPassword,
-//                            messageEmail = messageEmail,
-//                            context = context,
-//                        )
-//                        if (emailPasswordIsValid) {
-//                            ShowToastHelper.createToast(
-//                                message = "выполняем проверку на вход",
-//                                context = context
-//                            )
-////                                viewModel.registerUser(
-////                                    email = textEmailState,
-////                                    password = textPasswordState
-////                                )
-////                                viewModel.registerUser(
-////                                    email = "m@yandex.ru",
-////                                    password = "12345"
-////                                )
-//                        }
+                        val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
+                            textEmailState = textEmailState,
+                            textPasswordState = textPasswordState,
+                            messagePassword = messagePassword,
+                            messageEmailPassword = messageEmailPassword,
+                            messageEmail = messageEmail,
+                            context = context,
+                        )
+                        if (emailPasswordIsValid) {
+                            viewModel.signInAndSaveTokenSignIn(
+                                email = textEmailState,
+                                password = textPasswordState
+                            )
+
+//                                viewModel.registerUser(
+//                                    email = textEmailState,
+//                                    password = textPasswordState
+//                                )
+//                                viewModel.registerUser(
+//                                    email = "m@yandex.ru",
+//                                    password = "12345"
+//                                )
+                        } else {
+                            ShowToastHelper.createToast(
+                                message = emailOrPasswordInvalid,
+                                context = context
+                            )
+                        }
                     },
                     shape = RoundedCornerShape(100),
                     colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet)),

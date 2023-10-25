@@ -1,5 +1,5 @@
 package com.dev_marinov.chatalyze.data.auth.dto
 
-data class ForgotPasswordRequestDTO(
+data class ForgotPasswordEmailDTO(
     val email: String
 )

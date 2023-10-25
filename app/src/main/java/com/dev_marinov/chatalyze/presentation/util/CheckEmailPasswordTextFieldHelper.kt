@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.util
+package com.dev_marinov.chatalyze.presentation.util
 
 import android.content.Context
 import android.util.Patterns

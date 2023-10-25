@@ -9,13 +9,14 @@ import com.dev_marinov.chatalyze.data.util.PairTokensDTOSerializer
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
+import com.dev_marinov.chatalyze.presentation.ui.code_screen.model.UserCode
+import com.dev_marinov.chatalyze.presentation.ui.create_password_screen.model.ForgotPasswordPassword
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_CONFLICT
 import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
 import okhttp3.internal.http.HTTP_OK
-import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +25,7 @@ val Context.dataStore by dataStore("data_store_pair_tokens", PairTokensDTOSerial
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApiService: AuthApiService,
-    private val dataStore: DataStore<PairTokensDTO>
+    private val dataStore: DataStore<PairTokensDTO>,
 ) : AuthRepository {
 
     override val getPairTokensFromDataStore: Flow<PairTokens> = pairTokensMapping()
@@ -76,7 +77,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendEmail(email: String) : MessageResponse? {
-        val response = authApiService.sendEmail(ForgotPasswordRequestDTO(email = email))
+        val response = authApiService.sendEmail(ForgotPasswordEmailDTO(email = email))
         return response.body()?.mapToDomain()
 
     }
@@ -107,6 +108,23 @@ class AuthRepositoryImpl @Inject constructor(
                 refreshToken = ""
             )
         }
+    }
+
+    override suspend fun sendCode(userCode: UserCode): MessageResponse? {
+        val response = authApiService.sendCode(ForgotPasswordCodeDTO(
+            email = userCode.email,
+            code = userCode.code
+        ))
+        return response.body()?.mapToDomain()
+    }
+
+    override suspend fun sendRefreshPassword(forgotPasswordPassword: ForgotPasswordPassword): MessageResponse? {
+        val forgotPasswordPasswordDTO = ForgotPasswordPasswordDTO(
+            email = forgotPasswordPassword.email,
+            password = forgotPasswordPassword.password
+        )
+        val response = authApiService.sendPassword(forgotPasswordPasswordDTO = forgotPasswordPasswordDTO)
+        return response.body()?.mapToDomain()
     }
 
     private fun pairTokensMapping() : Flow<PairTokens> {

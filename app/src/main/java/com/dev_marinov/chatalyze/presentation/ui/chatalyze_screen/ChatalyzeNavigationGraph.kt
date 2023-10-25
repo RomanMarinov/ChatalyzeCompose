@@ -8,7 +8,7 @@ import com.dev_marinov.chatalyze.presentation.ui.call_screen.CallsScreen
 import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreen
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.ChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.profile_screen.ProfileScreen
-import com.dev_marinov.chatalyze.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 
 @Composable
 fun ChatalyzeNavigationGraph(

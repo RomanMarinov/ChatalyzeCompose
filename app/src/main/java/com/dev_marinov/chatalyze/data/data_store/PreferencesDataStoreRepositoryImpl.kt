@@ -1,10 +1,7 @@
 package com.dev_marinov.chatalyze.data.data_store
 
 import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
@@ -45,4 +42,19 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
             it[preferencesKey] = position
         }
     }
+
+    override val getEmail: Flow<String> = context.dataStore.data.map { preferences ->
+        val preferencesKey = stringPreferencesKey(Constants.KEY_EMAIL)
+        preferences[preferencesKey] ?: ""
+    }
+
+
+    override suspend fun saveEmail(key: String, email: String) {
+        val preferencesKey = stringPreferencesKey(key)
+        context.dataStore.edit {
+            it[preferencesKey] = email
+        }
+    }
+
+
 }

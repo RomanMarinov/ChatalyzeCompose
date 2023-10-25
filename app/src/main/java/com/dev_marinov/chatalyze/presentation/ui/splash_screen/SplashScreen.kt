@@ -17,10 +17,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.dev_marinov.chatalyze.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import kotlinx.coroutines.delay
 
 @Composable

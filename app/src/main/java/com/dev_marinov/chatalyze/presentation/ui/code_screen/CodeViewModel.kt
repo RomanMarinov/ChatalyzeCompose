@@ -1,51 +1,60 @@
-package com.dev_marinov.chatalyze.presentation.ui.forgot_password_screen
+package com.dev_marinov.chatalyze.presentation.ui.code_screen
 
 import android.util.Log
+import android.view.View
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
-import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.ui.code_screen.model.UserCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import okhttp3.internal.http.HTTP_BAD_REQUEST
-import okhttp3.internal.http.HTTP_CONFLICT
-import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
-import okhttp3.internal.http.HTTP_OK
+import okhttp3.internal.http.*
 import javax.inject.Inject
 
 @HiltViewModel
-class ForgotPasswordScreenViewModel @Inject constructor(
+class CodeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository
 ) : ViewModel() {
 
     val getEmail = preferencesDataStoreRepository.getEmail
+    var emailTemp = ""
 
     private var _statusCode: MutableStateFlow<Int> = MutableStateFlow(0)
     val statusCode: StateFlow<Int> = _statusCode
     private var _notice: MutableStateFlow<String> = MutableStateFlow("")
     val notice: StateFlow<String> = _notice
 
-    fun sendAndSaveEmail(email: String) {
-        Log.d("4444", " ForgotPasswordScreenViewModel sendEmail=" + email)
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = authRepository.sendEmail(email = email)
-            response?.let {
-                processTheResponse(it)
-            }
-        }
-        saveEmail(email = email)
+    init {
+        getEmail()
     }
 
-    fun saveEmail(email: String) {
+    fun sendCode(code: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            preferencesDataStoreRepository.saveEmail(key = Constants.KEY_EMAIL, email = email)
+            val response = authRepository.sendCode(
+                userCode = UserCode(
+                    email = emailTemp,
+                    code = code
+                )
+            )
+            response?.let {
+                processTheResponse(response = response)
+            }
+        }
+    }
+
+    private fun getEmail() {
+        viewModelScope.launch(Dispatchers.IO) {
+            getEmail.collect {
+                emailTemp = it
+            }
         }
     }
 
@@ -60,8 +69,16 @@ class ForgotPasswordScreenViewModel @Inject constructor(
                 delay(1000L)
                 _statusCode.value = 0
             }
-            HTTP_CONFLICT -> {
+            HTTP_NOT_FOUND -> {
+                Log.d("4444", " respons HTTP_NOT_FOUND")
                 _statusCode.value = response.httpStatusCode
+                _notice.value = response.message
+                delay(1000L)
+                _statusCode.value = 0
+            }
+            HTTP_GONE -> {
+                _statusCode.value = response.httpStatusCode
+                _notice.value = response.message
                 delay(1000L)
                 _statusCode.value = 0
             }
@@ -72,6 +89,7 @@ class ForgotPasswordScreenViewModel @Inject constructor(
             }
             HTTP_INTERNAL_SERVER_ERROR -> {
                 _statusCode.value = response.httpStatusCode
+                _notice.value = response.message
                 delay(1000L)
                 _statusCode.value = 0
             }

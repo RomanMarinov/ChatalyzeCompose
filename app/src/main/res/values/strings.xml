@@ -3,8 +3,8 @@
 
 
     <!--    auth screen-->
-    <string name="auth_bt_sign_in">Sign in</string>
-    <string name="auth_bt_sign_up">Sign up</string>
+    <string name="auth_bt_sign_in">sign in</string>
+    <string name="auth_bt_sign_up">sign up</string>
     <string name="password_length">The password must contain no more than 10 characters</string>
     <string name="email_length">The email must contain no more than 30 characters</string>
     <string name="username">username</string>
@@ -14,13 +14,19 @@
 
 <!--    sign up screen-->
     <string name="email_warning">Invalid Email format</string>
+    <string name="email_password_invalid">Invalid email or password</string>
     <string name="password_warning">Password must be more than 5 characters</string>
     <string name="email_password_warning">Email and Password must be more than 5 characters</string>
     <string name="email">email</string>
 
 <!--    forgot screen-->
     <string name="header_forgot_screen">Enter the email address you provided when registering earlier. We will ship to you now</string>
-    <string name="get_password">Get password</string>
+    <string name="get_code">get code</string>
+
+    <!-- code screen-->
+    <string name="header_code_screen">Enter the code sent to you by email</string>
+    <string name="send_code">send code</string>
+    <string name="code_warning">Code length is not equal to 5</string>
 
 <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
@@ -35,8 +41,10 @@
 <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>
 
-
-
+<!--        create password screen-->
+    <string name="password_confirm">password confirm</string>
+    <string name="create_password">create password</string>
+    <string name="password_mismatch">Password mismatch</string>
 
     <string name="hide">show</string>
 
