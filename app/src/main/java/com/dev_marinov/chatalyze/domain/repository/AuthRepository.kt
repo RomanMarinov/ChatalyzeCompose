@@ -2,6 +2,8 @@ package com.dev_marinov.chatalyze.domain.repository
 
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
+import com.dev_marinov.chatalyze.presentation.ui.code_screen.model.UserCode
+import com.dev_marinov.chatalyze.presentation.ui.create_password_screen.model.ForgotPasswordPassword
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
@@ -17,4 +19,8 @@ interface AuthRepository {
     suspend fun deleteProfile(token: String) : MessageResponse?
 
     suspend fun deletePairTokensToDataStore()
+
+    suspend fun sendCode(userCode: UserCode) : MessageResponse?
+
+    suspend fun sendRefreshPassword(forgotPasswordPassword: ForgotPasswordPassword) : MessageResponse?
 }

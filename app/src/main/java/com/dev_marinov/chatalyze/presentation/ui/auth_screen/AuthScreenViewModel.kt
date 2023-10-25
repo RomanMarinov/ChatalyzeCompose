@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
+import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -26,6 +27,10 @@ class AuthScreenViewModel @Inject constructor(
     val refreshToken = authRepository.getRefreshTokensFromDataStore
     private var _notice: MutableStateFlow<String> = MutableStateFlow("")
     val notice: StateFlow<String> = _notice
+
+    init {
+        saveEmail(email = "")
+    }
 
     fun signInAndSaveTokenSignIn(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -65,6 +70,12 @@ class AuthScreenViewModel @Inject constructor(
     private fun savePairTokens(pairTokens: PairTokens) {
         viewModelScope.launch(Dispatchers.IO) {
             authRepository.savePairTokens(pairTokens = pairTokens)
+        }
+    }
+
+    private fun saveEmail(email: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.saveEmail(key = Constants.KEY_EMAIL, email = email)
         }
     }
 }

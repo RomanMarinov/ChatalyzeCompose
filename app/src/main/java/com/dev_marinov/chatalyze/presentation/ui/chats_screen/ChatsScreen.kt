@@ -34,8 +34,8 @@ import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.CheckPermissionAndGetContacts
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.rememberContacts
-import com.dev_marinov.chatalyze.util.ScreenRoute
-import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
 

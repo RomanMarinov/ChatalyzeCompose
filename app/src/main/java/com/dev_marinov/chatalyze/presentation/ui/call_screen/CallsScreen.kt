@@ -27,8 +27,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
-import com.dev_marinov.chatalyze.util.ScreenRoute
-import com.dev_marinov.chatalyze.util.SystemUiControllerHelper
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable

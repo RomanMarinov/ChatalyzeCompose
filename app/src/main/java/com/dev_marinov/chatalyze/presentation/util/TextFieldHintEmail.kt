@@ -18,7 +18,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.util.ShowToastHelper
 
 @Composable
 fun TextFieldHintEmail(
