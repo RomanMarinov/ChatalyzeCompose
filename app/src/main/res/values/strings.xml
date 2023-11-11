@@ -28,6 +28,11 @@
     <string name="send_code">send code</string>
     <string name="code_warning">Code length is not equal to 5</string>
 
+<!--    chats screen-->
+    <string name="permission_read_contact_true">"Похоже, вы навсегда отказали в разрешении доступа к своему контакту.\nВы можете перейти в настройки приложения, чтобы предоставить это"</string>
+    <string name="permission_read_contact_false">"Этому приложению нужен доступ к вашему контакту, чтобы вы имели возможность написать друзьям"</string>
+    <string name="permission_read_phone_numbers_true">"Похоже, вы навсегда отказались от разрешения на доступ к вашим контактам.\nВы можете перейти в настройки приложения, чтобы предоставить это"</string>
+    <string name="permission_read_phone_numbers_false">"Этому приложению нужен доступ к вашим контактам, чтобы вы имели возможность написать друзьям"</string>
 <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
 

@@ -1,5 +1,10 @@
 package com.dev_marinov.chatalyze.presentation.util
 
+
+const val RECIPIENT_NAME = "recipientName"
+const val RECIPIENT_PHONE = "recipientPhone"
+const val SENDER_PHONE = "senderPhone"
+
 sealed class ScreenRoute(val route: String) {
     object SplashScreen : ScreenRoute("splash_screen")
     object AuthScreen : ScreenRoute("auth_screen")
@@ -13,11 +18,20 @@ sealed class ScreenRoute(val route: String) {
     object CallScreen : ScreenRoute("call_screen")
     object ProfileScreen : ScreenRoute("profile_screen")
 
-    object ChatScreen : ScreenRoute("chat_screen")
-
-
-
-    fun withArgs(args: String): String {
-        return "$route/$args"
+    object ChatScreen : ScreenRoute("chat_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}") {
+        fun withArgs(recipientName: String, recipientPhone: String, senderPhone: String) : String {
+            return "chat_screen/$recipientName/$recipientPhone/$senderPhone"
+        }
     }
+
+
+
+//    fun withArgs(args: String): String {
+//        return "$route/$args"
+//    }
+
+//    fun withArgs(vararg args: String): String {
+//        return "$route/${args.joinToString("/")}"
+//    }
+
 }

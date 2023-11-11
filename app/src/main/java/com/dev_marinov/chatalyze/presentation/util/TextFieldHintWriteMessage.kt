@@ -32,7 +32,8 @@ fun TextFieldHintWriteMessage(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.body1,
     maxLines: Int = 20,
-    viewModel: ChatScreenViewModel
+    viewModel: ChatScreenViewModel,
+    onSendClick: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
     var isFocusedMessage by remember { mutableStateOf(false) }
@@ -113,17 +114,9 @@ fun TextFieldHintWriteMessage(
                 .height(40.dp)
                 .clip(RoundedCornerShape(20))
                 .clickable {
-
-                    val currentDateTime = getCurrentDateTime()
-
-//
-//                    viewModel.sendMessage(
-//                        messageText = messageText,
-//                        currentDateTime = currentDateTime
-//                    )
-
-
-
+                    viewModel.sendMessage()
+                    viewModel.getAllMessages()
+                    onSendClick()
                 }
                 .layoutId("viewIcon")
         )

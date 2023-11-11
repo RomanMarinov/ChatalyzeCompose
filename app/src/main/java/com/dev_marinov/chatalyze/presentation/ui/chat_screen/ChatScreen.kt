@@ -1,6 +1,7 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -18,8 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -30,6 +35,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
@@ -45,8 +52,12 @@ import kotlinx.coroutines.flow.debounce
 @Composable
 fun ChatScreen(
     viewModel: ChatScreenViewModel = hiltViewModel(),
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    recipientName: String?,
+    recipientPhone: String?,
+    senderPhone: String?
 ) {
+    Log.d("44444", " recipientName=" + recipientName)
 
     GradientBackgroundHelper.SetMonochromeBackground()
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
@@ -54,14 +65,19 @@ fun ChatScreen(
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val chatName = "Маринов Роман"
 //
+    viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
     viewModel.getChatPosition(userName = chatName)
 
+    val myPhone = "89303493563"
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
 
     val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
 
     var textMessage by remember { mutableStateOf("") }
     var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
+    var sendClickState by remember { mutableStateOf(false) }
+
+    val col = colorResource(id = R.color.main_violet_light)
 
     val lazyListState: LazyListState = if (chatPosition != 0) {
         rememberLazyListState(
@@ -70,6 +86,37 @@ fun ChatScreen(
     } else {
         rememberLazyListState()
     }
+
+
+    ////////////////////////////////////////////////////
+    // lackner
+    val context = LocalContext.current
+    LaunchedEffect(key1 = true) {
+        viewModel.toastEvent.collectLatest { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) {
+                viewModel.connectToChat()
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                viewModel.disconnect()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    val state = viewModel.state.value
+    // с помощью state я буду формировть список сообщений
+
+
+    //////////////////////////////////////////
+
+
 
     Column(
         modifier = Modifier
@@ -159,8 +206,7 @@ fun ChatScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             navHostController.navigate(ScreenRoute.ChatsScreen.route)
-                           // viewModel.saveHideNavigationBar(false)
-
+                            // viewModel.saveHideNavigationBar(false)
                         }
                         .layoutId("back")
                 )
@@ -181,12 +227,14 @@ fun ChatScreen(
                         .padding(4.dp)
                         .layoutId("nameAndStatusNetworkUser")
                 ) {
-                    Text(
-                        text = "Маринов Роман",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    recipientName?.let {
+                        Text(
+                            text = it,
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                     Text(
                         text = "в сети",
                         color = Color.White,
@@ -276,8 +324,78 @@ fun ChatScreen(
                             ) {
                                 items(chatMessage) { item ->
                                     // add object message
+                                    Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
+                                    /////////////////////////////////
 
-                                    Text(text = item)
+                                    val isOwnMessage = item.sender == senderPhone
+                                    Box(
+                                        contentAlignment = if (isOwnMessage) {
+                                            Alignment.CenterEnd
+                                        } else Alignment.CenterStart,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .width(200.dp)
+                                                .drawBehind {
+                                                    val cornerRadius = 10.dp.toPx()
+                                                    val triangleHeight = 20.dp.toPx()
+                                                    val triangleWidth = 25.dp.toPx()
+                                                    val trianglePath = Path().apply {
+                                                        if (isOwnMessage) {
+                                                            moveTo(
+                                                                size.width,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            lineTo(
+                                                                size.width,
+                                                                size.height + triangleHeight
+                                                            )
+                                                            lineTo(
+                                                                size.width - triangleWidth,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            close()
+                                                        } else {
+                                                            moveTo(0f, size.height - cornerRadius)
+                                                            lineTo(0f, size.height + triangleHeight)
+                                                            lineTo(
+                                                                triangleWidth,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            close()
+                                                        }
+                                                    }
+                                                    drawPath(
+                                                        path = trianglePath,
+                                                        color = if (isOwnMessage) col else Color.DarkGray
+                                                    )
+                                                }
+                                                .background(
+                                                    color = if (isOwnMessage) col else Color.DarkGray,
+                                                    shape = RoundedCornerShape(10.dp)
+                                                )
+                                                .padding(8.dp)
+                                        ) {
+                                            Text(
+                                                text = item.sender,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = item.textMessage,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = item.createdAt,
+                                                color = Color.White,
+                                                modifier = Modifier.align(Alignment.End)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(32.dp))
+
+                                    //////////////////////////////////////
                                 }
                                 // Добавьте другие элементы списка здесь
                             }
@@ -352,20 +470,43 @@ fun ChatScreen(
                             tint = Color.White,
                         )
 
+//                        TextFieldHintWriteMessage(
+//                            value = textMessage,
+//                            onValueChanged = { textMessage = it },
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(IntrinsicSize.Min)
+//                                .clip(RoundedCornerShape(20))
+//                                .background(MaterialTheme.colors.surface),
+//                            viewModel = viewModel
+//                        )
+
                         TextFieldHintWriteMessage(
-                            value = textMessage,
-                            onValueChanged = { textMessage = it },
+                            value = viewModel.messageText.value,
+                            onValueChanged = viewModel::onMessageChange,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(IntrinsicSize.Min)
                                 .clip(RoundedCornerShape(20))
                                 .background(MaterialTheme.colors.surface),
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            onSendClick = {
+                                sendClickState = true
+                            }
                         )
                     }
+                }
+            }
+
+            LaunchedEffect(chatMessage) {
+                if (sendClickState) {
+                    lazyListState.animateScrollToItem(chatMessage.size)
+                    sendClickState = false
                 }
             }
         }
     }
 }
+
+
 

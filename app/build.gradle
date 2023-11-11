@@ -122,7 +122,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1"
     implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
 
-
     // preview
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
 
@@ -139,4 +138,23 @@ dependencies {
 //    implementation 'com.google.android.exoplayer:extension-mediasession:2.18.5' // MediaSession Extension dependency
 
     implementation "com.google.accompanist:accompanist-coil:0.12.0"
+
+    // Ktor client
+    def ktor_version = "1.6.3"
+    implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation "io.ktor:ktor-client-cio:$ktor_version"
+    implementation "io.ktor:ktor-client-serialization:$ktor_version"
+    implementation "io.ktor:ktor-client-websockets:$ktor_version"
+    implementation "io.ktor:ktor-client-logging:$ktor_version"
+    implementation "ch.qos.logback:logback-classic:1.2.6"
+
+
+
+
+
+
+
+   // implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation "io.ktor:ktor-client-json:$ktor_version"
+  //  implementation "io.ktor:ktor-client-logging:$ktor_version"
 }

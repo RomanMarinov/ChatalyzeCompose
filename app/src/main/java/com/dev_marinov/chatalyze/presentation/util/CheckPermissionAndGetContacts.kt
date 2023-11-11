@@ -2,44 +2,50 @@ package com.dev_marinov.chatalyze.presentation.util
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.provider.ContactsContract
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+
+//@Composable
+//fun CheckPermissionAndGetContacts(): Boolean {
+//    val context = LocalContext.current
+//    // Проверяем наличие разрешения
+//    val hasPermission = ContextCompat.checkSelfPermission(
+//        context,
+//        Manifest.permission.READ_CONTACTS
+//    ) == PackageManager.PERMISSION_GRANTED
+//
+//    // Если разрешение не предоставлено, запрашиваем его
+//    if (!hasPermission) {
+//        ActivityCompat.requestPermissions(
+//            context as Activity,
+//            arrayOf(Manifest.permission.READ_CONTACTS),
+//            0
+//        )
+//    }
+//    return hasPermission
+//}
 
 @Composable
 fun CheckPermissionAndGetContacts(): Boolean {
     val context = LocalContext.current
     // Проверяем наличие разрешения
-    val hasPermission = ContextCompat.checkSelfPermission(
+    return ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.READ_CONTACTS
     ) == PackageManager.PERMISSION_GRANTED
-
-    // Если разрешение не предоставлено, запрашиваем его
-    if (!hasPermission) {
-        ActivityCompat.requestPermissions(
-            context as Activity,
-            arrayOf(Manifest.permission.READ_CONTACTS),
-            0
-        )
-    }
-    return hasPermission
 }
-
 
 @SuppressLint("Range", "Recycle")
 @Composable
-fun rememberContacts(context: Context): Flow<List<Contact>> = flow {
+fun RememberContacts(context: Context): Flow<List<Contact>> = flow {
 
     val contacts = mutableListOf<Contact>()
     val cursor = context.contentResolver.query(
