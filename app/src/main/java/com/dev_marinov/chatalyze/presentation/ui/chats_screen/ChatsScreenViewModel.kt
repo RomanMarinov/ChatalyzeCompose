@@ -53,12 +53,12 @@ class ChatsScreenViewModel @Inject constructor(
     fun transferContacts(contacts: List<Contact>) {
         _contacts.value = contacts
 
-        val contacts2 = listOf(Contact(
-            name = "АртурМег",
-            phoneNumber = "9203333333",
-            photo = ""
-        ))
-        _contacts.value = contacts2
+//        val contacts2 = listOf(Contact(
+//            name = "АртурМег",
+//            phoneNumber = "9203333333",
+//            photo = ""
+//        ))
+      //  _contacts.value = contacts2
     }
 
     fun makeRequestPermissions(perform: Boolean) {

@@ -6,7 +6,6 @@ import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
 import io.ktor.client.*
 import io.ktor.client.request.*
-import io.ktor.client.response.*
 import io.ktor.http.*
 
 class MessageServiceImpl(
@@ -19,7 +18,7 @@ class MessageServiceImpl(
             client.post<List<MessageDto>>(MessageService.Endpoints.GetAllMessages.url) {
                 contentType(ContentType.Application.Json)
                 body = userPairChat
-            }.map { it.toMessage() }
+            }.map { it.mapToDomain() }
         } catch (e: Exception) {
             emptyList()
         }

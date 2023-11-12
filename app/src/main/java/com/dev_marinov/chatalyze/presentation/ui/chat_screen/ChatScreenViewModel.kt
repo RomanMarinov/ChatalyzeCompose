@@ -136,7 +136,7 @@ class ChatScreenViewModel @Inject constructor(
                         .onEach { message ->
                             Log.d("4444", " connectToChat Resource.Success message=" + message)
                             val newList = state.value.messages.toMutableList().apply {
-                                add(0, message)
+                                add(_state.value.messages.size, message)
                             }
                             _state.value = state.value.copy(
                                 messages = newList
@@ -163,6 +163,7 @@ class ChatScreenViewModel @Inject constructor(
     }
 
     fun getAllMessages() {
+
         val userPairChat = UserPairChat(
             sender = _sender,
             recipient = _recipient

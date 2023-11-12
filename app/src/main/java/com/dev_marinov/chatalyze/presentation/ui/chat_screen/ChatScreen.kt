@@ -322,11 +322,11 @@ fun ChatScreen(
                                     .padding(start = 8.dp, end = 8.dp),
                                 state = lazyListState
                             ) {
-                                items(chatMessage) { item ->
+                                items(state.messages) { item ->
                                     // add object message
                                     Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
                                     /////////////////////////////////
-
+                                    Log.d("4444", " chatMessage=" + chatMessage)
                                     val isOwnMessage = item.sender == senderPhone
                                     Box(
                                         contentAlignment = if (isOwnMessage) {

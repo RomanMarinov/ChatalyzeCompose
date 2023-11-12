@@ -2,8 +2,6 @@ package com.dev_marinov.chatalyze.data.chatMessage.dto
 
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import kotlinx.serialization.Serializable
-import java.text.DateFormat
-import java.util.*
 
 @Serializable
 data class MessageDto(
@@ -12,7 +10,7 @@ data class MessageDto(
     val textMessage: String,
     val createdAt: String
 ) {
-    fun toMessage(): Message {
+    fun mapToDomain(): Message {
         return Message(
             sender = sender,
             recipient = recipient,
