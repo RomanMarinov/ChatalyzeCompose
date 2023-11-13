@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId "com.dev_marinov.chatalyze"
-        minSdk 21
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -157,4 +157,7 @@ dependencies {
    // implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-json:$ktor_version"
   //  implementation "io.ktor:ktor-client-logging:$ktor_version"
+
+    // animated-navigation
+    implementation("com.exyte:animated-navigation-bar:1.0.0")
 }

@@ -2,15 +2,18 @@ package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.colorResource
 import com.dev_marinov.chatalyze.R
@@ -40,7 +43,12 @@ fun ChatalyzeBottomNavigationBar(
     BottomNavigation(
         backgroundColor = Color.Transparent,
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .border(width = 1.dp,
+                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+          //  .background(colorResource(id = R.color.main_violet_light)),
        // .height(height = if (isHideBottomBar == true) 0.dp else 70.dp),
         elevation = 60.dp
     ) {
@@ -53,7 +61,8 @@ fun ChatalyzeBottomNavigationBar(
             }
 
             BottomNavigationItem(
-                modifier = Modifier.background(colorResource(id = R.color.main_violet)),
+                modifier = Modifier
+                    .background(colorResource(id = R.color.main_violet_light)),
 //                modifier = Modifier.background(
 //                    brush = Brush.verticalGradient(
 //                      //  colors = gradientColors,
@@ -63,7 +72,7 @@ fun ChatalyzeBottomNavigationBar(
 //                ),
                 selected = selected,
                 onClick = { onItemClick(item) },
-                selectedContentColor = Color.DarkGray,
+                selectedContentColor = colorResource(id = R.color.main_yellow_new_chat_screen),
                 unselectedContentColor = Color.White,
                 icon = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

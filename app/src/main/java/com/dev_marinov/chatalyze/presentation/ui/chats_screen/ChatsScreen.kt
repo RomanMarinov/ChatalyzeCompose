@@ -14,10 +14,14 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -44,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.domain.model.chats.Chat
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.*
 import kotlinx.coroutines.*
@@ -72,7 +77,7 @@ fun ChatsScreen(
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
     // viewModel.onClickHideNavigationBar(false)
-
+    val chatList = viewModel.chatList.collectAsStateWithLifecycle()
     val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
     var ownPhoneSender by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(
@@ -202,6 +207,65 @@ fun ChatsScreen(
                 )
             }
         }
+
+         /////////////////////////////////
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .background(colorResource(id = R.color.main_violet_light))
+                .fillMaxWidth()
+        ) {
+
+            val contentChat = ConstraintSet {
+                val chatContent = createRefFor("chats")
+
+                constrain(chatContent) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.wrapContent
+                    height = Dimension.wrapContent
+                }
+            }
+
+            ConstraintLayout(
+                constraintSet = contentChat,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .layoutId("chats")
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                        .clip(RoundedCornerShape(10))
+                )
+                {
+                    BoxWithConstraints {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .border(width = 1.dp, color = colorResource(id = R.color.main_yellow_new_chat_screen), shape = RoundedCornerShape(10))
+                                .padding(start = 8.dp, end = 8.dp),
+                          //  state = lazyListState
+                        ) {
+                            items(chatList.value) { item ->
+                                Spacer(modifier = Modifier.height(32.dp))
+                                ChatsContentItem(
+                                    navController = navController,
+                                    chat = item,
+                                    ownPhoneSender = ownPhoneSender
+                                )
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //////////////////////////////////////////
 
         if (isSheetOpen) {
             ModalBottomSheetLayout(
@@ -390,6 +454,66 @@ fun BottomSheetContentTop(
         }
     }
 }
+
+@Composable
+fun ChatsContentItem(
+    navController: NavHostController,
+    chat: Chat,
+    ownPhoneSender: String,
+) {
+    Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + ownPhoneSender)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable {
+//                navController.navigate(ScreenRoute.ChatScreen.route)
+                // navController.navigate(ScreenRoute.ChatScreen.route + contact.name)
+                // navController.navigate(ScreenRoute.ChatScreen.withArgs(contact.name))
+                navController.navigate(
+                    route = ScreenRoute.ChatScreen.withArgs(
+                        recipientName = "name потом исправить",
+                        recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(chat.recipient),
+                        senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
+                    )
+                )
+            },
+
+        // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            modifier = Modifier
+                .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
+                .size(30.dp),
+            painter = painterResource(id = R.drawable.ic_user),
+            contentDescription = "",
+            tint = colorResource(id = R.color.main_yellow_new_chat_screen),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp)
+        ) {
+            Text(
+                text = chat.sender,
+                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = chat.textMessage?: "",
+                color = colorResource(id = R.color.main_yellow_splash_screen),
+            )
+            Divider(
+                modifier = Modifier.padding(top = 4.dp),
+                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                thickness = 1.dp
+            )
+        }
+    }
+}
+
 
 @Composable
 fun BottomSheetContentItem(
