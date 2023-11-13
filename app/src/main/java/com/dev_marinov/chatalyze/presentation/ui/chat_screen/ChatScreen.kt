@@ -2,6 +2,7 @@ package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -58,6 +59,11 @@ fun ChatScreen(
     senderPhone: String?
 ) {
     Log.d("44444", " recipientName=" + recipientName)
+
+    BackHandler {
+        navHostController.navigate(ScreenRoute.ChatsScreen.route)
+        viewModel.saveHideNavigationBar(false)
+    }
 
     GradientBackgroundHelper.SetMonochromeBackground()
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
@@ -206,7 +212,7 @@ fun ChatScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             navHostController.navigate(ScreenRoute.ChatsScreen.route)
-                            // viewModel.saveHideNavigationBar(false)
+                            viewModel.saveHideNavigationBar(false)
                         }
                         .layoutId("back")
                 )
