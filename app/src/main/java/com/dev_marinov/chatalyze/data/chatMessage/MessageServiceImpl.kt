@@ -14,7 +14,7 @@ class MessageServiceImpl(
 
     override suspend fun getAllMessages(userPairChat: UserPairChat): List<Message> {
         return try {
-            Log.d("4444", " MessageServiceImpl getAllMessages поппытка отпарвить")
+            Log.d("4444", " MessageServiceImpl getAllMessages поппытка отпарвить userPairChat=" + userPairChat)
             client.post<List<MessageDto>>(MessageService.Endpoints.GetAllMessages.url) {
                 contentType(ContentType.Application.Json)
                 body = userPairChat

@@ -14,14 +14,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -61,6 +59,7 @@ fun ChatsScreen(
     navController: NavHostController,
     viewModel: ChatsScreenViewModel = hiltViewModel()
 ) {
+    Log.d("4444", " ChatsScreen loaded")
     /////////////////////////
     val permissionsToRequest = arrayOf(
         Manifest.permission.READ_CONTACTS,
@@ -75,6 +74,13 @@ fun ChatsScreen(
     //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     GradientBackgroundHelper.SetMonochromeBackground()
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
+
+// удалить
+//    scope.launch {
+//        viewModel.makeRequestPermissions(true)
+//        delay(500L)
+//        viewModel.makeRequestPermissions(false)
+//    }
 
     // viewModel.onClickHideNavigationBar(false)
     val chatList = viewModel.chatList.collectAsStateWithLifecycle()
@@ -103,6 +109,24 @@ fun ChatsScreen(
         }
     )
 
+////////////////
+    val grantedReadPhoneNumber = checkReadPhoneNumberPermission(context = context)
+    if (grantedReadPhoneNumber) {
+        Log.d("4444", " разрешены")
+        val telephonyManager =
+            context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        ownPhoneSender = telephonyManager?.line1Number.toString()
+
+        viewModel.getChats(sender = ownPhoneSender)
+        viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
+        Log.d("4444", " 1 мой номер=" + ownPhoneSender)
+    } else {
+        Log.d("4444", " 2 НЕ разрешены")
+    }
+
+//////////////////
+
+
     val performRequestPermissions by viewModel.performRequestPermissions.collectAsStateWithLifecycle()
     if (performRequestPermissions) {
         val grantedReadPhoneNumber = checkReadPhoneNumberPermission(context = context)
@@ -113,8 +137,12 @@ fun ChatsScreen(
             val telephonyManager =
                 context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
             ownPhoneSender = telephonyManager?.line1Number.toString()
-          //  viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
+
+            viewModel.getChats(sender = ownPhoneSender)
+            //viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
             Log.d("4444", " мой номер=" + ownPhoneSender)
+        } else {
+            Log.d("4444", " НЕ разрешены")
         }
 
         if (grantedReadContacts) {
@@ -208,15 +236,12 @@ fun ChatsScreen(
             }
         }
 
-         /////////////////////////////////
-
         Column(
             modifier = Modifier
                 .weight(1f)
                 .background(colorResource(id = R.color.main_violet_light))
                 .fillMaxWidth()
         ) {
-
             val contentChat = ConstraintSet {
                 val chatContent = createRefFor("chats")
 
@@ -240,32 +265,35 @@ fun ChatsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
-                        .clip(RoundedCornerShape(10))
+                        .clip(RoundedCornerShape(20.dp))
                 )
                 {
                     BoxWithConstraints {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .border(width = 1.dp, color = colorResource(id = R.color.main_yellow_new_chat_screen), shape = RoundedCornerShape(10))
+                                .border(
+                                    width = 1.dp,
+                                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                                    shape = RoundedCornerShape(20.dp))
                                 .padding(start = 8.dp, end = 8.dp),
                           //  state = lazyListState
                         ) {
                             items(chatList.value) { item ->
-                                Spacer(modifier = Modifier.height(32.dp))
+                                Log.d("4444", " chats item=" + item)
+                                Spacer(modifier = Modifier.height(16.dp))
                                 ChatsContentItem(
                                     navController = navController,
                                     chat = item,
-                                    ownPhoneSender = ownPhoneSender
+                                    ownPhoneSender = ownPhoneSender,
+                                    viewModel = viewModel
                                 )
-
                             }
                         }
                     }
                 }
             }
         }
-        //////////////////////////////////////////
 
         if (isSheetOpen) {
             ModalBottomSheetLayout(
@@ -460,24 +488,41 @@ fun ChatsContentItem(
     navController: NavHostController,
     chat: Chat,
     ownPhoneSender: String,
+    viewModel: ChatsScreenViewModel,
 ) {
-    Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + ownPhoneSender)
-
+    Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
+    val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            // .clip(RoundedCornerShape(50.dp))
             .clickable {
-//                navController.navigate(ScreenRoute.ChatScreen.route)
-                // navController.navigate(ScreenRoute.ChatScreen.route + contact.name)
-                // navController.navigate(ScreenRoute.ChatScreen.withArgs(contact.name))
-                navController.navigate(
-                    route = ScreenRoute.ChatScreen.withArgs(
-                        recipientName = "name потом исправить",
-                        recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(chat.recipient),
-                        senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
-                    )
-                )
+                viewModel.onClickHideNavigationBar(isHide = true)
+                scope.launch {
+                    delay(50L) // костыль потому что ui у перехода не красивый
+                    withContext(Dispatchers.Main){
+                        Log.d("4444", " BottomSheetContentItem recipientName=" + "name потом исправить"
+                                + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(chat.recipient)
+                                + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(chat.sender))
+
+                        // правильные аргументы
+                        // recipientName=Roman recipientPhone=9303454564 senderPhone=5551234567
+                        // ошибочные аргументы
+                        // BottomSheetContentItem recipientName=name потом исправить recipientPhone=9303454564 senderPhone=
+                        navController.navigate(
+                            route = ScreenRoute.ChatScreen.withArgs(
+                                recipientName = CorrectNumberFormatHelper.getCorrectNumber(chat.recipient),
+                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
+                                    if (chat.recipient == CorrectNumberFormatHelper.getCorrectNumber(
+                                            ownPhoneSender)
+                                    )
+                                        chat.sender else chat.recipient),
+                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
+                            )
+                        )
+                    }
+                }
+
             },
 
         // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
@@ -496,10 +541,25 @@ fun ChatsContentItem(
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp)
         ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = if (chat.sender != CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
+                        chat.sender else chat.recipient,
+                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = chat.createdAt.substring(0, 3),
+                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.wrapContentWidth()
+                )
+            }
+
             Text(
-                text = chat.sender,
-                color = colorResource(id = R.color.main_yellow_new_chat_screen),
-                fontWeight = FontWeight.Bold
+                text = "от кого последнее " +  chat.sender,
+                color = colorResource(id = R.color.main_yellow_splash_screen),
             )
             Text(
                 text = chat.textMessage?: "",
@@ -521,8 +581,6 @@ fun BottomSheetContentItem(
     contact: Contact,
     ownPhoneSender: String
 ) {
-    Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + ownPhoneSender)
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -531,6 +589,12 @@ fun BottomSheetContentItem(
 //                navController.navigate(ScreenRoute.ChatScreen.route)
                 // navController.navigate(ScreenRoute.ChatScreen.route + contact.name)
                 // navController.navigate(ScreenRoute.ChatScreen.withArgs(contact.name))
+                Log.d("4444", " BottomSheetContentItem recipientName=" + contact.name
+                        + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(contact.phoneNumber)
+                        + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
+                    ownPhoneSender))
+
+
                 navController.navigate(
                     route = ScreenRoute.ChatScreen.withArgs(
                         recipientName = contact.name,
@@ -592,4 +656,3 @@ fun openAppSettings(context: Context) {
         .setData(Uri.fromParts("package", context.packageName, null))
     context.startActivity(intent)
 }
-

@@ -48,7 +48,6 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
         preferences[preferencesKey] ?: ""
     }
 
-
     override suspend fun saveEmail(key: String, email: String) {
         val preferencesKey = stringPreferencesKey(key)
         context.dataStore.edit {
@@ -56,5 +55,15 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
         }
     }
 
+    override val getOwnPhoneSender: Flow<String> = context.dataStore.data.map { preferences ->
+        val preferencesKey = stringPreferencesKey(Constants.OWN_PHONE_SENDER)
+        preferences[preferencesKey] ?: ""
+    }
 
+    override suspend fun saveOwnPhoneSender(key: String, ownPhoneSender: String, ) {
+        val preferencesKey = stringPreferencesKey(key)
+        context.dataStore.edit { preferences ->
+            preferences[preferencesKey] = ownPhoneSender
+        }
+    }
 }

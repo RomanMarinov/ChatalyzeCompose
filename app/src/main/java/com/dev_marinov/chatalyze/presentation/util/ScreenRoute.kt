@@ -1,9 +1,9 @@
 package com.dev_marinov.chatalyze.presentation.util
 
 
-const val RECIPIENT_NAME = "recipientName"
-const val RECIPIENT_PHONE = "recipientPhone"
-const val SENDER_PHONE = "senderPhone"
+const val RECIPIENT_NAME = "RECIPIENT_NAME"
+const val RECIPIENT_PHONE = "RECIPIENT_PHONE"
+const val SENDER_PHONE = "SENDER_PHONE"
 
 sealed class ScreenRoute(val route: String) {
     object SplashScreen : ScreenRoute("splash_screen")
@@ -23,6 +23,7 @@ sealed class ScreenRoute(val route: String) {
             return "chat_screen/$recipientName/$recipientPhone/$senderPhone"
         }
     }
+
 
 
 

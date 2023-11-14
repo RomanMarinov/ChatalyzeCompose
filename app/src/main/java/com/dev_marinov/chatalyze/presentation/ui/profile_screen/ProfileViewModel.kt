@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,10 +19,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository
 ) : ViewModel() {
 
     private val refreshToken = authRepository.getRefreshTokensFromDataStore
+
+    val ownPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
 
     private var _statusCode: MutableStateFlow<Int> = MutableStateFlow(0)
     val statusCode: StateFlow<Int> = _statusCode
@@ -29,6 +33,12 @@ class ProfileViewModel @Inject constructor(
     var refreshTokenTemp = ""
 
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+           ownPhoneSender.collect{
+               Log.d("4444", " ProfileViewModel ownPhoneSender=" + it)
+           }
+        }
+
         writeRefreshTokenTemp()
     }
 

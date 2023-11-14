@@ -15,6 +15,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -70,13 +71,13 @@ fun ChatScreen(
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val chatName = "Маринов Роман"
-//
+
+    viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
     viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
     viewModel.getChatPosition(userName = chatName)
 
     val myPhone = "89303493563"
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
-
     val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
 
     var textMessage by remember { mutableStateOf("") }
@@ -93,7 +94,6 @@ fun ChatScreen(
         rememberLazyListState()
     }
 
-
     ////////////////////////////////////////////////////
     // lackner
     val context = LocalContext.current
@@ -106,7 +106,7 @@ fun ChatScreen(
     DisposableEffect(key1 = lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                viewModel.connectToChat()
+                viewModel.connectToChat(senderPhone, recipientPhone)
             } else if (event == Lifecycle.Event.ON_STOP) {
                 viewModel.disconnect()
             }
@@ -452,16 +452,15 @@ fun ChatScreen(
                         .fillMaxWidth()
                         .imePadding()
                         .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
-                        .layoutId("bottomControl")
+                        .layoutId("bottomControl"),
                 ) {
                     Row(
                         modifier = Modifier
                             // .width(200.dp)
-
                             .background(colorResource(id = R.color.main_violet_light))
                             .layoutId("writeMessage"),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Icon(
                             modifier = Modifier

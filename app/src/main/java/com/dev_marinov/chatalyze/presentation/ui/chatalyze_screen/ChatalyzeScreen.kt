@@ -1,5 +1,7 @@
 package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,9 +48,9 @@ fun ChatalyzeScreen(
             //  Log.d("4444", " isHideBottomBar=" + isHideBottomBar)
             ChatalyzeBottomNavigationBar(
                 modifier = Modifier
-                 //   .background(colorResource(id = R.color.main_violet_light))
+                    .background(colorResource(id = R.color.main_violet_light))
                   //  .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    // .animateContentSize(animationSpec = tween(durationMillis = 800))
+                     //.animateContentSize(animationSpec = tween(durationMillis = 1500))
                     .height(height = if (isHideBottomBar == true) 0.dp else 70.dp),
                 
                 items = listOf(

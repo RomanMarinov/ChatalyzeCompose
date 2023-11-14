@@ -15,7 +15,6 @@ import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
-import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +33,12 @@ class ChatScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     val refreshToken = authRepository.getRefreshTokensFromDataStore
+
+//    private var _userPairChat = MutableStateFlow<UserPairChat?>(null)
+//    private val userPairChat: StateFlow<UserPairChat?> = _userPairChat
+
+    private var _userPairChat = mutableStateOf(UserPairChat())
+    private val userPairChat: State<UserPairChat> = _userPairChat
 
     private var _chatPosition = MutableStateFlow(0)
     val chatPosition: StateFlow<Int> = _chatPosition
@@ -120,7 +125,7 @@ class ChatScreenViewModel @Inject constructor(
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
 
-    fun connectToChat() {
+    fun connectToChat(senderPhone: String?, recipientPhone: String?) {
         // сюда передать объект message
         getAllMessages()
         //   getAllMessages()
@@ -164,15 +169,15 @@ class ChatScreenViewModel @Inject constructor(
 
     fun getAllMessages() {
 
-        val userPairChat = UserPairChat(
-            sender = _sender,
-            recipient = _recipient
-        )
+//        val userPairChat = UserPairChat(
+//            sender = _sender,
+//            recipient = _recipient
+//        )
         viewModelScope.launch {
             _state.value = state.value.copy(isLoading = true)
 
 
-            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat)
+            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat.value)
             //////
             _chatMessage.value = result
 
@@ -211,6 +216,13 @@ class ChatScreenViewModel @Inject constructor(
     fun saveToViewModel(recipient: String?, sender: String?) {
         recipient?.let { _recipient = it }
         sender?.let { _sender = it }
+    }
+
+    fun saveLocallyUserPairChat(senderPhone: String?, recipientPhone: String?) {
+        _userPairChat.value = UserPairChat(
+            sender = senderPhone ?: "",
+            recipient = recipientPhone ?: ""
+        )
     }
 
 //    fun saveToViewModel(recipient: String?, sender: String?) {

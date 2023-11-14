@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserPairChat(
-    val sender: String,
-    val recipient: String
+    val sender: String? = null,
+    val recipient: String? = null
 )
