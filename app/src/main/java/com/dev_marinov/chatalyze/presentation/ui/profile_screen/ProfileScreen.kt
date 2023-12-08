@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.profile_screen
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -48,6 +49,7 @@ fun ProfileScreen(
     //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     // viewModel.onClickHideNavigationBar(false)
 
+    val ownPhoneSender by viewModel.ownPhoneSender.collectAsStateWithLifecycle("")
     val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
 
     val tryAgainLater = stringResource(id = R.string.try_again_later)
@@ -70,6 +72,7 @@ fun ProfileScreen(
 
         val constraints = ConstraintSet {
             val headerChatText = createRefFor("header_profile_text")
+            val ownPhoneSender = createRefFor("own_phone_sender")
             val btLogOut = createRefFor("bt_log_out")
             val btDeleteProfile = createRefFor("bt_delete_profile")
 
@@ -81,8 +84,17 @@ fun ProfileScreen(
                 height = Dimension.wrapContent
             }
 
-            constrain(btLogOut) {
+            constrain(ownPhoneSender) {
                 top.linkTo(headerChatText.bottom)
+                start.linkTo(parent.start)
+                //end.linkTo(createChatIcon.start)
+                //bottom.linkTo(parent.bottom)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
+            }
+
+            constrain(btLogOut) {
+                top.linkTo(ownPhoneSender.bottom)
                 start.linkTo(parent.start)
                 //end.linkTo(createChatIcon.start)
                 //bottom.linkTo(parent.bottom)
@@ -117,6 +129,12 @@ fun ProfileScreen(
                     //ƒ .background(Color.Green)
                     .layoutId("header_profile_text")
             )
+
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .layoutId("own_phone_sender")) {
+                Text(text = "Your phone number $ownPhoneSender")
+            }
 
             Button(
                 modifier = Modifier.layoutId("bt_log_out"),

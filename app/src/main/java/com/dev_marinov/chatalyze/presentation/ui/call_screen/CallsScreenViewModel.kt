@@ -21,7 +21,7 @@ class CallsScreenViewModel @Inject constructor(
     fun getFakeCalls() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = chatRepository.getChatMessage()
-            _fakeCalls.value = result
+           // _fakeCalls.value = result
         }
     }
 }

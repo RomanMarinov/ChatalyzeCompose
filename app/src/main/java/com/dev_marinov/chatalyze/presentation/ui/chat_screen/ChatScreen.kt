@@ -1,6 +1,9 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -18,8 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -30,9 +37,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.data.socket_service.SocketService
+import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
@@ -45,23 +56,36 @@ import kotlinx.coroutines.flow.debounce
 @Composable
 fun ChatScreen(
     viewModel: ChatScreenViewModel = hiltViewModel(),
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    recipientName: String?,
+    recipientPhone: String?,
+    senderPhone: String?
 ) {
+
+    BackHandler {
+        navHostController.navigate(ScreenRoute.ChatsScreen.route)
+        viewModel.saveHideNavigationBar(false)
+    }
 
     GradientBackgroundHelper.SetMonochromeBackground()
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val chatName = "Маринов Роман"
-//
+
+    viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
+    viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
     viewModel.getChatPosition(userName = chatName)
 
+    val myPhone = "89303493563"
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
-
     val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
 
     var textMessage by remember { mutableStateOf("") }
     var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
+    var sendClickState by remember { mutableStateOf(false) }
+
+    val col = colorResource(id = R.color.main_violet_light)
 
     val lazyListState: LazyListState = if (chatPosition != 0) {
         rememberLazyListState(
@@ -70,6 +94,50 @@ fun ChatScreen(
     } else {
         rememberLazyListState()
     }
+
+
+    //////////////////////////////////////////////////
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
+                    }
+
+                    Lifecycle.Event.ON_STOP -> { // когда свернул
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
+                    }
+
+                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
+                    }
+                    else -> {}
+                }
+            }
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
+    ////////////////////////////////////////////////////
+
+
+
+    ////////////////////////////////////////////////////
+    // lackner
+    val context = LocalContext.current
+    LaunchedEffect(key1 = true) {
+        viewModel.toastEvent.collectLatest { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // с помощью state я буду формировть список сообщений
+    val state = viewModel.state.value
 
     Column(
         modifier = Modifier
@@ -159,8 +227,7 @@ fun ChatScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             navHostController.navigate(ScreenRoute.ChatsScreen.route)
-                           // viewModel.saveHideNavigationBar(false)
-
+                            viewModel.saveHideNavigationBar(false)
                         }
                         .layoutId("back")
                 )
@@ -181,12 +248,14 @@ fun ChatScreen(
                         .padding(4.dp)
                         .layoutId("nameAndStatusNetworkUser")
                 ) {
-                    Text(
-                        text = "Маринов Роман",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    recipientName?.let {
+                        Text(
+                            text = it,
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                     Text(
                         text = "в сети",
                         color = Color.White,
@@ -274,10 +343,83 @@ fun ChatScreen(
                                     .padding(start = 8.dp, end = 8.dp),
                                 state = lazyListState
                             ) {
-                                items(chatMessage) { item ->
+                                items(state.messages) { item ->
                                     // add object message
+                                   // Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
 
-                                    Text(text = item)
+
+
+                                    /////////////////////////////////
+                                  //  Log.d("4444", " chatMessage=" + chatMessage)
+                                    val isOwnMessage = item.sender == senderPhone
+                                    Box(
+                                        contentAlignment = if (isOwnMessage) {
+                                            Alignment.CenterEnd
+                                        } else Alignment.CenterStart,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .width(200.dp)
+                                                .drawBehind {
+                                                    val cornerRadius = 10.dp.toPx()
+                                                    val triangleHeight = 20.dp.toPx()
+                                                    val triangleWidth = 25.dp.toPx()
+                                                    val trianglePath = Path().apply {
+                                                        if (isOwnMessage) {
+                                                            moveTo(
+                                                                size.width,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            lineTo(
+                                                                size.width,
+                                                                size.height + triangleHeight
+                                                            )
+                                                            lineTo(
+                                                                size.width - triangleWidth,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            close()
+                                                        } else {
+                                                            moveTo(0f, size.height - cornerRadius)
+                                                            lineTo(0f, size.height + triangleHeight)
+                                                            lineTo(
+                                                                triangleWidth,
+                                                                size.height - cornerRadius
+                                                            )
+                                                            close()
+                                                        }
+                                                    }
+                                                    drawPath(
+                                                        path = trianglePath,
+                                                        color = if (isOwnMessage) col else Color.DarkGray
+                                                    )
+                                                }
+                                                .background(
+                                                    color = if (isOwnMessage) col else Color.DarkGray,
+                                                    shape = RoundedCornerShape(10.dp)
+                                                )
+                                                .padding(8.dp)
+                                        ) {
+                                            Text(
+                                                text = item.sender,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = item.textMessage,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = item.createdAt,
+                                                color = Color.White,
+                                                modifier = Modifier.align(Alignment.End)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(32.dp))
+
+                                    //////////////////////////////////////
                                 }
                                 // Добавьте другие элементы списка здесь
                             }
@@ -291,7 +433,7 @@ fun ChatScreen(
                                 .debounce(500L)
                                 .collectLatest { firstIndex ->
                                     firstIndex?.let {
-                                    Log.d("4444", " lastVisibleIndex =" + it)
+                                   // Log.d("4444", " lastVisibleIndex =" + it)
                                         viewModel.saveScrollChatPosition(
                                             keyUserName = chatName,
                                             position = it
@@ -328,16 +470,15 @@ fun ChatScreen(
                         .fillMaxWidth()
                         .imePadding()
                         .padding(top = 8.dp, end = 8.dp, bottom = 8.dp)
-                        .layoutId("bottomControl")
+                        .layoutId("bottomControl"),
                 ) {
                     Row(
                         modifier = Modifier
                             // .width(200.dp)
-
                             .background(colorResource(id = R.color.main_violet_light))
                             .layoutId("writeMessage"),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Icon(
                             modifier = Modifier
@@ -352,20 +493,45 @@ fun ChatScreen(
                             tint = Color.White,
                         )
 
+//                        TextFieldHintWriteMessage(
+//                            value = textMessage,
+//                            onValueChanged = { textMessage = it },
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(IntrinsicSize.Min)
+//                                .clip(RoundedCornerShape(20))
+//                                .background(MaterialTheme.colors.surface),
+//                            viewModel = viewModel
+//                        )
+
                         TextFieldHintWriteMessage(
-                            value = textMessage,
-                            onValueChanged = { textMessage = it },
+                            value = viewModel.messageText.value,
+                            onValueChanged = viewModel::onMessageChange,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(IntrinsicSize.Min)
                                 .clip(RoundedCornerShape(20))
                                 .background(MaterialTheme.colors.surface),
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            onSendClick = {
+                                sendClickState = true
+                            }
                         )
                     }
+                }
+            }
+
+            LaunchedEffect(state.messages) {
+                Log.d("4444", " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState)
+                viewModel.clearMessageTextField()
+                if (sendClickState) {
+                    lazyListState.animateScrollToItem(state.messages.size)
+                    sendClickState = false
                 }
             }
         }
     }
 }
+
+
 

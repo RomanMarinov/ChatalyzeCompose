@@ -1,9 +1,11 @@
 package com.dev_marinov.chatalyze
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.core.view.*
 import androidx.navigation.compose.NavHost
@@ -19,19 +21,74 @@ import com.dev_marinov.chatalyze.presentation.ui.splash_screen.SplashScreen
 import com.dev_marinov.chatalyze.presentation.ui.theme.ChatalyzeTheme
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import dagger.hilt.android.AndroidEntryPoint
 
+//@Composable
+//fun PerformOnLifecycle(
+//    lifecycleOwner: LifecycleOwner,
+//    onStart: () -> Unit,
+//    onStop: () -> Unit,
+//) {
+//    DisposableEffect(lifecycleOwner) {
+//        val observer = LifecycleEventObserver { _, event ->
+//            when (event) {
+//                Lifecycle.Event.ON_START -> { onStart() }
+//                Lifecycle.Event.ON_STOP -> { onStop() }
+//                else -> {}
+//            }
+//        }
+//        lifecycleOwner.lifecycle.addObserver(observer)
+//        return@DisposableEffect onDispose {
+//            lifecycleOwner.lifecycle.removeObserver(observer)
+//        }
+//
+//    }
+//}
+//
+//
+//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+//@Composable
+//fun OneQuoteApp(
+//    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+//    context: Context,
+//    viewModel: MainActivityViewModel = hiltViewModel()
+//) {
+//    val socketBroadcastReceiver = SocketBroadcastReceiver()
+//    val filter = IntentFilter("receiver_action")
+//
+//    PerformOnLifecycle(
+//        lifecycleOwner = lifecycleOwner,
+//        onStart = {
+//            Log.d("4444", " PerformOnLifecycle onStart")
+//            context.registerReceiver(socketBroadcastReceiver, filter, RECEIVER_NOT_EXPORTED)
+////            Intent(context, SocketService::class.java).also {
+////                it.putExtra("sender", "5551234567")
+////                context.startService(it)
+////            }
+//        },
+//        onStop = {
+//            Log.d("4444", " PerformOnLifecycle onStop")
+////            Intent(context, SocketService::class.java).also {
+////                context.stopService(it)
+////            }
+//            context.unregisterReceiver(socketBroadcastReceiver)
+//        })
+//}
+
+@ExperimentalPermissionsApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+
+
             ChatalyzeTheme {
                 Log.d("4444", " MainActivity loaded")
-             //   window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
+                //   window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
                 WindowCompat.setDecorFitsSystemWindows(window, false)
                 SystemUiControllerHelper.SetSystemBars(false)
                 SystemUiControllerHelper.SetStatusBarColor()
@@ -40,8 +97,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
+
+//    override fun onDestroy() {
+//        lifecycle.removeObserver()
+//        super.onDestroy()
+//    }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun SetNavigation() {
     val navController = rememberNavController()
@@ -57,7 +122,8 @@ fun SetNavigation() {
         }
 
         composable(
-            route = ScreenRoute.ForgotPasswordScreen.route) {
+            route = ScreenRoute.ForgotPasswordScreen.route
+        ) {
             ForgotPasswordScreen(navController = navController)
         }
 
@@ -101,3 +167,4 @@ fun SetNavigation() {
 //        }
 //    }
 //}
+

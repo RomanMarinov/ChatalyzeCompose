@@ -3,9 +3,14 @@ buildscript {
         kotlin_version = '1.9.0'
         compose_ui_version = '1.5.0'
     }
-//    r`epositories {
-//        google()
-//    }`
+//
+//    repositories {
+//        //google()
+//        // для lifecycleEventObserver
+////        maven {
+////            url "https://maven.google.com"
+////        }
+//    }
 }// Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     id 'com.android.application' version '7.3.1' apply false
@@ -16,6 +21,8 @@ plugins {
 
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.20' apply false
     id 'com.google.dagger.hilt.android' version '2.44' apply false
+
+//    id 'com.gradle.enterprise' version '3.8.1'
 }
 
 task clean(type: Delete) {

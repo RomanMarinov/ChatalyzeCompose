@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.splash_screen
 
+import android.util.Log
 import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -57,6 +58,7 @@ fun StartAnimationLogoAndCheckTokenSignIn(
         delay(1000L)
 
        if (refreshToken.isNotEmpty()) {
+           Log.d("4444", " refreshToken.isNotEmpty ChatalyzeScreen.route")
            navController.navigate(ScreenRoute.ChatalyzeScreen.route)
        } else {
            navController.navigate(ScreenRoute.AuthScreen.route)

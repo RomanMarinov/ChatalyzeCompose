@@ -4,6 +4,10 @@ pluginManagement {
         google()
         mavenCentral()
     }
+    // попытка установить lifecycleEventObserver
+//    plugins {
+//        id("com.gradle.enterprise") version "3.8.1"
+//    }
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -11,6 +15,9 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
     }
+
 }
+
+
 rootProject.name = "Chatalyze"
 include ':app'

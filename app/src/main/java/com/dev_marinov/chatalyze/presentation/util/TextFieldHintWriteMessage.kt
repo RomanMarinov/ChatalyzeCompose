@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.util
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -22,6 +24,8 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreenViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,7 +36,8 @@ fun TextFieldHintWriteMessage(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.body1,
     maxLines: Int = 20,
-    viewModel: ChatScreenViewModel
+    viewModel: ChatScreenViewModel,
+    onSendClick: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
     var isFocusedMessage by remember { mutableStateOf(false) }
@@ -99,8 +104,7 @@ fun TextFieldHintWriteMessage(
                 }
             }
         )
-
-
+        val scope = rememberCoroutineScope()
         Icon(
             painter = painterResource(
                 if (isNotNullMessageText) R.drawable.ic_send_message
@@ -113,17 +117,13 @@ fun TextFieldHintWriteMessage(
                 .height(40.dp)
                 .clip(RoundedCornerShape(20))
                 .clickable {
-
-                    val currentDateTime = getCurrentDateTime()
-
-//
-//                    viewModel.sendMessage(
-//                        messageText = messageText,
-//                        currentDateTime = currentDateTime
-//                    )
-
-
-
+                    scope.launch {
+                        onSendClick()
+                        viewModel.sendMessage()
+                        //delay(1000L)
+                       // viewModel.getAllMessages()
+                        //delay(500L)
+                    }
                 }
                 .layoutId("viewIcon")
         )
