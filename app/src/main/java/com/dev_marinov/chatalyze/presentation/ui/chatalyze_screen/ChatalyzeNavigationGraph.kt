@@ -66,35 +66,5 @@ fun ChatalyzeNavigationGraph(
                 senderPhone = entry.arguments?.getString(SENDER_PHONE)
             )
         }
-
-        ////////////////
-//        composable(
-//            // если бы было несколько аргументов то передавал бы один за другим "/{name}/{age}"
-//            // если мы вдруг не передадим стровое значение что запись будет такая "?name={name}"
-//            route = "${Screen.PlayVideoScreen.route}/{urlTrailer}",
-//            arguments = listOf(
-//                navArgument("urlTrailer") {
-//                    type = NavType.StringType // тип передаваемого значения строка
-//                    defaultValue = "Manmario"
-//                    nullable = true // можно обнулить
-//                }
-//            )
-//        ) { entry -> // запись
-//            PlayVideoScreen(
-//                // получатель
-//                urlTrailer = entry.arguments?.getString("urlTrailer"),
-//                // navController = navHostController
-//            )
-//        }
-        ////////////////
     }
-
-//    val currentRoute = navHostController.currentBackStackEntryAsState().value?.destination?.route
-//    BackHandler(enabled = currentRoute != null) {
-//        currentRoute?.let {
-//            viewModel.customBackStackBottomControl(
-//                navHostController = navHostController,
-//                currentRoute = currentRoute)
-//        }
-//    }
 }

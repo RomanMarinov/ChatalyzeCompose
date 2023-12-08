@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalPermissionsApi::class)
+
 package com.dev_marinov.chatalyze.presentation.ui.auth_screen
 
 import android.util.Log
@@ -32,13 +34,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
-import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
-import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
 import com.dev_marinov.chatalyze.presentation.util.CheckEmailPasswordTextFieldHelper
+import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.ShowToastHelper
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
+import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
+import com.dev_marinov.chatalyze.presentation.util.TextFieldHintPassword
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -65,6 +68,9 @@ fun AuthScreen(
 
     var isClicked by remember { mutableStateOf(false) }
     Log.d("4444", " refreshToken=" + refreshToken)
+
+//    ExecuteGrantedPermissions()
+
 
     LaunchedEffect(refreshToken) {
         Log.d("4444", " refreshToken=" + refreshToken)

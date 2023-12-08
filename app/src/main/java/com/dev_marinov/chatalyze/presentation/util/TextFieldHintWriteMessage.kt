@@ -24,6 +24,8 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreenViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -102,7 +104,7 @@ fun TextFieldHintWriteMessage(
                 }
             }
         )
-
+        val scope = rememberCoroutineScope()
         Icon(
             painter = painterResource(
                 if (isNotNullMessageText) R.drawable.ic_send_message
@@ -115,9 +117,13 @@ fun TextFieldHintWriteMessage(
                 .height(40.dp)
                 .clip(RoundedCornerShape(20))
                 .clickable {
-                    viewModel.sendMessage()
-                    viewModel.getAllMessages()
-                    onSendClick()
+                    scope.launch {
+                        onSendClick()
+                        viewModel.sendMessage()
+                        //delay(1000L)
+                       // viewModel.getAllMessages()
+                        //delay(500L)
+                    }
                 }
                 .layoutId("viewIcon")
         )

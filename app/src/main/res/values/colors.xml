@@ -10,6 +10,7 @@
 
 
     <color name="main_violet">#AB76AD</color>
+    <color name="main_violet_dialog_permission">#4B2A4C</color>
     <color name="main_violet_dark">#CF54D6</color>
     <color name="main_violet_light">#A282A3</color>
     <color name="main_yellow">#D3D371</color>

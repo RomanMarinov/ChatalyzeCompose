@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -15,7 +16,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -42,6 +42,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.data.socket_service.SocketService
+import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
@@ -59,7 +61,6 @@ fun ChatScreen(
     recipientPhone: String?,
     senderPhone: String?
 ) {
-    Log.d("44444", " recipientName=" + recipientName)
 
     BackHandler {
         navHostController.navigate(ScreenRoute.ChatsScreen.route)
@@ -94,6 +95,38 @@ fun ChatScreen(
         rememberLazyListState()
     }
 
+
+    //////////////////////////////////////////////////
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
+                    }
+
+                    Lifecycle.Event.ON_STOP -> { // когда свернул
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
+                    }
+
+                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
+                    }
+                    else -> {}
+                }
+            }
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
+    ////////////////////////////////////////////////////
+
+
+
     ////////////////////////////////////////////////////
     // lackner
     val context = LocalContext.current
@@ -102,27 +135,9 @@ fun ChatScreen(
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(key1 = lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                viewModel.connectToChat(senderPhone, recipientPhone)
-            } else if (event == Lifecycle.Event.ON_STOP) {
-                viewModel.disconnect()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-    val state = viewModel.state.value
+
     // с помощью state я буду формировть список сообщений
-
-
-    //////////////////////////////////////////
-
-
+    val state = viewModel.state.value
 
     Column(
         modifier = Modifier
@@ -330,9 +345,12 @@ fun ChatScreen(
                             ) {
                                 items(state.messages) { item ->
                                     // add object message
-                                    Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
+                                   // Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
+
+
+
                                     /////////////////////////////////
-                                    Log.d("4444", " chatMessage=" + chatMessage)
+                                  //  Log.d("4444", " chatMessage=" + chatMessage)
                                     val isOwnMessage = item.sender == senderPhone
                                     Box(
                                         contentAlignment = if (isOwnMessage) {
@@ -415,7 +433,7 @@ fun ChatScreen(
                                 .debounce(500L)
                                 .collectLatest { firstIndex ->
                                     firstIndex?.let {
-                                    Log.d("4444", " lastVisibleIndex =" + it)
+                                   // Log.d("4444", " lastVisibleIndex =" + it)
                                         viewModel.saveScrollChatPosition(
                                             keyUserName = chatName,
                                             position = it
@@ -503,9 +521,11 @@ fun ChatScreen(
                 }
             }
 
-            LaunchedEffect(chatMessage) {
+            LaunchedEffect(state.messages) {
+                Log.d("4444", " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState)
+                viewModel.clearMessageTextField()
                 if (sendClickState) {
-                    lazyListState.animateScrollToItem(chatMessage.size)
+                    lazyListState.animateScrollToItem(state.messages.size)
                     sendClickState = false
                 }
             }

@@ -66,4 +66,46 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
             preferences[preferencesKey] = ownPhoneSender
         }
     }
+
+//    override val isGrantedPermissions: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
+//        val preferencesKey = booleanPreferencesKey(Constants.IS_GRANTED_PERMISSIONS)
+//        value[preferencesKey] == true
+//    }
+
+    override val isGrantedPermissions: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
+        val preferencesKeyReadPhoneNumber = booleanPreferencesKey(Constants.KEY_READ_PHONE_NUMBERS)
+        val preferencesKeyReadContacts = booleanPreferencesKey(Constants.KEY_READ_CONTACTS)
+        value[preferencesKeyReadPhoneNumber] == true && value[preferencesKeyReadContacts] == true
+    }
+
+    override suspend fun saveGrantedPermissions(key: String, isGranted: Boolean) {
+        val preferencesKey = booleanPreferencesKey(key)
+        context.dataStore.edit { preferences ->
+            preferences[preferencesKey] = isGranted
+        }
+    }
+
+    override val isTheLifecycleEventNow: Flow<String> = context.dataStore.data.map { preferences ->
+        val preferencesKey = stringPreferencesKey(Constants.IS_LIFECYCLE_EVENT)
+        preferences[preferencesKey] ?: ""
+    }
+
+    override suspend fun saveLifecycleEvent(eventType: String) {
+        val preferencesKey = stringPreferencesKey(Constants.IS_LIFECYCLE_EVENT)
+        context.dataStore.edit {
+            it[preferencesKey] = eventType
+        }
+    }
+
+    override val isSessionState: Flow<String> = context.dataStore.data.map {
+        val preferencesKey = stringPreferencesKey(Constants.IS_SESSION_STATE)
+        it[preferencesKey] ?: ""
+    }
+
+    override suspend fun saveSessionState(sessionState: String) {
+        val preferencesKey = stringPreferencesKey(Constants.IS_SESSION_STATE)
+        context.dataStore.edit {
+            it[preferencesKey] = sessionState
+        }
+    }
 }

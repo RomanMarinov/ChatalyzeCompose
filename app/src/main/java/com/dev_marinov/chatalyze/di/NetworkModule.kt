@@ -53,7 +53,11 @@ class NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         //val baseUrl = "http://0.0.0.0:8080/"
         // взял на мак ipv4 192.168.0.101
-        val baseUrl = "http://192.168.0.101:8080/"
+        // 10.35.101.146
+
+        val baseUrl = "http://192.168.0.100:8080/"
+//        val baseUrl = "http://10.35.101.146:8080/"
+
       //  val baseUrl = "http://192.168.1.143:8080/"
         return Retrofit.Builder()
             .baseUrl(baseUrl)

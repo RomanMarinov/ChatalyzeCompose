@@ -53,4 +53,14 @@
 
     <string name="hide">show</string>
 
+
+
+
+
+    <string name="dialog_permissions_settings">go to settings</string>
+    <string name="dialog_permissions_justification">Permission must be accepted</string>
+    <string name="justification_READ_PHONE_NUMBERS">PHONE (read_phone_numbers)\n\nmust be enabled so that your contacts can contact you</string>
+    <string name="justification_denied_READ_PHONE_NUMBERS">PHONE (read_phone_numbers)\n\nmust be enabled, even though this permission is disabled in your settings, in order for your contacts to contact you</string>
+    <string name="justification_CONTACTS">CONTACTS (read_contacts)\n\nmust be enabled so you can contact the people you are talking to</string>
+    <string name="justification_denied_CONTACTS">CONTACTS (read_contacts)\n\nmust be enabled, even if this permission is disabled in your settings, in order for you to be able to contact the people you are talking to</string>
 </resources>

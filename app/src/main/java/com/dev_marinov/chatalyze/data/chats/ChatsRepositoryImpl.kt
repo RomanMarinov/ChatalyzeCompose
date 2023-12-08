@@ -17,7 +17,7 @@ class ChatsRepositoryImpl @Inject constructor(
     override suspend fun getChats(sender: String): List<Chat> {
         //val senderDTO = Sender(sender = sender).mapToData()
         val response = chatsApiService.getChats(senderDTO = SenderDTO(sender))
-        Log.d("4444", " response=" + response.body())
+       // Log.d("4444", " response=" + response.body())
         return response.body()?.map {
             it.mapToDomain()
         } ?: listOf()

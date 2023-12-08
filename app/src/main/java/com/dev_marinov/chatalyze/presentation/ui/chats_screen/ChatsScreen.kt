@@ -1,18 +1,10 @@
 package com.dev_marinov.chatalyze.presentation.ui.chats_screen
 
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
+import android.annotation.SuppressLint
 import android.os.Build
-import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -52,6 +42,7 @@ import com.dev_marinov.chatalyze.presentation.util.*
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -60,11 +51,6 @@ fun ChatsScreen(
     viewModel: ChatsScreenViewModel = hiltViewModel()
 ) {
     Log.d("4444", " ChatsScreen loaded")
-    /////////////////////////
-    val permissionsToRequest = arrayOf(
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.READ_PHONE_NUMBERS
-    )
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -75,17 +61,49 @@ fun ChatsScreen(
     GradientBackgroundHelper.SetMonochromeBackground()
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
-// удалить
-//    scope.launch {
-//        viewModel.makeRequestPermissions(true)
-//        delay(500L)
-//        viewModel.makeRequestPermissions(false)
-//    }
-
-    // viewModel.onClickHideNavigationBar(false)
+    //viewModel.onClickHideNavigationBar(false)
     val chatList = viewModel.chatList.collectAsStateWithLifecycle()
     val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
-    var ownPhoneSender by remember { mutableStateOf("") }
+
+    // раскоментировать
+    val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
+    val getOwnPhoneSender by viewModel.getOwnPhoneSender.collectAsStateWithLifecycle("")
+    val isTheLifecycleEventNow by viewModel.isTheLifecycleEventNow.collectAsStateWithLifecycle("")
+
+    val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
+
+    // может из за false не работать но скорей всего работает
+    val canGetChats by viewModel.canGetChats.collectAsStateWithLifecycle(false)
+
+
+
+    // сюда добавить статус соедения удачу сокета
+    LaunchedEffect(getOwnPhoneSender, isSessionState) {
+        if (isSessionState == Constants.SESSION_SUCCESS) {
+            Log.d("4444", " ChatsScreen isGrantedPermissions="
+                    + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow)
+
+            viewModel.canGetChats(can =true)
+        }
+    }
+
+    ////////////
+    if (canGetChats) {
+        viewModel.getChats()
+
+
+        val contactsFlow = RememberContacts(context = context)
+        scope.launch {
+            contactsFlow.collect {
+                viewModel.transferContacts(it)
+            }
+        }
+    }
+    /////////////
+
+
+
+//    var ownPhoneSender by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Expanded,
         skipHalfExpanded = true
@@ -94,87 +112,22 @@ fun ChatsScreen(
     var isSheetOpen by rememberSaveable { mutableStateOf(false) }
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
 
-    val dialogQueueList: SnapshotStateList<String> = viewModel.visiblePermissionDialogQueue
-    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { perms -> // срабатывает если юзер принимает или отклоняет разрешение
-            permissionsToRequest.forEach { permission ->
-                Log.d("4444", " check permission=" + permission)
-                // разрешение добавляется в список, если оно запрещено и отсутствует в списке разрешений.
-                viewModel.onPermissionResult(
-                    permission = permission,
-                    isGranted = perms[permission] == true
-                )
-            }
+    val isOpenModalBottomSheet by viewModel.isOpenModalBottomSheet.collectAsStateWithLifecycle()
+    if (isOpenModalBottomSheet) {
+        viewModel.onClickHideNavigationBar(isHide = true)
+        scope.launch {
+            delay(50L)
+            openBottomSheet = !openBottomSheet
+            isSheetOpen = true
+            sheetState.show()
         }
-    )
-
-////////////////
-    val grantedReadPhoneNumber = checkReadPhoneNumberPermission(context = context)
-    if (grantedReadPhoneNumber) {
-        Log.d("4444", " разрешены")
-        val telephonyManager =
-            context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-        ownPhoneSender = telephonyManager?.line1Number.toString()
-
-        viewModel.getChats(sender = ownPhoneSender)
-        viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
-        Log.d("4444", " 1 мой номер=" + ownPhoneSender)
-    } else {
-        Log.d("4444", " 2 НЕ разрешены")
-    }
-
-//////////////////
-
-
-    val performRequestPermissions by viewModel.performRequestPermissions.collectAsStateWithLifecycle()
-    if (performRequestPermissions) {
-        val grantedReadPhoneNumber = checkReadPhoneNumberPermission(context = context)
-        val grantedReadContacts = CheckPermissionAndGetContacts()
-
-        if (grantedReadPhoneNumber) {
-            Log.d("4444", " разрешены")
-            val telephonyManager =
-                context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-            ownPhoneSender = telephonyManager?.line1Number.toString()
-
-            viewModel.getChats(sender = ownPhoneSender)
-            //viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
-            Log.d("4444", " мой номер=" + ownPhoneSender)
-        } else {
-            Log.d("4444", " НЕ разрешены")
-        }
-
-        if (grantedReadContacts) {
-            val contactsFlow = RememberContacts(context = context)
-            scope.launch {
-                contactsFlow.collect {
-                    viewModel.transferContacts(it)
-                }
-            }
-        }
-
-        if (grantedReadContacts && grantedReadPhoneNumber) {
-            viewModel.onClickHideNavigationBar(isHide = true)
-            scope.launch {
-                delay(50L)
-                openBottomSheet = !openBottomSheet
-                isSheetOpen = true
-                sheetState.show()
-            }
-        }
-
-        multiplePermissionResultLauncher.launch(permissionsToRequest)
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-        //  .background(colorResource(id = R.color.main_violet_light))
-        //  .systemBarsPadding()
     ) {
-
         val constraints = ConstraintSet {
             val headerChatText = createRefFor("header_chat_text")
             val createChatIcon = createRefFor("create_chat_icon")
@@ -223,9 +176,9 @@ fun ChatsScreen(
                 onClick = {
                     Log.d("4444", " contacts.value=" + contacts.value)
                     scope.launch {
-                        viewModel.makeRequestPermissions(true)
+                        viewModel.openModalBottomSheet(isOpen = true)
                         delay(500L)
-                        viewModel.makeRequestPermissions(false)
+                        viewModel.openModalBottomSheet(isOpen =false)
                     }
                 }) {
                 Icon(
@@ -275,17 +228,18 @@ fun ChatsScreen(
                                 .border(
                                     width = 1.dp,
                                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
-                                    shape = RoundedCornerShape(20.dp))
+                                    shape = RoundedCornerShape(20.dp)
+                                )
                                 .padding(start = 8.dp, end = 8.dp),
                           //  state = lazyListState
                         ) {
                             items(chatList.value) { item ->
-                                Log.d("4444", " chats item=" + item)
+                               // Log.d("4444", " chats item=" + item)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 ChatsContentItem(
                                     navController = navController,
                                     chat = item,
-                                    ownPhoneSender = ownPhoneSender,
+                                    ownPhoneSender = viewModel.ownPhoneSender,
                                     viewModel = viewModel
                                 )
                             }
@@ -324,7 +278,7 @@ fun ChatsScreen(
                                 BottomSheetContentItem(
                                     navController = navController,
                                     contact = item,
-                                    ownPhoneSender = ownPhoneSender
+                                    ownPhoneSender = viewModel.ownPhoneSender
                                 )
                             }
                             // Добавьте другие элементы списка здесь
@@ -347,50 +301,6 @@ fun ChatsScreen(
         },
         sheetState = sheetState
     )
-
-    val permission_read_contact_true = stringResource(id = R.string.permission_read_contact_true)
-    val permission_read_contact_false = stringResource(id = R.string.permission_read_contact_false)
-    val permission_read_phone_numbers_true =
-        stringResource(id = R.string.permission_read_phone_numbers_true)
-    val permission_read_phone_numbers_false =
-        stringResource(id = R.string.permission_read_phone_numbers_false)
-
-    dialogQueueList // пробегаем по списку и для каждого элемента создаем PermissionDialog
-        .reversed()
-        .forEach { permission ->
-            Log.d("4444", " permission=" + permission)
-            PermissionAlertDialog(
-                permissionTextProvider = when (permission) {
-                    Manifest.permission.READ_CONTACTS -> {
-                        ContactPermissionTextProvider(
-                            permission_read_contact_true = permission_read_contact_true,
-                            permission_read_contact_false = permission_read_contact_false
-                        )
-                    }
-                    Manifest.permission.READ_PHONE_NUMBERS -> {
-                        ReadPhoneNumberPermissionTextProvider(
-                            permission_read_phone_numbers_true = permission_read_phone_numbers_true,
-                            permission_read_phone_numbers_false = permission_read_phone_numbers_false
-                        )
-                    }
-                    else -> return@forEach
-                },
-                isPermanentlyDeclined = !RememberCurrentActivity().shouldShowRequestPermissionRationale(
-                    permission
-                ),
-                // при сокрытии диалога удаляем первый элемент из списка
-                onDismiss = viewModel::dismissDialog,
-                onOkClick = {
-                    // при сокрытии диалога удаляем первый элемент из списка
-                    viewModel.dismissDialog()
-                    // запрос нескольких разрещений
-                    multiplePermissionResultLauncher.launch(arrayOf(permission))
-                },
-                onGoToAppSettingsClick = {
-                    openAppSettings(context = context)
-                }
-            )
-        }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -490,7 +400,7 @@ fun ChatsContentItem(
     ownPhoneSender: String,
     viewModel: ChatsScreenViewModel,
 ) {
-    Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
+   // Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
     val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier
@@ -500,10 +410,17 @@ fun ChatsContentItem(
                 viewModel.onClickHideNavigationBar(isHide = true)
                 scope.launch {
                     delay(50L) // костыль потому что ui у перехода не красивый
-                    withContext(Dispatchers.Main){
-                        Log.d("4444", " BottomSheetContentItem recipientName=" + "name потом исправить"
-                                + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(chat.recipient)
-                                + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(chat.sender))
+                    withContext(Dispatchers.Main) {
+                        Log.d(
+                            "4444",
+                            " BottomSheetContentItem recipientName=" + "name потом исправить"
+                                    + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
+                                chat.recipient
+                            )
+                                    + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
+                                chat.sender
+                            )
+                        )
 
                         // правильные аргументы
                         // recipientName=Roman recipientPhone=9303454564 senderPhone=5551234567
@@ -514,10 +431,14 @@ fun ChatsContentItem(
                                 recipientName = CorrectNumberFormatHelper.getCorrectNumber(chat.recipient),
                                 recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
                                     if (chat.recipient == CorrectNumberFormatHelper.getCorrectNumber(
-                                            ownPhoneSender)
+                                            ownPhoneSender
+                                        )
                                     )
-                                        chat.sender else chat.recipient),
-                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
+                                        chat.sender else chat.recipient
+                                ),
+                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(
+                                    ownPhoneSender
+                                )
                             )
                         )
                     }
@@ -589,11 +510,15 @@ fun BottomSheetContentItem(
 //                navController.navigate(ScreenRoute.ChatScreen.route)
                 // navController.navigate(ScreenRoute.ChatScreen.route + contact.name)
                 // navController.navigate(ScreenRoute.ChatScreen.withArgs(contact.name))
-                Log.d("4444", " BottomSheetContentItem recipientName=" + contact.name
-                        + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(contact.phoneNumber)
-                        + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                    ownPhoneSender))
-
+                Log.d(
+                    "4444", " BottomSheetContentItem recipientName=" + contact.name
+                            + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
+                        contact.phoneNumber
+                    )
+                            + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
+                        ownPhoneSender
+                    )
+                )
 
                 navController.navigate(
                     route = ScreenRoute.ChatScreen.withArgs(
@@ -638,21 +563,8 @@ fun BottomSheetContentItem(
     }
 }
 
-fun checkReadPhoneNumberPermission(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.READ_PHONE_NUMBERS
-    ) == PackageManager.PERMISSION_GRANTED
-}
-
 @Composable
 fun RememberCurrentActivity(): ComponentActivity {
     val context = LocalContext.current
     return remember(context) { context as ComponentActivity }
-}
-
-fun openAppSettings(context: Context) {
-    val intent = Intent(ACTION_APPLICATION_DETAILS_SETTINGS)
-        .setData(Uri.fromParts("package", context.packageName, null))
-    context.startActivity(intent)
 }

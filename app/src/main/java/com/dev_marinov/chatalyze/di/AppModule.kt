@@ -1,9 +1,8 @@
 package com.dev_marinov.chatalyze.di
 
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketService
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketServiceImpl
-import com.dev_marinov.chatalyze.data.chatMessage.MessageService
-import com.dev_marinov.chatalyze.data.chatMessage.MessageServiceImpl
+import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+import com.dev_marinov.chatalyze.data.socket_service.SocketService
+
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,15 +32,17 @@ object AppModule {
         }
     }
 
-    @Provides
-    @Singleton
-    fun provideMessageService(client: HttpClient): MessageService {
-        return MessageServiceImpl(client)
-    }
+//    @Provides
+//    @Singleton
+//    fun provideMessageService(client: HttpClient): MessageRepository {
+//        return MessageRepositoryImpl(client)
+//    }
+
+
 
     @Provides
     @Singleton
-    fun provideChatSocketService(client: HttpClient): ChatSocketService {
-        return ChatSocketServiceImpl(client)
+    fun provideChatSocketService(socketService: SocketService): ChatSocketRepository {
+        return socketService
     }
 }

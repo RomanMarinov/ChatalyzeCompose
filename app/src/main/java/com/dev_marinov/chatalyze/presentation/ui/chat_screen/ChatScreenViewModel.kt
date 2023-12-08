@@ -6,8 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketService
-import com.dev_marinov.chatalyze.data.chatMessage.MessageService
+import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
@@ -15,9 +14,10 @@ import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
-import com.dev_marinov.chatalyze.presentation.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,8 +27,8 @@ class ChatScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository,
-    private val messageService: MessageService,
-    private val chatSocketService: ChatSocketService,
+    //private val messageRepository: MessageRepository,
+    private val chatSocketRepository: ChatSocketRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -131,29 +131,55 @@ class ChatScreenViewModel @Inject constructor(
         //   getAllMessages()
         Log.d("4444", " connectToChat execute")
         // savedStateHandle.get<String>("username")?.let { username ->
-        viewModelScope.launch {
-            val result = chatSocketService.initSession(sender = _sender)
-            Log.d("4444", " connectToChat result.message=" + result.message)
-            when (result) {
-                is Resource.Success -> {
-                    Log.d("4444", " connectToChat Resource.Success")
-                    chatSocketService.observeMessages()
-                        .onEach { message ->
-                            Log.d("4444", " connectToChat Resource.Success message=" + message)
-                            val newList = state.value.messages.toMutableList().apply {
-                                add(_state.value.messages.size, message)
-                            }
-                            _state.value = state.value.copy(
-                                messages = newList
-                            )
-                        }.launchIn(viewModelScope)
-                }
-                is Resource.Error -> {
-                    Log.d("4444", " connectToChat Resource.Error")
-                    _toastEvent.emit(result.message ?: "Unknown error")
-                }
-            }
+//        viewModelScope.launch {
+//            val result = chatSocketRepository.initSession(sender = _sender)
+//            Log.d("4444", " connectToChat result.message=" + result.message)
+//            when (result) {
+//                is Resource.Success -> {
+//                    Log.d("4444", " connectToChat Resource.Success")
+//                    chatSocketRepository.observeMessages()
+//                        .onEach { message ->
+//                            Log.d("4444", " connectToChat Resource.Success message=" + message)
+//                            val newList = state.value.messages.toMutableList().apply {
+//                                add(_state.value.messages.size, message)
+//                            }
+//                            _state.value = state.value.copy(
+//                                messages = newList
+//                            )
+//
+//                            // тут вызвать как-то getChats
+//
+//                        }.launchIn(viewModelScope)
+//
+//                    /////////////////////////////
+//                    // test ping pong
+//
+////                    chatSocketService.observePingPong()
+////                        .onEach {
+////                            Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
+////                        }
+////
+////                    val res = chatSocketService.method("ping")
+////                    Log.d("4444", " connectToChat ping res=" + res)
+//
+//
+//                }
+//                is Resource.Error -> {
+//                    Log.d("4444", " connectToChat Resource.Error")
+//                    _toastEvent.emit(result.message ?: "Unknown error")
+//                }
+//            }
+//        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+           // chatSocketService.getStateUsersConnection()
+
+            //chatSocketService.observePing().collect {
+           //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
+         //   }
         }
+
+
         // }
     }
 
@@ -161,30 +187,26 @@ class ChatScreenViewModel @Inject constructor(
         _messageText.value = message
     }
 
-    fun disconnect() {
-        viewModelScope.launch {
-            chatSocketService.closeSession()
-        }
-    }
-
     fun getAllMessages() {
-
-//        val userPairChat = UserPairChat(
-//            sender = _sender,
-//            recipient = _recipient
-//        )
         viewModelScope.launch {
             _state.value = state.value.copy(isLoading = true)
 
+            val jobResponse: Deferred<List<Message>> = async {
+                chatSocketRepository.getAllMessages(userPairChat = userPairChat.value)
+            }
 
-            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat.value)
-            //////
-            _chatMessage.value = result
+//            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat.value)
+//            _chatMessage.value = result
 
-            ////////
-            Log.d("4444", " getAllMessages result=" + result)
+
+            _chatMessage.value = jobResponse.await()
+
+
+            Log.d("4444", " getAllMessages result=" + jobResponse.await())
+
+
             _state.value = state.value.copy(
-                messages = result,
+                messages = jobResponse.await(),
                 isLoading = false
             )
         }
@@ -200,18 +222,14 @@ class ChatScreenViewModel @Inject constructor(
                     textMessage = messageText.value,
                     refreshToken = _refreshToken
                 )
-                chatSocketService.sendMessage(messageToSend)
-
-                _messageText.value = ""
+                chatSocketRepository.sendMessage(messageToSend)
             }
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        disconnect()
+    fun clearMessageTextField() {
+        _messageText.value = ""
     }
-
 
     fun saveToViewModel(recipient: String?, sender: String?) {
         recipient?.let { _recipient = it }

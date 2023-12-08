@@ -4,12 +4,13 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+import com.dev_marinov.chatalyze.data.socket_service.SocketService
 import com.dev_marinov.chatalyze.domain.model.chats.Chat
 import com.dev_marinov.chatalyze.domain.repository.ChatsRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.Constants
-import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,47 +21,50 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatsScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
-    private val chatalyzeRepository: ChatsRepository,
+    private val chatsRepository: ChatsRepository,
+    private val chatSocketRepository: ChatSocketRepository,
+    private val socketService: SocketService
 ) : ViewModel() {
 
-    private var _performRequestPermissions: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val performRequestPermissions: StateFlow<Boolean> = _performRequestPermissions
+    val isSessionState = preferencesDataStoreRepository.isSessionState
+
+    val isGrantedPermissions  = preferencesDataStoreRepository.isGrantedPermissions
+    val isTheLifecycleEventNow = preferencesDataStoreRepository.isTheLifecycleEventNow
+    val getOwnPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
+
+    var ownPhoneSender = ""
+
+    private var _isOpenModalBottomSheet: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isOpenModalBottomSheet: StateFlow<Boolean> = _isOpenModalBottomSheet
+
+    private var _canGetChats: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val canGetChats: StateFlow<Boolean> = _canGetChats
 
     private var _chatList = MutableStateFlow<List<Chat>>(listOf())
     val chatList: StateFlow<List<Chat>> = _chatList
 
-    /////////////
-    private var ownPhoneSenderCorrectFormat = ""
-    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+    init {
+        saveLocalOwnPhoneSender()
+    }
 
-    fun getChats(sender: String) {
+    private fun getStateUsersConnection() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response =
-                chatalyzeRepository.getChats(sender = CorrectNumberFormatHelper.getCorrectNumber(
-                    number = sender))
-            Log.d("4444", " ChatsScreenViewModel response=" + response)
+            val response = chatSocketRepository.getStateUsersConnection()
+            Log.d("4444", " responseget StateUsersConnection =" + response)
+        }
+    }
 
-
+    fun getChats() {
+        viewModelScope.launch(Dispatchers.IO) {
+            //Log.d("4444", " ChatsScreenViewModel ownPhoneSender=" + ownPhoneSender)
+            val response = chatsRepository.getChats(sender = ownPhoneSender)
+           // Log.d("4444", " ChatsScreenViewModel response=" + response)
             _chatList.value = response
             //_chatList.value = response + getFakeChats()
         }
-    }
 
-    fun dismissDialog() {
-        visiblePermissionDialogQueue.removeFirst() // удаляет первый элемент из списка
+        getStateUsersConnection()
     }
-
-    fun onPermissionResult(
-        permission: String,
-        isGranted: Boolean,
-    ) {
-        // если разрешение запрешено и оно отсутствует в списке
-        if (!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
-            visiblePermissionDialogQueue.add(permission)
-        }
-    }
-
-    //////////////
 
     private var _contacts: MutableStateFlow<List<Contact>> = MutableStateFlow(listOf())
     val contacts: StateFlow<List<Contact>> = _contacts
@@ -83,8 +87,8 @@ class ChatsScreenViewModel @Inject constructor(
         //  _contacts.value = contacts2
     }
 
-    fun makeRequestPermissions(perform: Boolean) {
-        _performRequestPermissions.value = perform
+    fun openModalBottomSheet(isOpen: Boolean) {
+        _isOpenModalBottomSheet.value = isOpen
     }
 
     private fun getFakeChats(): List<Chat> {
@@ -176,4 +180,49 @@ class ChatsScreenViewModel @Inject constructor(
                 ownPhoneSender = ownPhoneSender)
         }
     }
+
+    private fun saveLocalOwnPhoneSender() {
+        viewModelScope.launch(Dispatchers.IO) {
+            getOwnPhoneSender.collect {
+                ownPhoneSender = it
+            }
+        }
+    }
+
+    // тут надо вернуть результат подключения вебсокета
+
+    fun connectToChat() {
+        Log.d("4444", " ChatsScreenViewModel connectToChat execute")
+        // savedStateHandle.get<String>("username")?.let { username ->
+        viewModelScope.launch {
+//            val result = chatSocketRepository.initSession(sender = ownPhoneSenderCorrectFormat)
+//            Log.d("4444", " ChatsScreenViewModel connectToChat result.message=" + result.message)
+//            when (result) {
+//                is Resource.Success -> {
+//                    Log.d("4444", " ChatsScreenViewModel connectToChat Resource.Success")
+//
+//
+//                }
+//                is Resource.Error -> {
+//                    Log.d("4444", " connectToChat Resource.Error")
+//                   // _toastEvent.emit(result.message ?: "Unknown error")
+//                }
+//
+//                else -> {}
+//            }
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // chatSocketService.getStateUsersConnection()
+
+            //chatSocketService.observePing().collect {
+            //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
+            //   }
+        }
+    }
+
+    fun canGetChats(can: Boolean) {
+        _canGetChats.value = can
+    }
+    // }
 }

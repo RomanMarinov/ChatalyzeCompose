@@ -60,7 +60,6 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.5.31'
 
     implementation 'androidx.core:core-ktx:1.10.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
     implementation 'androidx.activity:activity-compose:1.6.1'
 
     // To use constraintlayout in compose
@@ -77,6 +76,8 @@ dependencies {
 
     // ui
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.31.2-alpha"
+    implementation "com.google.accompanist:accompanist-coil:0.12.0"
+    implementation "com.google.accompanist:accompanist-permissions:0.21.1-beta" // не обновлять
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
     implementation "androidx.compose.ui:ui:$compose_ui_version"
@@ -100,9 +101,18 @@ dependencies {
 
     // observable
     implementation 'androidx.compose.runtime:runtime-livedata:1.4.0-rc01'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1.'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
     implementation "androidx.compose.runtime:runtime-livedata:1.5.1"
     // 2.6.1 не поддерживала asFlow
+
+    // lifecycle
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.2"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    // lifecycleEventObserver
+    //implementation 'com.gradle:gradle-enterprise-gradle-plugin:3.8.1'
 
     // Dagger - Hilt
     implementation 'com.google.dagger:hilt-android:2.45'
@@ -116,11 +126,6 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11'
-
-    // lifecycle
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1"
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
 
     // preview
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
@@ -137,7 +142,7 @@ dependencies {
 //    implementation 'com.google.android.exoplayer:exoplayer:2.18.5' // ExoPlayer dependency
 //    implementation 'com.google.android.exoplayer:extension-mediasession:2.18.5' // MediaSession Extension dependency
 
-    implementation "com.google.accompanist:accompanist-coil:0.12.0"
+
 
     // Ktor client
     def ktor_version = "1.6.3"
@@ -148,16 +153,11 @@ dependencies {
     implementation "io.ktor:ktor-client-logging:$ktor_version"
     implementation "ch.qos.logback:logback-classic:1.2.6"
 
-
-
-
-
-
-
    // implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-json:$ktor_version"
   //  implementation "io.ktor:ktor-client-logging:$ktor_version"
 
     // animated-navigation
     implementation("com.exyte:animated-navigation-bar:1.0.0")
+    //apply plugin: 'announce'
 }

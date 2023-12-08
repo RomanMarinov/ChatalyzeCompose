@@ -1,3 +1,59 @@
+какие гланые тригеры перезапуска
+
+1 слушатель жиз цикла с тремя ивентами
+(отрабатывает всегда)
+2 hasPermission для двух пермишинов (ЭТО НЕ ПРАВИЛЬНО ИСПОЛЬЗОВАТЬ)
+(отрабатывает всегда)
+
+что мне надо вызывать
+
+следовательно я буду вызывать
+
+
+
+описание проблемы
+1 надо сначала разрешить два пермишина
+2 далее получить телефон и потом стартовать сервис
+3 и потом ориентируясь на жц повторно стартовать сервис
+
+
+
+
+
+
+ val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) {
+
+
+                viewModel.connectToChat(senderPhone, recipientPhone)
+            } else if (event == Lifecycle.Event.ON_STOP) {
+
+
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+
+
+если стартовать бродкаст в чаты то и его нужно отключать???
+
+что если бродкаст будет работать до тех пор пока прила не будет закрыто или свернуто
+
+
+
+
+
+
+
+
+
+
 
 написать функцию авторизатион для проверки токена
 
