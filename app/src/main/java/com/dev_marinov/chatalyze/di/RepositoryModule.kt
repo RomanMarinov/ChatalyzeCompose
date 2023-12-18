@@ -3,8 +3,9 @@ package com.dev_marinov.chatalyze.di
 import com.dev_marinov.chatalyze.data.auth.AuthRepositoryImpl
 import com.dev_marinov.chatalyze.data.chat.ChatRepositoryImpl
 import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepositoryImpl
 import com.dev_marinov.chatalyze.data.chats.ChatsRepositoryImpl
-import com.dev_marinov.chatalyze.data.socket_service.SocketService
+
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatsRepository
@@ -28,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindChatRepository(chatRepositoryImpl: ChatRepositoryImpl) : ChatRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindChatSocketRepository(chatSocketRepositoryImpl: ChatSocketRepositoryImpl) : ChatSocketRepository
 }

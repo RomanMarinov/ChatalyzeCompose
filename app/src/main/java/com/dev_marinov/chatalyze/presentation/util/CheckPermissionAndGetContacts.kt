@@ -80,7 +80,7 @@ fun RememberContacts(context: Context): Flow<List<Contact>> = flow {
                         pCur.getString(pCur.getColumnIndex(ContactsContract.Contacts.PHOTO_URI))
 
                     contacts.add(
-                        Contact(name = name, phoneNumber = phoneNo, photo = photo)
+                        Contact(name = name, phoneNumber = CorrectNumberFormatHelper.getCorrectNumber(phoneNo), photo = photo)
                     )
                 }
                 pCur?.close()

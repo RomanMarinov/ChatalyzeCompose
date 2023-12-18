@@ -3,7 +3,7 @@ package com.dev_marinov.chatalyze.data.chatMessage.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class OnlineOrDate(
+data class OnlineUserState(
     val userPhone: String,
     val onlineOrDate: String
 )

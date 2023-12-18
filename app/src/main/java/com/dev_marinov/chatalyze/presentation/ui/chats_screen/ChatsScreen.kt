@@ -1,11 +1,8 @@
 package com.dev_marinov.chatalyze.presentation.ui.chats_screen
 
-import android.annotation.SuppressLint
-import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,24 +31,27 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.domain.model.chats.Chat
+import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.*
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
 
-@SuppressLint("CoroutineCreationDuringComposition")
-@RequiresApi(Build.VERSION_CODES.O)
+//@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ChatsScreen(
     navController: NavHostController,
-    viewModel: ChatsScreenViewModel = hiltViewModel()
+    viewModel: ChatsScreenViewModel = hiltViewModel(),
 ) {
+
     Log.d("4444", " ChatsScreen loaded")
 
     val context = LocalContext.current
@@ -61,9 +63,15 @@ fun ChatsScreen(
     GradientBackgroundHelper.SetMonochromeBackground()
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
+
     //viewModel.onClickHideNavigationBar(false)
     val chatList = viewModel.chatList.collectAsStateWithLifecycle()
     val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
+    val combineChatList =
+        viewModel.combineChatList.collectAsStateWithLifecycle(initialValue = listOf())
+
+
+//    Log.d("4444", " ChatsScreenViewModel ЧТО НА ЭКРАНЕ combineChatList=" + combineChatList.value)
 
     // раскоментировать
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
@@ -73,34 +81,85 @@ fun ChatsScreen(
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
 
     // может из за false не работать но скорей всего работает
-    val canGetChats by viewModel.canGetChats.collectAsStateWithLifecycle(false)
-
-
+    val getChatListFlag by viewModel.getChatListFlag.collectAsStateWithLifecycle(false)
 
     // сюда добавить статус соедения удачу сокета
     LaunchedEffect(getOwnPhoneSender, isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
-            Log.d("4444", " ChatsScreen isGrantedPermissions="
-                    + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow)
 
-            viewModel.canGetChats(can =true)
+            Log.d(
+                "4444", " ChatsScreen isGrantedPermissions="
+                        + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow
+            )
+            viewModel.canGetChatList(can = true)
+
+
+            // viewModel.ebnutCombine()
         }
     }
 
+    //viewModel.getOnlineUserStateList()
     ////////////
-    if (canGetChats) {
-        viewModel.getChats()
-
+    if (getChatListFlag) {
+//
+        viewModel.createOnlineUserStateList()
 
         val contactsFlow = RememberContacts(context = context)
-        scope.launch {
-            contactsFlow.collect {
-                viewModel.transferContacts(it)
+        LaunchedEffect(Unit) {
+            scope.launch {
+                contactsFlow.collect {
+                    viewModel.createContactsFlow(it)
+
+                    //viewModel.createOnlineUserStateList()
+                    //viewModel.createCombineFlow()
+
+
+                    viewModel.createChatListFlow()
+
+                    viewModel.createCombineFlow()
+                }
             }
         }
-    }
-    /////////////
 
+    }
+
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " ChatsScreen Lifecycle.Event.ON_START")
+
+                        // val res = viewModel.combineChatList.value
+
+                    }
+
+                    Lifecycle.Event.ON_STOP -> { // когда свернул
+                        Log.d("4444", " ChatsScreen Lifecycle.Event.ON_STOP")
+                        //viewModel.resetDataFlow()
+                        // viewModel.ebnutCombine()
+                    }
+
+                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+                        Log.d("4444", " ChatsScreen Lifecycle.Event.ON_DESTROY")
+                    }
+
+                    else -> {}
+                }
+            }
+
+            // последняя пробелма в том что долго обновяется статус онланй
+            // и не дописана логика по отправке сообщений с новым наблюдателем
+
+
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
 
 
 //    var ownPhoneSender by remember { mutableStateOf("") }
@@ -115,12 +174,15 @@ fun ChatsScreen(
     val isOpenModalBottomSheet by viewModel.isOpenModalBottomSheet.collectAsStateWithLifecycle()
     if (isOpenModalBottomSheet) {
         viewModel.onClickHideNavigationBar(isHide = true)
-        scope.launch {
-            delay(50L)
-            openBottomSheet = !openBottomSheet
-            isSheetOpen = true
-            sheetState.show()
+        LaunchedEffect(Unit) {
+            scope.launch {
+                delay(50L)
+                openBottomSheet = !openBottomSheet
+                isSheetOpen = true
+                sheetState.show()
+            }
         }
+
     }
 
     Column(
@@ -178,7 +240,7 @@ fun ChatsScreen(
                     scope.launch {
                         viewModel.openModalBottomSheet(isOpen = true)
                         delay(500L)
-                        viewModel.openModalBottomSheet(isOpen =false)
+                        viewModel.openModalBottomSheet(isOpen = false)
                     }
                 }) {
                 Icon(
@@ -231,14 +293,26 @@ fun ChatsScreen(
                                     shape = RoundedCornerShape(20.dp)
                                 )
                                 .padding(start = 8.dp, end = 8.dp),
-                          //  state = lazyListState
+                            //  state = lazyListState
                         ) {
-                            items(chatList.value) { item ->
-                               // Log.d("4444", " chats item=" + item)
+//                            items(chatList.value) { item ->
+//                               // Log.d("4444", " chats item=" + item)
+//                                Spacer(modifier = Modifier.height(16.dp))
+//                                ChatsContentItem(
+//                                    navController = navController,
+//                                    chat = item,
+//                                    ownPhoneSender = viewModel.ownPhoneSender,
+//                                    viewModel = viewModel
+//                                )
+//                            }
+
+                            //  Log.d("4444", " combineChatList.value=" + combineChatList.value)
+                            items(combineChatList.value) { item ->
+                                // Log.d("4444", " chats item=" + item)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 ChatsContentItem(
                                     navController = navController,
-                                    chat = item,
+                                    combineChat = item,
                                     ownPhoneSender = viewModel.ownPhoneSender,
                                     viewModel = viewModel
                                 )
@@ -309,7 +383,7 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
     navController: NavHostController,
     isSheetOpen: Boolean,
     onSheetOpenChanged: (Boolean) -> Unit,
-    sheetState: ModalBottomSheetState
+    sheetState: ModalBottomSheetState,
 ) {
     val scope = rememberCoroutineScope()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
@@ -331,7 +405,7 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
 
 @Composable
 fun BottomSheetContentTop(
-    isHide: (Boolean) -> Unit
+    isHide: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -396,11 +470,11 @@ fun BottomSheetContentTop(
 @Composable
 fun ChatsContentItem(
     navController: NavHostController,
-    chat: Chat,
+    combineChat: CombineChat,
     ownPhoneSender: String,
     viewModel: ChatsScreenViewModel,
 ) {
-   // Log.d("4444", " BottomSheetContentItem ownPhoneNumber=" + CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
+    Log.d("4444", " ChatsContentItem combineChat=" + combineChat)
     val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier
@@ -415,10 +489,10 @@ fun ChatsContentItem(
                             "4444",
                             " BottomSheetContentItem recipientName=" + "name потом исправить"
                                     + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                                chat.recipient
+                                combineChat.recipient
                             )
                                     + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                                chat.sender
+                                combineChat.sender
                             )
                         )
 
@@ -428,13 +502,15 @@ fun ChatsContentItem(
                         // BottomSheetContentItem recipientName=name потом исправить recipientPhone=9303454564 senderPhone=
                         navController.navigate(
                             route = ScreenRoute.ChatScreen.withArgs(
-                                recipientName = CorrectNumberFormatHelper.getCorrectNumber(chat.recipient),
+                                recipientName = CorrectNumberFormatHelper.getCorrectNumber(
+                                    combineChat.recipient
+                                ),
                                 recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
-                                    if (chat.recipient == CorrectNumberFormatHelper.getCorrectNumber(
+                                    if (combineChat.recipient == CorrectNumberFormatHelper.getCorrectNumber(
                                             ownPhoneSender
                                         )
                                     )
-                                        chat.sender else chat.recipient
+                                        combineChat.sender else combineChat.recipient
                                 ),
                                 senderPhone = CorrectNumberFormatHelper.getCorrectNumber(
                                     ownPhoneSender
@@ -449,29 +525,50 @@ fun ChatsContentItem(
         // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            modifier = Modifier
-                .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
-                .size(30.dp),
-            painter = painterResource(id = R.drawable.ic_user),
-            contentDescription = "",
-            tint = colorResource(id = R.color.main_yellow_new_chat_screen),
-        )
+        Column(
+//            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                modifier = Modifier
+                    //.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
+                    .size(30.dp),
+                painter = painterResource(id = R.drawable.ic_user),
+                contentDescription = "",
+                tint = colorResource(id = R.color.main_yellow_new_chat_screen),
+            )
+            Icon(
+                // online state
+                modifier = Modifier
+                    // .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
+                    .padding(start = 25.dp)
+                    .size(10.dp),
+                painter = if (combineChat.onlineOrDate == "online") painterResource(id = R.drawable.ic_online_state)
+                else painterResource(id = R.drawable.ic_offline_state),
+                contentDescription = "",
+                tint = colorResource(id = R.color.main_yellow_new_chat_screen),
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
+
+                Text( // phone title // перепроверить
                     modifier = Modifier.weight(1f),
-                    text = if (chat.sender != CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender))
-                        chat.sender else chat.recipient,
+                    text = combineChat.name
+                        ?: (uiFormatPhoneNumber(phone = combineChat.sender).takeUnless {
+                            it == uiFormatPhoneNumber(phone = ownPhoneSender)
+                        }
+                            ?: uiFormatPhoneNumber(phone = combineChat.recipient)),
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = chat.createdAt.substring(0, 3),
+                Text( // last message
+                    text = CorrectDateTimeHelper.formatDateTime(combineChat.createdAt),
+//                    text = combineChat.createdAt.substring(0, 3),
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.wrapContentWidth()
@@ -479,11 +576,11 @@ fun ChatsContentItem(
             }
 
             Text(
-                text = "от кого последнее " +  chat.sender,
+                text = "from " + uiFormatPhoneNumber(phone = combineChat.sender),
                 color = colorResource(id = R.color.main_yellow_splash_screen),
             )
             Text(
-                text = chat.textMessage?: "",
+                text = combineChat.textMessage ?: "",
                 color = colorResource(id = R.color.main_yellow_splash_screen),
             )
             Divider(
@@ -495,12 +592,21 @@ fun ChatsContentItem(
     }
 }
 
+@Composable
+fun uiFormatPhoneNumber(phone: String): String {
+    return if ('9' == phone.first()) {
+        "+7".plus(phone)
+    } else {
+        "+1".plus(phone)
+    }
+}
+
 
 @Composable
 fun BottomSheetContentItem(
     navController: NavHostController,
     contact: Contact,
-    ownPhoneSender: String
+    ownPhoneSender: String,
 ) {
     Row(
         modifier = Modifier

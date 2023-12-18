@@ -1,6 +1,12 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -42,15 +48,58 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.data.socket_service.SocketService
+
+import com.dev_marinov.chatalyze.domain.model.chat.Message
+import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+
+
+//fun ServiceConnection() : ServiceConnection {
+//    val serviceConnection = object : ServiceConnection {
+//        override fun onServiceConnected(className: ComponentName, binder: IBinder) {
+//            val myBinder = binder as SocketService.MyBinder
+//            val service = myBinder.getService()
+//            // Теперь у вас есть доступ к методам службы через 'service'
+//
+////            service.MyBinder().getService()
+////            scope.launch {
+////                val messageToSend = MessageToSend(
+////                    sender = "5551234567",
+////                    recipient = "9303454564",
+////                    textMessage = "swcfwecwecwecercecerc",
+////                    refreshToken = "_refreshToken"
+////                )
+////                service.sendMessage(messageToSend)
+////            }
+//
+//
+//        }
+//
+//        override fun onServiceDisconnected(className: ComponentName) {
+//            // Вызывается, когда соединение с службой потеряно
+//        }
+//    }
+//
+//    return serviceConnection
+//
+//
+//
+//}
+
+
 
 @OptIn(ExperimentalComposeUiApi::class, FlowPreview::class)
 @Composable
@@ -70,12 +119,13 @@ fun ChatScreen(
     GradientBackgroundHelper.SetMonochromeBackground()
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
+    val col = colorResource(id = R.color.main_violet_light)
+
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val chatName = "Маринов Роман"
 
-    viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
-    viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
-    viewModel.getChatPosition(userName = chatName)
+    val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
+    val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
 
     val myPhone = "89303493563"
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
@@ -85,7 +135,20 @@ fun ChatScreen(
     var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
     var sendClickState by remember { mutableStateOf(false) }
 
-    val col = colorResource(id = R.color.main_violet_light)
+    val scope = rememberCoroutineScope()
+
+    viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
+    viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
+    viewModel.getChatPosition(userName = chatName)
+
+    LaunchedEffect(isSessionState) {
+        if (isSessionState == Constants.SESSION_SUCCESS) {
+          Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
+            viewModel.getAllMessageChat()
+            // хуй пока закрыл ебаная ошибка
+            viewModel.observeMessages()
+        }
+    }
 
     val lazyListState: LazyListState = if (chatPosition != 0) {
         rememberLazyListState(
@@ -95,39 +158,34 @@ fun ChatScreen(
         rememberLazyListState()
     }
 
+//    val localLifecycleOwner = LocalLifecycleOwner.current
+//    DisposableEffect(
+//        key1 = localLifecycleOwner,
+//        effect = {
+//            val observer = LifecycleEventObserver { _, event ->
+//                when (event) {
+//                    Lifecycle.Event.ON_START -> {
+//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
+//                    }
+//
+//                    Lifecycle.Event.ON_STOP -> { // когда свернул
+//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
+//                    }
+//
+//                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
+//                    }
+//                    else -> {}
+//                }
+//            }
+//            localLifecycleOwner.lifecycle.addObserver(observer)
+//            onDispose {
+//                localLifecycleOwner.lifecycle.removeObserver(observer)
+//            }
+//        }
+//    )
+//    ////////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////
-    val localLifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(
-        key1 = localLifecycleOwner,
-        effect = {
-            val observer = LifecycleEventObserver { _, event ->
-                when (event) {
-                    Lifecycle.Event.ON_START -> {
-                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
-                    }
-
-                    Lifecycle.Event.ON_STOP -> { // когда свернул
-                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
-                    }
-
-                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
-                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
-                    }
-                    else -> {}
-                }
-            }
-            localLifecycleOwner.lifecycle.addObserver(observer)
-            onDispose {
-                localLifecycleOwner.lifecycle.removeObserver(observer)
-            }
-        }
-    )
-    ////////////////////////////////////////////////////
-
-
-
-    ////////////////////////////////////////////////////
     // lackner
     val context = LocalContext.current
     LaunchedEffect(key1 = true) {
@@ -515,6 +573,7 @@ fun ChatScreen(
                             viewModel = viewModel,
                             onSendClick = {
                                 sendClickState = true
+                                Log.d("4444", " TextFieldHintWriteMessage sendClickState=" + sendClickState)
                             }
                         )
                     }
@@ -524,14 +583,19 @@ fun ChatScreen(
             LaunchedEffect(state.messages) {
                 Log.d("4444", " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState)
                 viewModel.clearMessageTextField()
-                if (sendClickState) {
+                if (sendClickState) { // это сработает у отправителя
                     lazyListState.animateScrollToItem(state.messages.size)
                     sendClickState = false
+                } else {
+                    // это сработает у получателя
+                    Log.d("4444", " сработал LaunchedEffect(chatMessage) chatPosition=" + chatPosition)
+                    Log.d("4444", " сработал LaunchedEffect(chatMessage) chatPosstate.messages.size=" + state.messages.size)
+
+                    if (chatPosition in state.messages.size - 7..state.messages.size) {
+                        lazyListState.animateScrollToItem(state.messages.size)
+                    }
                 }
             }
         }
     }
 }
-
-
-

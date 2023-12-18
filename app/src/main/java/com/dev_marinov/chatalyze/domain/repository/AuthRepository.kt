@@ -15,7 +15,7 @@ interface AuthRepository {
     val getRefreshTokensFromDataStore: Flow<String>
 
     suspend fun savePairTokens(pairTokens: PairTokens)
-    suspend fun logout(token: String) : MessageResponse?
+    suspend fun logout(token: String, senderPhone: String) : MessageResponse?
     suspend fun deleteProfile(token: String) : MessageResponse?
 
     suspend fun deletePairTokensToDataStore()

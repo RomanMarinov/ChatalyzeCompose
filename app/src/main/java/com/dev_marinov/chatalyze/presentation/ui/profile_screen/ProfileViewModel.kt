@@ -10,7 +10,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_CONFLICT
 import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
@@ -31,20 +30,25 @@ class ProfileViewModel @Inject constructor(
     val statusCode: StateFlow<Int> = _statusCode
 
     var refreshTokenTemp = ""
+    var ownPhoneSenderTemp = ""
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-           ownPhoneSender.collect{
-               Log.d("4444", " ProfileViewModel ownPhoneSender=" + it)
-           }
-        }
-
         writeRefreshTokenTemp()
+        saveOwnPhoneInViewModel()
+    }
+
+    private fun saveOwnPhoneInViewModel() {
+        viewModelScope.launch(Dispatchers.IO) {
+            ownPhoneSender.collect{
+                Log.d("4444", " ProfileViewModel ownPhoneSender=" + it)
+                ownPhoneSenderTemp = it
+            }
+        }
     }
 
     fun executeLogout() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = authRepository.logout(token = refreshTokenTemp)
+            val response = authRepository.logout(token = refreshTokenTemp, senderPhone = ownPhoneSenderTemp)
             response?.let {
                 processTheResponse(response = response)
             }

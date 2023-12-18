@@ -4,10 +4,8 @@ package com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -52,7 +50,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.data.socket_service.SocketService
 import com.dev_marinov.chatalyze.presentation.ui.chatalyze_screen.model.ChatalyzeBottomNavItem
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
@@ -62,7 +59,6 @@ import com.dev_marinov.chatalyze.presentation.util.isAlwaysDenied
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -189,36 +185,36 @@ fun ExecuteGrantedPermissions(
     // сохранение ивентов socketBroadcastReceiver нужен только для возможности вызваать методы
     // получения чатов гет месседж и возможности писать звонить и тд
     val context = LocalContext.current
-    DisposableEffect(context) {
-        val socketBroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == "receiver_socket_action") {
-                    when (intent.getStringExtra("session")) {
-                        "session_success" -> {
-                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
-                            viewModel.saveSessionState(sessionState = Constants.SESSION_SUCCESS)
-                        }
-                        "session_error" -> {
-                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ERROR")
-                            viewModel.saveSessionState(sessionState = Constants.SESSION_ERROR)
-                        }
-                        "session_close" -> {
-                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ClOSE")
-                            viewModel.saveSessionState(sessionState = Constants.SESSION_CLOSE)
-                        }
-                    }
-                }
-            }
-        }
-        //Log.d("4444", " socketBroadcastReceiver registerReceiver")
-        val filter = IntentFilter("receiver_socket_action")
-        context.registerReceiver(socketBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-
-        onDispose {
-            //Log.d("4444", " socketBroadcastReceiver unregisterReceiver")
-            context.unregisterReceiver(socketBroadcastReceiver)
-        }
-    }
+//    DisposableEffect(context) {
+//        val socketBroadcastReceiver = object : BroadcastReceiver() {
+//            override fun onReceive(context: Context, intent: Intent) {
+//                if (intent.action == "receiver_socket_action") {
+//                    when (intent.getStringExtra("session")) {
+//                        "session_success" -> {
+//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
+//                            viewModel.saveSessionState(sessionState = Constants.SESSION_SUCCESS)
+//                        }
+//                        "session_error" -> {
+//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ERROR")
+//                            viewModel.saveSessionState(sessionState = Constants.SESSION_ERROR)
+//                        }
+//                        "session_close" -> {
+//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ClOSE")
+//                            viewModel.saveSessionState(sessionState = Constants.SESSION_CLOSE)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        //Log.d("4444", " socketBroadcastReceiver registerReceiver")
+//        val filter = IntentFilter("receiver_socket_action")
+//        context.registerReceiver(socketBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+//
+//        onDispose {
+//            //Log.d("4444", " socketBroadcastReceiver unregisterReceiver")
+//            context.unregisterReceiver(socketBroadcastReceiver)
+//        }
+//    }
 
     Log.d("4444", " 1 ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartService)
     LaunchedEffect(isGrantedPermissions, canStartService) {
@@ -231,12 +227,19 @@ fun ExecuteGrantedPermissions(
             val ownPhoneSender = getOwnPhoneSender(context = context)
             if (ownPhoneSender.isNotEmpty()) {
                 viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
+
+
                     Log.d("4444", " выполнился context.startService")
-                    Intent(context, SocketService::class.java).also {
-                    it.action = "open_session"
-                    it.putExtra("sender", viewModel.phoneSender)
-                    context.startService(it)
-                }
+
+
+                // новый вариант
+                viewModel.openServerConnection(ownPhoneSender = ownPhoneSender)
+
+//                    Intent(context, SocketService::class.java).also {
+//                    it.action = "open_session"
+//                    it.putExtra("sender", viewModel.phoneSender)
+//                    context.startService(it)
+               // }
                 viewModel.canStartService(can = false)
             }
         }
@@ -273,24 +276,26 @@ fun ExecuteGrantedPermissions(
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_START)
                         permissionsState.launchMultiplePermissionRequest()
 
-                        //viewModel.canStartService(can = true)
-                        tryCallService(scope = scope, viewModel = viewModel)
+                        viewModel.canStartService(can = true)
+                        //tryCallService(scope = scope, viewModel = viewModel)
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
                         Log.d("4444", " ExecuteGrantedPermissions Lifecycle.Event.ON_STOP")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_STOP)
-                        Intent(context, SocketService::class.java).also { context.stopService(it) }
+                        //Intent(context, SocketService::class.java).also { context.stopService(it) }
+
+                        viewModel.closeServerConnection()
                     }
 
                     Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
                         Log.d("4444", " ExecuteGrantedPermissions Lifecycle.Event.ON_DESTROY")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_DESTROY)
-                        Intent(context, SocketService::class.java).also {
-                            context.stopService(it)
-                        }
+//                        Intent(context, SocketService::class.java).also {
+//                            context.stopService(it)
+//                        }
+                        viewModel.closeServerConnection()
                     }
-
                     else -> {}
                 }
             }

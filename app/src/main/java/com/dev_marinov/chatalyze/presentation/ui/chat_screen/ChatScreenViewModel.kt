@@ -1,5 +1,7 @@
 package com.dev_marinov.chatalyze.presentation.ui.chat_screen
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -29,8 +31,11 @@ class ChatScreenViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     //private val messageRepository: MessageRepository,
     private val chatSocketRepository: ChatSocketRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    val isSessionState = preferencesDataStoreRepository.isSessionState
+    val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
 
     val refreshToken = authRepository.getRefreshTokensFromDataStore
 
@@ -53,6 +58,8 @@ class ChatScreenViewModel @Inject constructor(
     init {
         // getFakeChatMessage()
         saveRefreshTokenToViewModel()
+
+        //connectToChat()
     }
 
     private fun saveRefreshTokenToViewModel() {
@@ -125,12 +132,61 @@ class ChatScreenViewModel @Inject constructor(
     private val _toastEvent = MutableSharedFlow<String>()
     val toastEvent = _toastEvent.asSharedFlow()
 
-    fun connectToChat(senderPhone: String?, recipientPhone: String?) {
-        // сюда передать объект message
-        getAllMessages()
-        //   getAllMessages()
-        Log.d("4444", " connectToChat execute")
-        // savedStateHandle.get<String>("username")?.let { username ->
+    //////////////////////////////
+    /////////////////////////////////
+
+
+    /////////////////////////////////
+    /////////////////////////////////
+
+
+
+    // хуй пока закрыл ебаная ошибка
+    fun observeMessages() {
+        viewModelScope.launch {
+            Log.d("4444", " connectToChat Resource.Success")
+            chatSocketRepository.observeMessages()
+                .onEach { message ->
+                    Log.d("4444", " connectToChat Resource.Success message=" + message)
+
+
+                    // connectToChat Resource.Success message=MessageWrapper(type=userList, payloadJson=[{"userPhone":"9203333333","onlineOrDate":"online"},{"userPhone":"9303454564","onlineOrDate":"offline"}])
+                    // connectToChat Resource.Success message=MessageWrapper(type=singleMessage, payloadJson={"sender":"5551234567","recipient":"9303454564","textMessage":"Пппп","createdAt":"2023-12-16T12:27:51.161455Z"})
+
+//                    val newList = state.value.messages.toMutableList().apply {
+//                        add(_state.value.messages.size, message)
+//                    }
+//                    _state.value = state.value.copy(
+//                        messages = newList
+//                    )
+                }.launchIn(viewModelScope)
+        }
+    }
+//
+//// хуй пока закрыл ебаная ошибка
+//    fun observeMessages() {
+//        viewModelScope.launch {
+//            Log.d("4444", " connectToChat Resource.Success")
+//            chatSocketRepository.observeMessages()
+//                .onEach { message ->
+//                    Log.d("4444", " connectToChat Resource.Success message=" + message)
+//                    val newList = state.value.messages.toMutableList().apply {
+//                        add(_state.value.messages.size, message)
+//                    }
+//                    _state.value = state.value.copy(
+//                        messages = newList
+//                    )
+//                }.launchIn(viewModelScope)
+//        }
+//    }
+
+
+//    fun connectToChat() {
+//        // сюда передать объект message
+//        //getAllMessageChat()
+//        //   getAllMessages()
+//        Log.d("4444", " connectToChat execute")
+//        // savedStateHandle.get<String>("username")?.let { username ->
 //        viewModelScope.launch {
 //            val result = chatSocketRepository.initSession(sender = _sender)
 //            Log.d("4444", " connectToChat result.message=" + result.message)
@@ -170,24 +226,24 @@ class ChatScreenViewModel @Inject constructor(
 //                }
 //            }
 //        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-           // chatSocketService.getStateUsersConnection()
-
-            //chatSocketService.observePing().collect {
-           //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-         //   }
-        }
-
-
-        // }
-    }
+//
+//        viewModelScope.launch(Dispatchers.IO) {
+//           // chatSocketService.getStateUsersConnection()
+//
+//            //chatSocketService.observePing().collect {
+//           //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
+//         //   }
+//        }
+//
+//
+//        // }
+//    }
 
     fun onMessageChange(message: String) {
         _messageText.value = message
     }
 
-    fun getAllMessages() {
+    fun getAllMessageChat() {
         viewModelScope.launch {
             _state.value = state.value.copy(isLoading = true)
 
@@ -198,12 +254,8 @@ class ChatScreenViewModel @Inject constructor(
 //            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat.value)
 //            _chatMessage.value = result
 
-
             _chatMessage.value = jobResponse.await()
-
-
             Log.d("4444", " getAllMessages result=" + jobResponse.await())
-
 
             _state.value = state.value.copy(
                 messages = jobResponse.await(),
@@ -213,7 +265,7 @@ class ChatScreenViewModel @Inject constructor(
     }
 
     fun sendMessage() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             Log.d("4444", " sendMessage=" + messageText.value)
             if (messageText.value.isNotEmpty()) {
                 val messageToSend = MessageToSend(
@@ -223,6 +275,23 @@ class ChatScreenViewModel @Inject constructor(
                     refreshToken = _refreshToken
                 )
                 chatSocketRepository.sendMessage(messageToSend)
+
+//                val intent = Intent("receiver_socket_action_2")
+//                // intent.action = "receiver_socket_action_2"
+//                intent.putExtra("sender", _sender)
+//                intent.putExtra("recipient", _recipient)
+//                intent.putExtra("messageText", messageText.value)
+//                intent.putExtra("refreshToken", _refreshToken)
+//                context.sendBroadcast(intent)
+
+//                val serviceConnection = ServiceConnection()
+//                val intent = Intent(context, SocketService::class.java)
+//                intent.action = "send_message"
+//                intent.putExtra("sender", _sender)
+//                intent.putExtra("recipient", _recipient)
+//                intent.putExtra("messageText", messageText.value)
+//                intent.putExtra("refreshToken", _refreshToken)
+//                context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
             }
         }
     }
@@ -243,16 +312,21 @@ class ChatScreenViewModel @Inject constructor(
         )
     }
 
-//    fun saveToViewModel(recipient: String?, sender: String?) {
-//        recipient?.let {
-//            if (CorrectNumberFormatHelper.getCorrectNumber(number = it).isNotEmpty()) {
-//                _recipient = CorrectNumberFormatHelper.getCorrectNumber(it)
-//            }
-//        }
-//        sender?.let {
-//            if (CorrectNumberFormatHelper.getCorrectNumber(number = it).isNotEmpty()) {
-//                _sender = CorrectNumberFormatHelper.getCorrectNumber(it)
-//            }
-//        }
-//    }
+    fun receiveMessage(sender: String, recipient: String, textMessage1: String, createdAt: String) {
+        val message = Message(
+            sender = sender,
+            recipient = recipient,
+            textMessage = textMessage1,
+            createdAt = createdAt
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("4444", " receiveMessage message=" + message)
+            val newList = state.value.messages.toMutableList().apply {
+                add(_state.value.messages.size, message)
+            }
+            _state.value = state.value.copy(
+                messages = newList
+            )
+        }
+    }
 }

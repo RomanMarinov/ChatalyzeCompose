@@ -91,8 +91,8 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun logout(token: String) : MessageResponse? {
-        val response = authApiService.logoutUser(LogoutRequestDTO(refreshToken = token))
+    override suspend fun logout(token: String, senderPhone: String) : MessageResponse? {
+        val response = authApiService.logoutUser(LogoutRequestDTO(refreshToken = token, senderPhone = senderPhone))
         return response.body()?.mapToDomain()
     }
 

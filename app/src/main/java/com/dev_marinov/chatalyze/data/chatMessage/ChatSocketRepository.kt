@@ -1,6 +1,10 @@
 package com.dev_marinov.chatalyze.data.chatMessage
 
-import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineOrDate
+import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageWrapper
+import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
+import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUsers
+import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUsersDTO
+import com.dev_marinov.chatalyze.data.chatMessage.dto.TestClassText
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
@@ -9,19 +13,27 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatSocketRepository {
 
-//    suspend fun initSession(sender: String): Resource<Unit>
-//    suspend fun closeSession()
+    suspend fun initSession(sender: String): Resource<Unit>
+    suspend fun closeSession()
 
     //  suspend fun getStateUsersConnection(): List<OnlineOrDate>
-    suspend fun getStateUsersConnection()
+
 
 //    suspend fun sendMessage(message: String)
     suspend fun sendMessage(messageToSend: MessageToSend)
     suspend fun getAllMessages(userPairChat: UserPairChat): List<Message>
-    fun observeMessages(): Flow<Message>
 
-    fun observePing() : Flow<List<OnlineOrDate>>
-   // fun observePing() : Flow<String>
+
+    fun observeMessages(): Flow<MessageWrapper>
+    fun observeOnlineUserState() : Flow<MessageWrapper>
+
+
+   //// хуй пока закрыл ебаная ошибка
+//    fun observeMessages(): Flow<Message>
+//    fun observeOnlineUserState() : Flow<List<OnlineUserState>>
+//    fun observeOnlineUserState() : List<ChatSocketRepositoryImpl.SocketEvent>
+
+    // fun observePing() : Flow<String>
 
     companion object {
 //        val baseUrl = "http://10.35.101.146:8080/"
@@ -29,8 +41,8 @@ interface ChatSocketRepository {
 
      //   const val BASE_URL_WS = "ws://10.35.101.146:8080"
       //  const val BASE_URL_HTTPS = "http://10.35.101.146:8080/"
-        const val BASE_URL_WS = "ws://192.168.0.100:8080"
-        const val BASE_URL_HTTPS = "http://192.168.0.100:8080/"
+        const val BASE_URL_WS = "ws://192.168.0.101:8080"
+        const val BASE_URL_HTTPS = "http://192.168.0.101:8080/"
     }
 
     sealed class Endpoints(val url: String) {
