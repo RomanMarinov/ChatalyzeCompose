@@ -29,7 +29,7 @@ fun ChatalyzeNavigationGraph(
             ChatsScreen(navController = navHostController)
         }
         composable(route = ScreenRoute.CallScreen.route) {
-            CallsScreen(navHostController = navHostController)
+            CallsScreen(navController = navHostController)
         }
         composable(route = ScreenRoute.ProfileScreen.route) {
             ProfileScreen(

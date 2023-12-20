@@ -46,6 +46,9 @@
 <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>
 
+    <!--    new call screen-->
+    <string name="header_new_call_screen">New call</string>
+
 <!--        create password screen-->
     <string name="password_confirm">password confirm</string>
     <string name="create_password">create password</string>
