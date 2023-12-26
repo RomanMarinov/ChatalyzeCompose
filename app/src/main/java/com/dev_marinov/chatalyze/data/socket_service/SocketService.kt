@@ -9,7 +9,7 @@
 //import android.os.IBinder
 //import android.util.Log
 //import androidx.compose.runtime.rememberCoroutineScope
-//import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+//import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 //import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageDto
 //import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineOrDate
 //import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineOrDateDTO

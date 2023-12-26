@@ -15,7 +15,7 @@ sealed class ScreenRoute(val route: String) {
 
     object ChatalyzeScreen : ScreenRoute("chatalyze_screen")
     object ChatsScreen : ScreenRoute("chats_screen")
-    object CallScreen : ScreenRoute("call_screen")
+    object CallsScreen : ScreenRoute("calls_screen")
     object ProfileScreen : ScreenRoute("profile_screen")
 
     object ChatScreen : ScreenRoute("chat_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}") {
@@ -24,6 +24,11 @@ sealed class ScreenRoute(val route: String) {
         }
     }
 
+    object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}") {
+        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String) : String {
+            return "call_screen/$recipientName/$recipientPhone/$senderPhone"
+        }
+    }
 
 
 

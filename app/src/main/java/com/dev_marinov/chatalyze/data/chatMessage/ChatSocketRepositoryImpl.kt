@@ -1,16 +1,17 @@
 package com.dev_marinov.chatalyze.data.chatMessage
 
 import android.util.Log
+import com.dev_marinov.chatalyze.data.call.dto.UserCallDTO
 import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageDto
 import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageWrapper
-import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
-import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserStateDTO
+import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
+import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
+import com.dev_marinov.chatalyze.presentation.ui.call_screen.model.UserCall
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
@@ -19,16 +20,14 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class ChatSocketRepositoryImpl @Inject constructor(
+
     private val client: HttpClient,
 ) : ChatSocketRepository {
 
-    private val pingHandler = PingHandler()
     private var socket: WebSocketSession? = null
 
     //

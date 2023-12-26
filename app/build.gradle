@@ -160,4 +160,24 @@ dependencies {
     // animated-navigation
     implementation("com.exyte:animated-navigation-bar:1.0.0")
     //apply plugin: 'announce'
+
+
+
+
+    // Stream Video Compose SDK
+    implementation("io.getstream:stream-video-android-compose:0.4.2")
+    // новая штоли
+    // implementation "io.getstream:stream-video-android-ui-compose:0.4.3"
+
+    // Optionally add Jetpack Compose if Android studio didn't automatically include them
+    //implementation(platform("androidx.compose:compose-bom:2023.08.00"))
+    //  implementation("androidx.compose.ui:ui")
+   // implementation("androidx.compose.ui:ui-tooling")
+    //implementation("androidx.compose.runtime:runtime")
+    //implementation("androidx.compose.foundation:foundation")
+    //implementation("androidx.compose.material:material")
+
+    //implementation 'androidx.compose.compiler:compiler:1.5.4'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
 }

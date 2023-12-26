@@ -20,5 +20,7 @@ class Constants {
 
         const val KEY_READ_PHONE_NUMBERS = "KEY_READ_PHONE_NUMBERS"
         const val KEY_READ_CONTACTS = "KEY_READ_CONTACTS"
+        const val KEY_CAMERA = "KEY_CAMERA"
+        const val KEY_RECORD_AUDIO = "KEY_RECORD_AUDIO"
     }
 }

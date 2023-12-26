@@ -1,12 +1,9 @@
 package com.dev_marinov.chatalyze.presentation.ui.chats_screen
 
 import android.util.Log
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageWrapper
 import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
 import com.dev_marinov.chatalyze.domain.model.chats.Chat
@@ -16,17 +13,12 @@ import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 

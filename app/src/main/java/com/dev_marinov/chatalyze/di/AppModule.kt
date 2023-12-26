@@ -1,6 +1,5 @@
 package com.dev_marinov.chatalyze.di
 
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
