@@ -8,7 +8,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.dev_marinov.chatalyze.presentation.ui.call_screen.CallsScreen
+import com.dev_marinov.chatalyze.presentation.ui.call_screen.CallScreen
+import com.dev_marinov.chatalyze.presentation.ui.calls_screen.CallsScreen
 import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreen
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.ChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.profile_screen.ProfileScreen
@@ -22,28 +23,12 @@ import com.dev_marinov.chatalyze.presentation.util.RECIPIENT_PHONE
 fun ChatalyzeNavigationGraph(
     navHostController: NavHostController,
     authHostController: NavHostController,
-    viewModel: ChatalyzeScreenViewModel
+    viewModel: ChatalyzeScreenViewModel,
 ) {
     NavHost(navController = navHostController, startDestination = ScreenRoute.ChatsScreen.route) {
         composable(route = ScreenRoute.ChatsScreen.route) {
             ChatsScreen(navController = navHostController)
         }
-        composable(route = ScreenRoute.CallScreen.route) {
-            CallsScreen(navController = navHostController)
-        }
-        composable(route = ScreenRoute.ProfileScreen.route) {
-            ProfileScreen(
-                navHostController = navHostController,
-                authHostController = authHostController
-            )
-        }
-
-//        composable(route = ScreenRoute.ChatScreen.route) {
-//            ChatScreen(
-//                navHostController = navHostController
-//            )
-//        }
-
         ///////////////////////
         composable(
             route = ScreenRoute.ChatScreen.route,
@@ -66,5 +51,45 @@ fun ChatalyzeNavigationGraph(
                 senderPhone = entry.arguments?.getString(SENDER_PHONE)
             )
         }
+
+        composable(route = ScreenRoute.CallsScreen.route) {
+            CallsScreen(navController = navHostController)
+        }
+        composable(
+            route = ScreenRoute.CallScreen.route,
+            arguments = listOf(
+                navArgument(RECIPIENT_NAME) {
+                    type = NavType.StringType
+                },
+                navArgument(RECIPIENT_PHONE) {
+                    type = NavType.StringType
+                },
+                navArgument(SENDER_PHONE) {
+                    type = NavType.StringType
+                }
+            )
+        ) { entry ->
+            CallScreen(
+                navController = navHostController,
+                recipientName = entry.arguments?.getString(RECIPIENT_NAME),
+                recipientPhone = entry.arguments?.getString(RECIPIENT_PHONE),
+                senderPhone = entry.arguments?.getString(SENDER_PHONE)
+            )
+        }
+
+        composable(route = ScreenRoute.ProfileScreen.route) {
+            ProfileScreen(
+                navHostController = navHostController,
+                authHostController = authHostController
+            )
+        }
+
+//        composable(route = ScreenRoute.ChatScreen.route) {
+//            ChatScreen(
+//                navHostController = navHostController
+//            )
+//        }
+
+
     }
 }

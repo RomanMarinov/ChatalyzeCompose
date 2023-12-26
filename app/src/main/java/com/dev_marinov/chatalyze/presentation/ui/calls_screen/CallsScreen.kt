@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.presentation.ui.call_screen
+package com.dev_marinov.chatalyze.presentation.ui.calls_screen
 
 import android.util.Log
 import androidx.activity.compose.BackHandler
@@ -44,10 +44,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.BottomSheetContentItem
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.BottomSheetContentTop
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.ChatsContentItem
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.ChatsScreenViewModel
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.CustomBackStackOnlyBottomSheetInChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
@@ -262,7 +258,7 @@ fun CallsScreen(
 //                            }
 
                             //  Log.d("4444", " combineChatList.value=" + combineChatList.value)
-                            items(combineChatList.value) { item ->
+                            items(items = combineChatList.value) { item ->
                                 // Log.d("4444", " chats item=" + item)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 CallContentItem(
@@ -335,17 +331,17 @@ fun CallsScreen(
 //    CustomBackStackOnlyCallsScreen(navHostController = navHostController)
 }
 
-@Composable
-fun CustomBackStackOnlyCallsScreen(
-    navHostController: NavHostController
-) {
-    val currentRoute = navHostController.currentBackStackEntryAsState().value?.destination?.route
-    BackHandler(enabled = currentRoute != null) {
-        if (currentRoute == ScreenRoute.CallScreen.route) {
-            navHostController.navigate(ScreenRoute.ChatsScreen.route)
-        }
-    }
-}
+//@Composable
+//fun CustomBackStackOnlyCallsScreen(
+//    navHostController: NavHostController
+//) {
+//    val currentRoute = navHostController.currentBackStackEntryAsState().value?.destination?.route
+//    BackHandler(enabled = currentRoute != null) {
+//        if (currentRoute == ScreenRoute.CallsScreen.route) {
+//            navHostController.navigate(ScreenRoute.ChatsScreen.route)
+//        }
+//    }
+//}
 
 @Composable
 fun CallContentItem(
@@ -381,7 +377,7 @@ fun CallContentItem(
                         // ошибочные аргументы
                         // BottomSheetContentItem recipientName=name потом исправить recipientPhone=9303454564 senderPhone=
                         navController.navigate(
-                            route = ScreenRoute.ChatScreen.withArgs(
+                            route = ScreenRoute.CallScreen.withArgs2(
                                 recipientName = CorrectNumberFormatHelper.getCorrectNumber(
                                     combineChat.recipient
                                 ),
@@ -560,14 +556,27 @@ fun BottomSheetCallContentItem(
                         ownPhoneSender
                     )
                 )
+//erer
+
+                Log.d("4444", " navController.currentDestination=" + navController.currentDestination)
+
+
+//                navController.navigate(
+//                    route = ScreenRoute.CallScreen.withArgs2(
+//                        recipientName = "romchik",
+//                        recipientPhone = "3333",
+//                        senderPhone = "3333"
+//                    )
+//                )
 
                 navController.navigate(
-                    route = ScreenRoute.ChatScreen.withArgs(
+                    route = ScreenRoute.CallScreen.withArgs2(
                         recipientName = contact.name,
                         recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(contact.phoneNumber),
                         senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
                     )
                 )
+
             },
 
         // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),

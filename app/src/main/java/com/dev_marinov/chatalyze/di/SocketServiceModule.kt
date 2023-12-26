@@ -1,6 +1,6 @@
 //package com.dev_marinov.chatalyze.di
 //
-//import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+//import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 //
 //import dagger.Module
 //import dagger.Provides

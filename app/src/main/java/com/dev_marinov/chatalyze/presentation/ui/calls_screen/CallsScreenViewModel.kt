@@ -1,4 +1,4 @@
-package com.dev_marinov.chatalyze.presentation.ui.call_screen
+package com.dev_marinov.chatalyze.presentation.ui.calls_screen
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -45,6 +45,11 @@ class CallsScreenViewModel @Inject constructor(
 //        }
 //    }
 
+    init {
+        Log.d("4444", " ChatsScreenViewModel сработал init")
+        saveLocalOwnPhoneSender()
+    }
+
     fun onClickHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
             preferencesDataStoreRepository.saveHideNavigationBar(
@@ -67,5 +72,13 @@ class CallsScreenViewModel @Inject constructor(
     fun createContactsFlow(contacts: List<Contact>) {
         Log.d("4444", " ChatsScreenViewModel createContactsFlow contacts=" + contacts)
         _contacts.value = contacts
+    }
+
+    private fun saveLocalOwnPhoneSender() {
+        viewModelScope.launch(Dispatchers.IO) {
+            getOwnPhoneSender.collect {
+                ownPhoneSender = it
+            }
+        }
     }
 }

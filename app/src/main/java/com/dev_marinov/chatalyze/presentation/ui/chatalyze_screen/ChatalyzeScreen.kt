@@ -57,7 +57,9 @@ import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 
 import com.dev_marinov.chatalyze.presentation.util.isAlwaysDenied
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -110,7 +112,7 @@ fun SetPermissionsAndNavigation(
                     ),
                     ChatalyzeBottomNavItem(
                         name = "Call",
-                        route = ScreenRoute.CallScreen.route,
+                        route = ScreenRoute.CallsScreen.route,
                         icon = Icons.Default.Call,
                         badgeCount = 4
                     ),
@@ -262,7 +264,9 @@ fun ExecuteGrantedPermissions(
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.READ_PHONE_NUMBERS,
-            Manifest.permission.READ_CONTACTS
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
         )
     )
     val localLifecycleOwner = LocalLifecycleOwner.current
@@ -315,12 +319,12 @@ fun ExecuteGrantedPermissions(
             when (it.permission) {
                 Manifest.permission.READ_PHONE_NUMBERS -> {
                     when {
-                        it.hasPermission -> {
+                        it.status.isGranted -> {
                             Log.d("4444", "READ_PHONE_NUMBERS 1 ")
                             savePermissionReadPhoneNumbers(viewModel = viewModel, isGranted = true)
                         }
 
-                        it.shouldShowRationale -> {
+                        it.status.shouldShowRationale -> {
                             Log.d("4444", "READ_PHONE_NUMBERS 2 ")
                             savePermissionReadPhoneNumbers(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
@@ -348,12 +352,12 @@ fun ExecuteGrantedPermissions(
 
                 Manifest.permission.READ_CONTACTS -> {
                     when {
-                        it.hasPermission -> {
+                        it.status.isGranted -> {
                             Log.d("4444", "READ_CONTACTS 1 ")
                             savePermissionReadContacts(viewModel = viewModel, isGranted = true)
                         }
 
-                        it.shouldShowRationale -> {
+                        it.status.shouldShowRationale -> {
                             savePermissionReadContacts(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_CONTACTS),
@@ -368,6 +372,69 @@ fun ExecuteGrantedPermissions(
                             savePermissionReadContacts(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_denied_CONTACTS),
+                                onDismiss = { },
+                                onConfirm = {
+                                    openAppSettings(context = context)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                //////////////
+                Manifest.permission.CAMERA -> {
+                    when {
+                        it.status.isGranted -> {
+                            Log.d("4444", "CAMERA 1 ")
+                            savePermissionCamera(viewModel = viewModel, isGranted = true)
+                        }
+
+                        it.status.shouldShowRationale -> {
+                            savePermissionCamera(viewModel = viewModel, isGranted = false)
+                            DialogPermissions(
+                                message = stringResource(id = R.string.justification_CAMERA),
+                                onDismiss = { },
+                                onConfirm = {
+                                    openAppSettings(context = context)
+                                }
+                            )
+                        }
+
+                        it.isAlwaysDenied() -> {
+                            savePermissionCamera(viewModel = viewModel, isGranted = false)
+                            DialogPermissions(
+                                message = stringResource(id = R.string.justification_denied_CAMERA),
+                                onDismiss = { },
+                                onConfirm = {
+                                    openAppSettings(context = context)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Manifest.permission.RECORD_AUDIO -> {
+                    when {
+                        it.status.isGranted -> {
+                            Log.d("4444", "RECORD_AUDIO 1 ")
+                            savePermissionRecordAudio(viewModel = viewModel, isGranted = true)
+                        }
+
+                        it.status.shouldShowRationale -> {
+                            savePermissionRecordAudio(viewModel = viewModel, isGranted = false)
+                            DialogPermissions(
+                                message = stringResource(id = R.string.justification_RECORD_AUDIO),
+                                onDismiss = { },
+                                onConfirm = {
+                                    openAppSettings(context = context)
+                                }
+                            )
+                        }
+
+                        it.isAlwaysDenied() -> {
+                            savePermissionRecordAudio(viewModel = viewModel, isGranted = false)
+                            DialogPermissions(
+                                message = stringResource(id = R.string.justification_denied_RECORD_AUDIO),
                                 onDismiss = { },
                                 onConfirm = {
                                     openAppSettings(context = context)
@@ -400,6 +467,20 @@ fun savePermissionReadPhoneNumbers(viewModel: ChatalyzeScreenViewModel, isGrante
 fun savePermissionReadContacts(viewModel: ChatalyzeScreenViewModel, isGranted: Boolean) {
     viewModel.savePermissions(
         key = Constants.KEY_READ_CONTACTS,
+        isGranted = isGranted
+    )
+}
+
+fun savePermissionCamera(viewModel: ChatalyzeScreenViewModel, isGranted: Boolean) {
+    viewModel.savePermissions(
+        key = Constants.KEY_CAMERA,
+        isGranted = isGranted
+    )
+}
+
+fun savePermissionRecordAudio(viewModel: ChatalyzeScreenViewModel, isGranted: Boolean) {
+    viewModel.savePermissions(
+        key = Constants.KEY_RECORD_AUDIO,
         isGranted = isGranted
     )
 }

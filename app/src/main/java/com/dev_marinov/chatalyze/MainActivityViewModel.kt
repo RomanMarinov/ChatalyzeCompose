@@ -1,12 +1,8 @@
 package com.dev_marinov.chatalyze
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.data.chatMessage.ChatSocketRepository
+import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
