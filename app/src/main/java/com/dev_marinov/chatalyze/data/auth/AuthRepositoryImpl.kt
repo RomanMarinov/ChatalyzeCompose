@@ -9,8 +9,8 @@ import com.dev_marinov.chatalyze.data.util.PairTokensDTOSerializer
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
-import com.dev_marinov.chatalyze.presentation.ui.code_screen.model.UserCode
-import com.dev_marinov.chatalyze.presentation.ui.create_password_screen.model.ForgotPasswordPassword
+import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.code_screen.model.UserCode
+import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.create_password_screen.model.ForgotPasswordPassword
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okhttp3.internal.http.HTTP_BAD_REQUEST

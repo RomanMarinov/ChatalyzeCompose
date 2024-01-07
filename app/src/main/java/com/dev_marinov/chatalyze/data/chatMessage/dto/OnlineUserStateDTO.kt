@@ -30,12 +30,12 @@ data class OnlineUsers(
 @Serializable
 data class OnlineUserStateDTO(
     val userPhone: String,
-    val onlineOrDate: String
+    val onlineOrOffline: String
 ) {
     fun mapToDomain() : OnlineUserState {
         return OnlineUserState(
             userPhone = userPhone,
-            onlineOrDate = onlineOrDate
+            onlineOrOffline = onlineOrOffline
         )
     }
 }

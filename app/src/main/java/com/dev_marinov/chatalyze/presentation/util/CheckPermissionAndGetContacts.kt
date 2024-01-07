@@ -9,7 +9,7 @@ import android.provider.ContactsContract
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

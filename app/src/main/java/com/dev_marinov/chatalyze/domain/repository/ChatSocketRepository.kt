@@ -5,7 +5,7 @@ import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
-import com.dev_marinov.chatalyze.presentation.ui.call_screen.model.UserCall
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.UserCall
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import kotlinx.coroutines.flow.Flow
 
@@ -19,7 +19,7 @@ interface ChatSocketRepository {
 
 //    suspend fun sendMessage(message: String)
     suspend fun sendMessage(messageToSend: MessageToSend)
-    suspend fun getAllMessages(userPairChat: UserPairChat): List<Message>
+   // suspend fun getAllMessages(userPairChat: UserPairChat): List<Message>
 
 
     fun observeMessages(): Flow<MessageWrapper>

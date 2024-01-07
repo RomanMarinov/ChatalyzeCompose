@@ -22,7 +22,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.ui.chat_screen.ChatScreenViewModel
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_screen.ChatScreenViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*

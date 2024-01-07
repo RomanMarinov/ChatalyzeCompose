@@ -1,23 +1,38 @@
 package com.dev_marinov.chatalyze.data.chatMessage
 
 import android.util.Log
-import com.dev_marinov.chatalyze.data.call.dto.UserCallDTO
 import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageDto
 import com.dev_marinov.chatalyze.data.chatMessage.dto.MessageWrapper
-import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
 import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
-import com.dev_marinov.chatalyze.presentation.ui.call_screen.model.UserCall
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import com.google.gson.Gson
-import io.ktor.client.*
-import io.ktor.client.features.websocket.*
-import io.ktor.client.request.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.call.receive
+import io.ktor.client.network.sockets.mapEngineExceptions
+import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
-import io.ktor.http.cio.websocket.*
 import io.ktor.http.contentType
+import io.ktor.http.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.client.utils.EmptyContent.contentType
+import io.ktor.http.*
+import io.ktor.client.utils.*
+
+import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
+import io.ktor.websocket.close
+import io.ktor.websocket.readText
+
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
@@ -50,6 +65,7 @@ class ChatSocketRepositoryImpl @Inject constructor(
             socket = client.webSocketSession {
                 url("${ChatSocketRepository.Endpoints.SocketChat.url}?sender=$sender")
             }
+
             if (socket?.isActive == true) {
                 Resource.Success(Unit)
             } else Resource.Error("Couldn't establish a connection.")
@@ -71,27 +87,31 @@ class ChatSocketRepositoryImpl @Inject constructor(
         }
     }
 
+//    при чем здесь нажатие на чат observeMessages socket NOT NULL
+//    почему сразу при загрузке observeMessages socket NULL
+
     val myJson = Json { ignoreUnknownKeys = true }
     override fun observeOnlineUserState(): Flow<MessageWrapper> {
         return try {
-            Log.d("4444", " observeMessages")
+            if (socket == null) {
+                Log.d("4444", " observeOnlineUserState socket NULL")
+            } else {
+                Log.d("4444", " observeOnlineUserState socket NOT NULL")
+            }
+
             socket?.incoming
                 ?.receiveAsFlow()
                 ?.filter { it is Frame.Text }
                 ?.map {
                     val json = (it as? Frame.Text)?.readText() ?: ""
+                    //Log.d("4444", " observeMessages json=" + json)
                     myJson.decodeFromString<MessageWrapper>(json)
-
                 } ?: flow { }
         }  catch (e: Exception) {
             e.printStackTrace()
             Log.d("4444", " try catch observeMessages e=$e")
             flow {  }
         }
-    }
-
-    private fun cancelobserveOnlineUserState() {
-
     }
 
     // хуй пока закрыл ебаная ошибка
@@ -118,20 +138,51 @@ class ChatSocketRepositoryImpl @Inject constructor(
         socket?.close()
     }
 
-    override suspend fun getAllMessages(userPairChat: UserPairChat): List<Message> {
-        return try {
-            Log.d(
-                "4444",
-                " MessageServiceImpl getAllMessages поппытка отпарвить userPairChat=" + userPairChat
-            )
-            client.post<List<MessageDto>>(ChatSocketRepository.Endpoints.GetAllMessages.url) {
-                contentType(ContentType.Application.Json)
-                body = userPairChat
-            }.map { it.mapToDomain() }
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+//    override suspend fun getAllMessages(userPairChat: UserPairChat): List<Message> {
+//        return try {
+//            client.post<List<MessageDto>>(ChatSocketRepository.Endpoints.GetAllMessages.url) {
+//                contentType(ContentType.Application.Json)
+//                body = userPairChat
+//            }.map { it.mapToDomain() }
+//        } catch (e: Exception) {
+//            emptyList()
+//        }
+//    }
+
+
+//    override suspend fun getAllMessages(userPairChat: UserPairChat): List<Message> {
+//        return try {
+//            val response: HttpResponse = client.post(ChatSocketRepository.Endpoints.GetAllMessages.url) {
+//                contentType(ContentType.Application.Json)
+//                setBody(userPairChat)
+//            }
+//            response.body<List<Message>>()
+////            client.post<List<MessageDto>>(ChatSocketRepository.Endpoints.GetAllMessages.url) {
+////                contentType(ContentType.Application.Json)
+////                body = userPairChat
+////            }.map { it.mapToDomain() }
+//        } catch (e: Exception) {
+//            emptyList()
+//        }
+//    }
+
+//    override suspend fun getAllMessages(userPairChat: UserPairChat): List<Message> {
+//        return try {
+//            val response: HttpResponse = client.post(ChatSocketRepository.Endpoints.GetAllMessages.url) {
+//                contentType(ContentType.Application.Json)
+//                setBody(userPairChat)
+//            }
+//            if (response.status == HttpStatusCode.OK) {
+//                response.receive<List<Message>>() // Десериализация ответа в список сообщений
+//            } else {
+//                emptyList<Message>() // Возвращаем пустой список, если статус ответа не ОК
+//            }
+//        } catch (e: Exception) {
+//            emptyList<Message>() // Возвращаем пустой список в случае ошибки
+//        }
+//    }
+
+
 
 /////////////////////
 

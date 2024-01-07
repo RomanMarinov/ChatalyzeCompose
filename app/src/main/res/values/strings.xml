@@ -12,14 +12,14 @@
     <string name="password">password</string>
     <string name="successful_registration">You have successfully registered</string>
 
-<!--    sign up screen-->
+    <!--    sign up screen-->
     <string name="email_warning">Invalid Email format</string>
     <string name="email_password_invalid">Invalid email or password</string>
     <string name="password_warning">Password must be more than 5 characters</string>
     <string name="email_password_warning">Email and Password must be more than 5 characters</string>
     <string name="email">email</string>
 
-<!--    forgot screen-->
+    <!--    forgot screen-->
     <string name="header_forgot_screen">Enter the email address you provided when registering earlier. We will ship to you now</string>
     <string name="get_code">get code</string>
 
@@ -28,12 +28,12 @@
     <string name="send_code">send code</string>
     <string name="code_warning">Code length is not equal to 5</string>
 
-<!--    chats screen-->
+    <!--    chats screen-->
     <string name="permission_read_contact_true">"Похоже, вы навсегда отказали в разрешении доступа к своему контакту.\nВы можете перейти в настройки приложения, чтобы предоставить это"</string>
     <string name="permission_read_contact_false">"Этому приложению нужен доступ к вашему контакту, чтобы вы имели возможность написать друзьям"</string>
     <string name="permission_read_phone_numbers_true">"Похоже, вы навсегда отказались от разрешения на доступ к вашим контактам.\nВы можете перейти в настройки приложения, чтобы предоставить это"</string>
     <string name="permission_read_phone_numbers_false">"Этому приложению нужен доступ к вашим контактам, чтобы вы имели возможность написать друзьям"</string>
-<!--    chat screen-->
+    <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
 
     <!--    call screen-->
@@ -43,22 +43,18 @@
     <string name="profile_screen_setting">Profile</string>
     <string name="try_again_later">Try again later</string>
 
-<!--    new chat screen-->
+    <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>
 
     <!--    new call screen-->
     <string name="header_new_call_screen">New call</string>
 
-<!--        create password screen-->
+    <!--        create password screen-->
     <string name="password_confirm">password confirm</string>
     <string name="create_password">create password</string>
     <string name="password_mismatch">Password mismatch</string>
 
     <string name="hide">show</string>
-
-
-
-
 
     <string name="dialog_permissions_settings">go to settings</string>
     <string name="dialog_permissions_justification">Permission must be accepted</string>
@@ -72,4 +68,8 @@
     <string name="justification_RECORD_AUDIO">RECORD_AUDIO (microphone)\n\nmust be turned on for you to audio chat with the people you are talking to</string>
     <string name="justification_denied_RECORD_AUDIO">RECORD_AUDIO (microphone)\n\nmust be enabled even if this permission is disabled in your settings so that you can audio connect with people you are talking to.</string>
 
+
+    <string name="trying_to_call">trying to make a call…</string>
+    <string name="incoming_call">incoming call…</string>
+    <string name="title_activity_main_screens">MainScreensActivity</string>
 </resources>

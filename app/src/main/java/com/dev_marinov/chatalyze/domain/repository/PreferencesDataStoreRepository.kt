@@ -23,4 +23,7 @@ interface PreferencesDataStoreRepository {
 
     val isSessionState: Flow<String>
     suspend fun saveSessionState(sessionState: String)
+
+    val firebaseToken: Flow<String>
+    suspend fun saveFirebaseToken(firebaseToken: String)
 }

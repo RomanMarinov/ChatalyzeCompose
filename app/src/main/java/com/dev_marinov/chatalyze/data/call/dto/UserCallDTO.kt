@@ -1,15 +1,15 @@
 package com.dev_marinov.chatalyze.data.call.dto
 
-import com.dev_marinov.chatalyze.presentation.ui.call_screen.model.UserCall
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.UserCall
 
 data class UserCallDTO(
-    val event: String,
+    val topic: String,
     val sender: String,
     val recipient: String
 ) {
     fun mapToDomain() : UserCall {
         return UserCall(
-            event = event,
+            topic = topic,
             sender = sender,
             recipient = recipient
         )

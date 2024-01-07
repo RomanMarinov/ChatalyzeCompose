@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "576573887886",
+    "project_id": "chatalyze-client",
+    "storage_bucket": "chatalyze-client.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576573887886:android:e6901b8c2cbf2acf7d00df",
+        "android_client_info": {
+          "package_name": "com.dev_marinov.chatalyze"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrVYIeiAL2Pb3gqc94K5Xjr66h6PWRLL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

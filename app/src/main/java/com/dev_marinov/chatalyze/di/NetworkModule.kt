@@ -1,8 +1,10 @@
 package com.dev_marinov.chatalyze.di
 
 import com.dev_marinov.chatalyze.data.auth.AuthApiService
+import com.dev_marinov.chatalyze.data.call.remote.CallApiService
 import com.dev_marinov.chatalyze.data.chat.ChatApiService
 import com.dev_marinov.chatalyze.data.chats.ChatsApiService
+import com.dev_marinov.chatalyze.data.firebase.register.FirebaseApiService
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -14,6 +16,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -40,11 +43,17 @@ class NetworkModule {
         return retrofit.create(ChatsApiService::class.java)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideApiService(
-//        retrofit: Retrofit
-//    ): ApiService = retrofit.create()
+    @Provides
+    @Singleton
+    fun provideCallApiService(retrofit: Retrofit): CallApiService {
+        return retrofit.create(CallApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): FirebaseApiService {
+        return retrofit.create(FirebaseApiService::class.java)
+    }
 
 
     //http://0.0.0.0:8080/register

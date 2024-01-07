@@ -22,5 +22,10 @@ class Constants {
         const val KEY_READ_CONTACTS = "KEY_READ_CONTACTS"
         const val KEY_CAMERA = "KEY_CAMERA"
         const val KEY_RECORD_AUDIO = "KEY_RECORD_AUDIO"
+
+        const val KEY_FIREBASE_TOKEN = "KEY_FIREBASE_TOKEN"
+
+        const val INCOMING_CALL_EVENT = "INCOMING_CALL_EVENT"
+        const val OUTGOING_CALL_EVENT = "OUTGOING_CALL_EVENT"
     }
 }
