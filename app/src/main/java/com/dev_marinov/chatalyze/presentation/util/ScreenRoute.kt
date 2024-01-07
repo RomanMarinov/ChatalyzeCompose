@@ -4,6 +4,7 @@ package com.dev_marinov.chatalyze.presentation.util
 const val RECIPIENT_NAME = "RECIPIENT_NAME"
 const val RECIPIENT_PHONE = "RECIPIENT_PHONE"
 const val SENDER_PHONE = "SENDER_PHONE"
+const val TYPE_EVENT = "TYPE_EVENT"
 
 sealed class ScreenRoute(val route: String) {
     object SplashScreen : ScreenRoute("splash_screen")
@@ -24,9 +25,15 @@ sealed class ScreenRoute(val route: String) {
         }
     }
 
-    object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}") {
-        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String) : String {
-            return "call_screen/$recipientName/$recipientPhone/$senderPhone"
+//    object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
+//        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String, typeEvent: String) : String {
+//            return "call_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
+//        }
+//    }
+
+    object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
+        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String, typeEvent: String) : String {
+            return "call_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
         }
     }
 
@@ -41,3 +48,4 @@ sealed class ScreenRoute(val route: String) {
 //    }
 
 }
+

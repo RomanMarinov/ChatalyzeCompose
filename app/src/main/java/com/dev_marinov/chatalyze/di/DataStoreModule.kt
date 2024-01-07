@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import com.dev_marinov.chatalyze.data.auth.dataStore
 import com.dev_marinov.chatalyze.data.auth.dto.PairTokensDTO
-import com.dev_marinov.chatalyze.data.data_store.PreferencesDataStoreRepositoryImpl
+import com.dev_marinov.chatalyze.data.store.data_store.PreferencesDataStoreRepositoryImpl
 import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import dagger.Module

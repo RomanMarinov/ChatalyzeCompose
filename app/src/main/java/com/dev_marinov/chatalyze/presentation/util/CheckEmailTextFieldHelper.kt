@@ -3,7 +3,7 @@ package com.dev_marinov.chatalyze.presentation.util
 import android.content.Context
 import android.util.Log
 import android.util.Patterns
-import com.dev_marinov.chatalyze.presentation.ui.forgot_password_screen.ForgotPasswordScreenViewModel
+import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.forgot_password_screen.ForgotPasswordScreenViewModel
 
 object CheckEmailTextFieldHelper {
     fun check(

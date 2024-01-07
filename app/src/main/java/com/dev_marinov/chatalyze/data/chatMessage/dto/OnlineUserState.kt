@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class OnlineUserState(
     val userPhone: String,
-    val onlineOrDate: String
+    val onlineOrOffline: String
 )

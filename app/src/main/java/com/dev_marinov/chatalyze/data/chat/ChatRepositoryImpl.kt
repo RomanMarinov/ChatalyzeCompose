@@ -2,7 +2,7 @@ package com.dev_marinov.chatalyze.data.chat
 
 import com.dev_marinov.chatalyze.domain.model.chat.ChatMessage
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
-import com.dev_marinov.chatalyze.presentation.ui.chats_screen.model.Contact
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import javax.inject.Singleton
