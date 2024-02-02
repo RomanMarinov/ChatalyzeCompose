@@ -72,4 +72,24 @@
     <string name="trying_to_call">trying to make a call…</string>
     <string name="incoming_call">incoming call…</string>
     <string name="title_activity_main_screens">MainScreensActivity</string>
+
+    <string name="select_display">Select type display incoming call notification</string>
+    <string name="important">Important setting</string>
+    <string name="go_to_settings">go to settings</string>
+    <string name="accept_push_type">accept push type</string>
+    <string name="enable_сhatalyze">You need to enable Chatalyze to show on top of other applications</string>
+
+    <string name="setting_notification">Check and enable all notification permissions in settings</string>
+    <string name="title_activity_stream_screen">StreamScreenActivity</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+
+    <string name="execute_logout">Do you really want to get out of the profile?</string>
+    <string name="execute_delete_profile">Do you really want to delete your profile completely?</string>
+    <string name="execute_delete_history_calls">Do you really want to clear your call history?</string>
+
+
+    <string name="user_token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidjhybXQzZmFlcmNrIn0.48dmUEoA5zMV_dRwTh7M_sz5qCfOx78aMc1oEN0Hs3g</string>
+
 </resources>

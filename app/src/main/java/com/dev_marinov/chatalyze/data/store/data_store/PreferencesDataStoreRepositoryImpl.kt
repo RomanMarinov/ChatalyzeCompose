@@ -120,4 +120,29 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
             preferences[preferencesKey] = firebaseToken
         }
     }
+
+    override val pushTypeDisplayFlow: Flow<Int> = context.dataStore.data.map { value: Preferences ->
+        val preferencesKey = intPreferencesKey(Constants.PUSH_TYPE_DISPLAY)
+        value[preferencesKey] ?: -1
+    }
+
+    override suspend fun savePushTypeDisplay(selectedBoxIndex: Int) {
+        val preferencesKey = intPreferencesKey(Constants.PUSH_TYPE_DISPLAY)
+        context.dataStore.edit {
+            it[preferencesKey] = selectedBoxIndex
+        }
+    }
+
+    override val hideDialogPermissionNotificationFlow: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
+        val preferencesKey = booleanPreferencesKey(Constants.HIDE_DIALOG_PERMISSION_NOTIFICATION)
+        value[preferencesKey] == true
+    }
+
+    override suspend fun saveHideDialogPermissionNotification(hide: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.HIDE_DIALOG_PERMISSION_NOTIFICATION)
+        context.dataStore.edit {
+            it[preferencesKey] = hide
+        }
+
+    }
 }

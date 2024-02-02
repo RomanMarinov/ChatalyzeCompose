@@ -14,7 +14,6 @@ sealed class ScreenRoute(val route: String) {
     object CreatePasswordScreen : ScreenRoute("create_password_screen")
     object SignUpScreen : ScreenRoute("sign_up_screen")
 
-    object ChatalyzeScreen : ScreenRoute("chatalyze_screen")
     object ChatsScreen : ScreenRoute("chats_screen")
     object CallsScreen : ScreenRoute("calls_screen")
     object ProfileScreen : ScreenRoute("profile_screen")
@@ -25,14 +24,16 @@ sealed class ScreenRoute(val route: String) {
         }
     }
 
-//    object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
-//        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String, typeEvent: String) : String {
-//            return "call_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
-//        }
-//    }
+//    object StreamScreen : ScreenRoute("stream_screen")
+
+    object StreamScreen : ScreenRoute("stream_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
+        fun withArgs(recipientName: String?, recipientPhone: String?, senderPhone: String?, typeEvent: String) : String {
+            return "stream_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
+        }
+    }
 
     object CallScreen : ScreenRoute("call_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
-        fun withArgs2(recipientName: String, recipientPhone: String, senderPhone: String, typeEvent: String) : String {
+        fun withArgs2(recipientName: String?, recipientPhone: String, senderPhone: String, typeEvent: String) : String {
             return "call_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
         }
     }

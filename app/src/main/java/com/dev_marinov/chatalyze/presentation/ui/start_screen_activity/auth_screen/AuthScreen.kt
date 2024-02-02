@@ -51,6 +51,8 @@ fun AuthScreen(
     navController: NavHostController,
     viewModel: AuthScreenViewModel = hiltViewModel()
 ) {
+    Log.d("4444", " AuthScreen loaded")
+
     SystemUiControllerHelper.SetSystemBars(false)
     SystemUiControllerHelper.SetStatusBarColor()
     GradientBackgroundHelper.SetGradientBackground()
@@ -74,8 +76,8 @@ fun AuthScreen(
 //    ExecuteGrantedPermissions()
 
 
-    LaunchedEffect(key1 = true) {
-        Log.d("4444", " refreshToken=" + refreshToken)
+    LaunchedEffect(refreshToken) {
+        Log.d("4444", " LaunchedEffect refreshToken=" + refreshToken)
         if (refreshToken.isNotEmpty()) {
             val intent = Intent(context, MainScreensActivity::class.java)
             context.startActivity(intent)
@@ -214,7 +216,6 @@ fun AuthScreen(
                         .clip(RoundedCornerShape(50))
                         .clickable {
                             isClicked = !isClicked
-//                            navController.navigate(ScreenRoute.ForgotPasswordScreen.route)
                             navController.navigate(ScreenRoute.ForgotPasswordScreen.route)
 
                         },

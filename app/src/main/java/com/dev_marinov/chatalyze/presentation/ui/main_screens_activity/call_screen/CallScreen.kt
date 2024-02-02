@@ -2,8 +2,14 @@ package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_scr
 
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.KeyguardManager
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
-
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloat
@@ -17,11 +23,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,8 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -53,35 +55,52 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.airbnb.lottie.LottieComposition
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.FirebaseCommand
 import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import kotlin.math.roundToInt
 
-//@RootNavGraph(true)
-//@Destination(
-//    deepLinks = [
-//        DeepLink(
-//            uriPattern = "https://www.example.com/home"
+@Composable
+fun UnlockAndTurnOnTheScreen() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) { // для Android выше от 8.1
+        val context = LocalContext.current
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val windowContext = LocalContext.current as? Activity
+        windowContext?.apply {
+            setShowWhenLocked(true) // позволяет отобразить активити поверх блокировки экрана.
+            setTurnScreenOn(true) // позволяет включить экран.
+            keyguardManager.requestDismissKeyguard(this, null)
+        }
+    } else {
+//        val window = LocalWindow.current
+//        window.addFlags(
+//            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+//                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+//                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
 //        )
-//    ]
-//)
+    }
+}
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -95,115 +114,138 @@ fun CallScreen(
 ) {
     Log.d("4444", " CallScreen загрузился")
 
+    val context = LocalContext.current
+
+    UnlockAndTurnOnTheScreen()
+
     SystemUiControllerHelper.SetStatusBarColor()
-
-    viewModel.saveHideNavigationBar(true)
-
-//            починить получение чатов при заходке и вообще
-
-
-
-
-    // 1 исходящий
-    // открыть OutgoingCallContent и отправить получателю объект и чекать participants.size == 2
-    // как только 2 то сразу скрыть OutgoingCallContent и показать экран CallStreamConnection
-    // потом придумать таймер 20 сек и посылать второй объект на уведомление о пропущенном
-
-
-    // 2 входящий
-    // если отрисовался пуш и юзер нажал на него то сразу отрыть CallStreamConnection
-    // если не пуш то открыть IncomingCallContent
-    // для кнопки принять - закрыть IncomingCallContent и открыть CallStreamConnection
-    // для кнопки отклонить - IncomingCallContent
-
-    var callStreamState by remember {
-        mutableStateOf(false)
-    }
 
     val isFinishCallScreen by viewModel.isFinishCallScreen.observeAsState()
     LaunchedEffect(isFinishCallScreen) {
         if (isFinishCallScreen == true) {
-            navController.popBackStack()
+//            navController.popBackStack()
         }
     }
 
-//    if (isFinishCallScreen == true) {
-//        LottieExample(isPlaying = false)
-//    } else {
-//        LottieExample(isPlaying = true)
-//    }
-
     when (typeEvent) {
-        Constants.OUTGOING_CALL_EVENT -> {
+        Constants.OUTGOING_CALL_EVENT -> { // исходящий
+            Log.d("4444", " CallScreen Constants.OUTGOING_CALL_EVENT")
             OutgoingCallContent(
+                navController = navController,
                 recipientName = recipientName,
                 recipientPhone = recipientPhone,
                 senderPhone = senderPhone,
-                viewModel = viewModel
-//                onDeclineCall = {
-//                    callStreamState = true
-//                }
+                viewModel = viewModel,
+                onDeclineCall = {
+                    navController.popBackStack(ScreenRoute.CallsScreen.route, false)
+                }
             )
         }
 
         Constants.INCOMING_CALL_EVENT -> {
-            Log.d("4444", " Constants.INCOMING_CALL_EVENT=" + Constants.INCOMING_CALL_EVENT
-            + " recipientName=" + recipientName + " recipientPhone=" + recipientPhone)
-            IncomingCallContent(
+            //Log.d("4444", " CallScreen Constants.INCOMING_CALL_EVENT")
+            IncomingCallContent( // входящий
+                context = context,
                 recipientName = recipientName,
                 recipientPhone = recipientPhone,
                 viewModel = viewModel,
+                navController = navController,
+                senderPhone = senderPhone,
                 onAcceptCall = {
-                    callStreamState = it
+                    Log.d("4444", " CallScreen IncomingCallContent")
+
+                    viewModel.sendStateReadyToStream(
+                        firebaseCommand =
+                        FirebaseCommand(
+                            topic = "",
+                            senderPhone = senderPhone ?: "",
+                            recipientPhone = recipientPhone ?: "",
+                            typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
+                        )
+                    )
+                    navController.navigate(
+                        route = ScreenRoute.StreamScreen.withArgs(
+                            recipientName = recipientName,
+                            recipientPhone = recipientPhone,
+                            senderPhone = senderPhone,
+                            typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
+                        )
+                    )
+                },
+                onDeclineCall = {
+                    Log.d("4444", " onDeclineCall")
+                  //  viewModel.saveHideNavigationBar(isHide = false)
+                    //navController.popBackStack()cdwc
+                    val uri = "scheme_chatalyze://calls_screen".toUri()
+                    val deepLink = Intent(Intent.ACTION_VIEW, uri)
+                    val pendingIntent: PendingIntent =
+                        TaskStackBuilder.create(context).run {
+                            addNextIntentWithParentStack(deepLink)
+                            getPendingIntent(
+                                0,
+                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                            )
+                        }
+                    pendingIntent.send()
                 }
             )
         }
     }
-
-//    if (callStreamState) {
-//        CallStreamConnection(
-//            navController = navController,
-//            recipientName = recipientName,
-//            recipientPhone = recipientPhone,
-//            viewModel = viewModel
-//        )
-//    }
-
-
-    // надо сначала показать попытку дозвона
-    // клиент на сервер отправит событие звонка
-    // с объектом (event = "call", )
-
-    //viewModel.tryingToCall(senderPhone = senderPhone, recipientPhone = recipientPhone)
-    //CallConnection(recipientName = recipientName, recipientPhone = recipientPhone)
-//    CallConnected(
-//        navController = navController,
-//        recipientName = recipientName,
-//        recipientPhone = recipientPhone,
-//        viewModel = viewModel
-//    )
 }
-
 
 @Composable
 fun OutgoingCallContent(
+    navController: NavHostController,
     recipientName: String?,
     recipientPhone: String?,
     senderPhone: String?,
     viewModel: CallScreenViewModel,
-    //onDeclineCall: () -> Unit,
+    onDeclineCall: () -> Unit,
 //    composition: LottieComposition?,
 //    progress: Float,
 ) {
+
+
+//
+//    val getReadyStreamOsb by viewModel.getReadyStream.collectAsStateWithLifecycle(null)
+//    val isSessionStateOsb by viewModel.isSessionState.collectAsStateWithLifecycle("")
+//
+//    val getReadyStream by remember { mutableStateOf(getReadyStreamOsb) }
+//    val isSessionState by remember { mutableStateOf(isSessionStateOsb) }
+    val context = LocalContext.current
+    val getReadyStream by viewModel.getReadyStream.collectAsStateWithLifecycle(null)
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
+
     LaunchedEffect(isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
-            viewModel.makeCall(senderPhone = senderPhone, recipientPhone = recipientPhone)
+            IfLetHelper.execute(senderPhone, recipientPhone) {
+                val firebaseCommand = FirebaseCommand(
+                    topic = "",
+                    senderPhone = it[0],
+                    recipientPhone = it[1],
+                    typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_CALL
+                )
+                viewModel.sendCommandToFirebase(firebaseCommand = firebaseCommand)
+            } ?: run { }
+        }
+    }
+
+    LaunchedEffect(getReadyStream) {
+        getReadyStream?.let {
+            if (it.typeFirebaseCommand == Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM) {
+                navController.navigate(
+                    route = ScreenRoute.StreamScreen.withArgs(
+                        recipientName = recipientName ?: recipientPhone,
+                        recipientPhone = recipientPhone,
+                        senderPhone = senderPhone,
+                        typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM // не используется хуй
+                    )
+                )
+            }
         }
     }
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.outgoing_call_anim))
-
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever, // бесконечно
@@ -219,20 +261,27 @@ fun OutgoingCallContent(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {  }
+                onClick = { }
             ),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(1f)) // Добавляет пустое пространство вверху с весом 1f
 
-        Column(modifier = Modifier.fillMaxWidth().height(500.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp),
                 color = Color.White,
                 fontSize = 36.sp,
                 text = recipientName ?: recipientPhone ?: "",
+                textAlign = TextAlign.Center
             )
 
             Text(
@@ -243,6 +292,7 @@ fun OutgoingCallContent(
             )
         }
 
+        // просто пока исключил чтобы избежать перекомпановки
         Box(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -275,9 +325,9 @@ fun OutgoingCallContent(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(bounded = false, color = Color.Gray)
                     ) {
-                        //onDeclineCall()
+                        onDeclineCall()
 
-                        viewModel.executeFinishCallScreen(finish = true)
+                       // viewModel.executeFinishCallScreen(finish = true)
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -296,12 +346,18 @@ fun OutgoingCallContent(
 
 @Composable
 fun IncomingCallContent(
+    context: Context,
     modifier: Modifier = Modifier,
     recipientName: String?,
     recipientPhone: String?,
     viewModel: CallScreenViewModel,
-    onAcceptCall: (Boolean) -> Unit
+    navController: NavHostController,
+    senderPhone: String?,
+    onAcceptCall: (Boolean) -> Unit,
+    onDeclineCall: (Boolean) -> Unit
 ) {
+
+    viewModel.saveHideNavigationBar(true)
 
     Column(
         modifier = Modifier
@@ -310,18 +366,19 @@ fun IncomingCallContent(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {  }
+                onClick = { }
             ),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(1f)) // Добавляет пустое пространство вверху с весом 1f
 
-        Column(modifier = Modifier.fillMaxWidth()
+        Column(modifier = Modifier
+            .fillMaxWidth()
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = {  }
+                onClick = { }
             ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
@@ -329,6 +386,7 @@ fun IncomingCallContent(
                 color = Color.White,
                 fontSize = 36.sp,
                 text = recipientName ?: recipientPhone ?: ""
+//                text = "Мой дружище"
             )
             Text(
                 modifier = Modifier.padding(bottom = 106.dp),
@@ -353,9 +411,14 @@ fun IncomingCallContent(
             ) {
                 AcceptBand(
                     viewModel = viewModel,
+                    navController = navController,
+                    senderPhone = senderPhone,
+                    recipientPhone = recipientPhone,
                     onAcceptCall = {
                         onAcceptCall(it)
-                    })
+                    },
+                    context = context
+                )
             }
             Box(
                 modifier = Modifier
@@ -363,12 +426,15 @@ fun IncomingCallContent(
                     .padding(top = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                DeclineBand(viewModel = viewModel)
+                DeclineBand(
+                    viewModel = viewModel,
+                    onDeclineCall = {
+                        onDeclineCall(it)
+                    }
+                )
             }
         }
     }
-
-
 }
 
 
@@ -377,8 +443,13 @@ fun IncomingCallContent(
 @Composable
 fun AcceptBand(
     viewModel: CallScreenViewModel,
+    navController: NavHostController,
+    senderPhone: String?,
+    recipientPhone: String?,
     onAcceptCall: (Boolean) -> Unit,
+    context: Context,
 ) {
+
     val shimmerColorShades = listOf(
         colorResource(id = R.color.white).copy(1f),
         colorResource(id = R.color.white).copy(0.0f),
@@ -429,7 +500,11 @@ fun AcceptBand(
             //.alpha(if (progress.value in 0.0f..0.5f) 1f else 0f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("slide to answer", color = colorResource(id = R.color.main_violet), fontSize = 18.sp)
+            Text(
+                "slide to answer",
+                color = colorResource(id = R.color.main_violet),
+                fontSize = 18.sp
+            )
         }
 
         AcceptBall(
@@ -438,9 +513,13 @@ fun AcceptBand(
                 .size(dragSize),
             progress = progress.value,
             viewModel = viewModel,
+            navController = navController,
+            senderPhone = senderPhone,
+            recipientPhone = recipientPhone,
             onAcceptCall = {
                 onAcceptCall(it)
-            }
+            },
+            context = context
         )
     }
 }
@@ -451,8 +530,13 @@ private fun AcceptBall(
     modifier: Modifier,
     progress: Float,
     viewModel: CallScreenViewModel,
+    navController: NavHostController,
+    senderPhone: String?,
+    recipientPhone: String?,
     onAcceptCall: (Boolean) -> Unit,
+    context: Context,
 ) {
+    val limitState = remember { mutableStateOf(true) }
     Box(
         modifier
             .padding(4.dp)
@@ -469,10 +553,45 @@ private fun AcceptBall(
                     tint = Color.White,
                     modifier = Modifier.size(40.dp)
                 )
+
+                //  Log.d("4444", " CallScreen onAcceptCall progress=" +progress)
+
+                if (limitState.value && progress >= 1.0) {
+                    //  Log.d("4444", " CallScreen onAcceptCall progress=" +progress)
+                    onAcceptCall(true)
+                    limitState.value = false
+                }
+
                 // viewModel.
                 // тут надо сделать закрытие экрана
 
-                onAcceptCall(true)
+
+//                LaunchedEffect(key1 = true) {
+//
+//                        val intent = Intent(context, StreamScreenActivity::class.java)
+//                        intent.putExtra("recipientName", "recipientName")
+//                        intent.putExtra("recipientPhone", recipientPhone)
+//                        intent.putExtra("senderPhone", senderPhone)
+//                        intent.putExtra("typeEvent", Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM)
+//                        context.startService(intent)
+//
+////                    navController.navigate(
+////                        route = ScreenRoute.StreamScreen.withArgs(
+////                            recipientName = "roma",
+////                            recipientPhone = recipientPhone,
+////                            senderPhone = senderPhone,
+////                            typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
+////                        )
+////                    )
+//                }
+
+//                val intent = Intent(context, StreamScreenActivity::class.java)
+//                    intent.putExtra("recipientName", "recipientName")
+//                    intent.putExtra("recipientPhone", recipientPhone)
+//                    intent.putExtra("senderPhone", senderPhone)
+//                    intent.putExtra("typeEvent", Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM)
+//                    context.startService(intent)
+
 
             } else {
                 Icon(
@@ -492,6 +611,7 @@ private fun AcceptBall(
 @Composable
 fun DeclineBand(
     viewModel: CallScreenViewModel,
+    onDeclineCall: (Boolean) -> Unit
 ) {
     val shimmerColorShades = listOf(
         colorResource(id = R.color.white).copy(1f),
@@ -546,7 +666,11 @@ fun DeclineBand(
                 .alpha(progress.value),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("slide to decline", color = colorResource(id = R.color.main_violet), fontSize = 18.sp)
+            Text(
+                "slide to decline",
+                color = colorResource(id = R.color.main_violet),
+                fontSize = 18.sp
+            )
         }
 
         DeclineBall(
@@ -554,7 +678,10 @@ fun DeclineBand(
                 .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
                 .size(dragSize),
             progress = progress.value,
-            viewModel = viewModel
+            viewModel = viewModel,
+            onDeclineCall = {
+                onDeclineCall(it)
+            }
         )
     }
 }
@@ -565,7 +692,10 @@ private fun DeclineBall(
     modifier: Modifier,
     progress: Float,
     viewModel: CallScreenViewModel,
+    onDeclineCall: (Boolean) -> Unit
 ) {
+    val limitState = remember { mutableStateOf(true) }
+
     Box(
         modifier
             .padding(4.dp)
@@ -582,7 +712,17 @@ private fun DeclineBall(
                     tint = Color.White,
                     modifier = Modifier.size(40.dp)
                 )
-                viewModel.executeFinishCallScreen(finish = true)
+
+              //  Log.d("4444", " isConfirmed progress=" + progress)
+
+                if (limitState.value && progress <= 0.02) {
+                    limitState.value = false
+                    onDeclineCall(true)
+                }
+
+
+
+               // viewModel.executeFinishCallScreen(finish = true)
                 // тут надо сделать закрытие экрана
             } else {
                 Icon(

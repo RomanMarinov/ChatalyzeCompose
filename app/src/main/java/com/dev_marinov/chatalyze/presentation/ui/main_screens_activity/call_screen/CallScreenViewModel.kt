@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.repository.CallRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.UserCall
+import com.dev_marinov.chatalyze.domain.repository.RoomRepository
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.FirebaseCommand
 import com.dev_marinov.chatalyze.presentation.util.Constants
-import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import com.dev_marinov.chatalyze.presentation.util.SingleLiveEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,28 +16,28 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
 import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
-import java.time.Duration
 import javax.inject.Inject
 
 @HiltViewModel
 class CallScreenViewModel @Inject constructor(
     private val callRepository: CallRepository,
-    private val preferencesDataStoreRepository: PreferencesDataStoreRepository
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
+    private val roomRepository: RoomRepository
 ) : ViewModel() {
 
     val isSessionState = preferencesDataStoreRepository.isSessionState
 
-    private var _callTimeDuration: MutableStateFlow<String> = MutableStateFlow("")
-    val callTimeDuration: StateFlow<String> = _callTimeDuration
+    val getReadyStream = roomRepository.getReadyStream
 
-    private var currentTimeUnix: Long = 0L
-    private var currentTimeUnixCount: Long = 0L
+//    private var _callTimeDuration: MutableStateFlow<String> = MutableStateFlow("")
+//    val callTimeDuration: StateFlow<String> = _callTimeDuration
+
+//    private var currentTimeUnix: Long = 0L
+//    private var currentTimeUnixCount: Long = 0L
 
     private var jobCallingLoop: Job? = null
 
@@ -47,64 +47,57 @@ class CallScreenViewModel @Inject constructor(
     private var _isFinishCallScreen = SingleLiveEvent<Boolean>()
     val isFinishCallScreen: SingleLiveEvent<Boolean> = _isFinishCallScreen
 
-    fun currentTimeUnix(epochSeconds: Long) {
-        currentTimeUnix = epochSeconds
-    }
+//    fun currentTimeUnix(epochSeconds: Long) {
+//        currentTimeUnix = epochSeconds
+//    }
 
-    private fun currentTimeUnixCount(epochSeconds: Long) {
-        currentTimeUnixCount = epochSeconds
-    }
+//    private fun currentTimeUnixCount(epochSeconds: Long) {
+//        currentTimeUnixCount = epochSeconds
+//    }
 
-    private fun calculateTimeDifference() {
-        val callTimeDuration = calculateTimeDifference(
-            currentTimeUnix,
-            currentTimeUnixCount
-        )
-        _callTimeDuration.value = callTimeDuration
-    }
+//    private fun calculateTimeDifference() {
+//        val callTimeDuration = calculateTimeDifference(
+//            currentTimeUnix,
+//            currentTimeUnixCount
+//        )
+//        _callTimeDuration.value = callTimeDuration
+//    }
 
-    private fun calculateTimeDifference(start: Long, end: Long): String {
-        val duration = Duration.ofSeconds(end - start)
-        val hours = duration.toHours()
-        val minutes = duration.toMinutes() % 60
-        val seconds = duration.seconds % 60
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
-    }
+//    private fun calculateTimeDifference(start: Long, end: Long): String {
+//        val duration = Duration.ofSeconds(end - start)
+//        val hours = duration.toHours()
+//        val minutes = duration.toMinutes() % 60
+//        val seconds = duration.seconds % 60
+//        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+//    }
 
-    fun startCallingLoop() {
-        //Log.d("4444", " _callTimeDuratin вызов startCallingLoop=")
-         viewModelScope.launch(Dispatchers.Default) {
-             jobCallingLoop = launch {
-                 while (isActive) {
-                     currentTimeUnixCount(Clock.System.now().epochSeconds)
-                     calculateTimeDifference()
-                     delay(1000L)
-                     //Log.d("4444", " _callTimeDuratin=" + _callTimeDuration.value)
-                 }
-             }
-        }
-    }
+//    fun startCallingLoop() {
+//        //Log.d("4444", " _callTimeDuratin вызов startCallingLoop=")
+//         viewModelScope.launch(Dispatchers.Default) {
+//             jobCallingLoop = launch {
+//                 while (isActive) {
+//                     currentTimeUnixCount(Clock.System.now().epochSeconds)
+//                     calculateTimeDifference()
+//                     delay(1000L)
+//                     //Log.d("4444", " _callTimeDuratin=" + _callTimeDuration.value)
+//                 }
+//             }
+//        }
+//    }
 
-    fun cancelCallingLoop() {
-        viewModelScope.launch(Dispatchers.Default) {
-            jobCallingLoop?.cancel()
-        }
-    }
+//    fun cancelCallingLoop() {
+//        viewModelScope.launch(Dispatchers.Default) {
+//            jobCallingLoop?.cancel()
+//        }
+//    }
 
-    fun makeCall(senderPhone: String?, recipientPhone: String?) {
-        IfLetHelper.execute(senderPhone, recipientPhone) {
-            val userCall = UserCall(
-                topic = "",
-                sender = it[0],
-                recipient = it[1]
-            )
-            viewModelScope.launch(Dispatchers.IO) {
-                val response = callRepository.makeCall(userCall = userCall)
-                response?.let { messageResponse ->
-                    processTheResponse(response = messageResponse)
-                }
+    fun sendCommandToFirebase(firebaseCommand: FirebaseCommand) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = callRepository.sendCommandToFirebase(firebaseCommand = firebaseCommand)
+            response?.let { messageResponse ->
+                processTheResponse(response = messageResponse)
             }
-        } ?: run {  }
+        }
     }
 
 //    private inline fun <T: Any, R: Any> ifLet(vararg elements: T?, closure: (List<T>) -> R): R? {
@@ -122,11 +115,13 @@ class CallScreenViewModel @Inject constructor(
                 delay(1000L)
                 _statusCode.value = 0
             }
+
             HTTP_NOT_FOUND -> {
                 _statusCode.value = response.httpStatusCode
                 delay(1000L)
                 _statusCode.value = 0
             }
+
             HTTP_INTERNAL_SERVER_ERROR -> {
                 _statusCode.value = response.httpStatusCode
                 delay(1000L)
@@ -145,6 +140,13 @@ class CallScreenViewModel @Inject constructor(
                 Constants.HIDE_BOTTOM_BAR,
                 isHide = isHide
             )
+        }
+    }
+
+    fun sendStateReadyToStream(firebaseCommand: FirebaseCommand) {
+        Log.d("4444", " StreamScreenViewModel sendStateReadyToStream")
+        viewModelScope.launch(Dispatchers.IO) {
+            callRepository.sendCommandToFirebase(firebaseCommand = firebaseCommand)
         }
     }
 }

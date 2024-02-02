@@ -35,8 +35,8 @@ open class BroadcastReceiverNotification() : BroadcastReceiver() {
                     val isScreenLocked = keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
                     Log.d("4444", " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission  + " isScreenLocked=" + isScreenLocked)
 
-                    val recipient = "9303454564" // Замените этим реальным номером получателя
-                    val sender = "5551234567" // Замените этим вашим реальным номером
+                    val senderPhone = intent.getStringExtra("senderPhone")
+                    val recipientPhone = intent.getStringExtra("recipientPhone")
                     val typeEvent = Constants.INCOMING_CALL_EVENT
 
 // Правильный формат с заменой переменных
@@ -54,7 +54,7 @@ open class BroadcastReceiverNotification() : BroadcastReceiver() {
 
                     //проверить эту ебаную ссылку просто повесить клик на любую кноку и че будет
 //                    val uri = "scheme_chatalyze://${ScreenRoute.CallScreen.route}/${"roma"}${recipient}/${sender}/${typeEvent}".toUri()
-                    val uri = "scheme_chatalyze://call_screen/roma/$recipient/$sender/$typeEvent".toUri()
+                    val uri = "scheme_chatalyze://call_screen/roma/$recipientPhone/$senderPhone/$typeEvent".toUri()
                     val deepLink = Intent(Intent.ACTION_VIEW, uri)
 
                     val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {

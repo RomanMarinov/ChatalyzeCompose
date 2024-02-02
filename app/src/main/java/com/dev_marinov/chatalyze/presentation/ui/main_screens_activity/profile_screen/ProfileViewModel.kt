@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
+import com.dev_marinov.chatalyze.domain.repository.CallRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val preferencesDataStoreRepository: PreferencesDataStoreRepository
+    private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
+    private val callRepository: CallRepository
 ) : ViewModel() {
 
     private val refreshToken = authRepository.getRefreshTokensFromDataStore
@@ -61,6 +63,12 @@ class ProfileViewModel @Inject constructor(
             response?.let {
                 processTheResponse(response = response)
             }
+        }
+    }
+
+    fun executeDeleteHistoryCalls() {
+        viewModelScope.launch(Dispatchers.IO) {
+            callRepository.deleteHistoryCalls()
         }
     }
 

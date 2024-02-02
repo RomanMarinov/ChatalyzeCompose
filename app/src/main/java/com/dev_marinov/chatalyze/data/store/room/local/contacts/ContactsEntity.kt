@@ -6,14 +6,14 @@ import com.dev_marinov.chatalyze.data.util.DataConvertersForList
 
 @Entity(tableName = "contacts")
 data class ContactsEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey(autoGenerate = false)
+    val id: Int,
     @ColumnInfo(name = "name")
-    val name: String,
+    val name: String? = null,
     @ColumnInfo(name = "phone_number")
     val phoneNumber: String,
     @ColumnInfo(name = "photo")
-    val photo: String?
+    val photo: String? = null
 ) {
 //    companion object {
 //        fun mapFromDomain(contact: Contact): ContactsEntity {

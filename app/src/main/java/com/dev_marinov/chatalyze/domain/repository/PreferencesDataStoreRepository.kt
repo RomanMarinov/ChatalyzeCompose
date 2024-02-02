@@ -26,4 +26,10 @@ interface PreferencesDataStoreRepository {
 
     val firebaseToken: Flow<String>
     suspend fun saveFirebaseToken(firebaseToken: String)
+
+    val pushTypeDisplayFlow: Flow<Int>
+    suspend fun savePushTypeDisplay(selectedBoxIndex: Int)
+
+    val hideDialogPermissionNotificationFlow: Flow<Boolean>
+    suspend fun saveHideDialogPermissionNotification(hide: Boolean)
 }
