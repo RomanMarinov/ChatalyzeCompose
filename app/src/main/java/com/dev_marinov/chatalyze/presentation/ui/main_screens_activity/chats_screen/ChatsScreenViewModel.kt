@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,8 +30,10 @@ class ChatsScreenViewModel @Inject constructor(
     private val roomRepository: RoomRepository,
 ) : ViewModel() {
 
-    private val onlineUserStateList = roomRepository.onlineUserStateList
+    val hideDialogPermissionNotificationFlow = preferencesDataStoreRepository.hideDialogPermissionNotificationFlow
 
+    private val onlineUserStateList = roomRepository.onlineUserStateList
+    val filteredContacts = roomRepository.filteredContacts
     val isSessionState = preferencesDataStoreRepository.isSessionState
 
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
@@ -53,6 +56,8 @@ class ChatsScreenViewModel @Inject constructor(
 
     private var _chatList = MutableStateFlow(emptyList<Chat>())
     val chatList: StateFlow<List<Chat>> = _chatList
+
+
 
     private var _contacts: MutableStateFlow<List<Contact>> = MutableStateFlow(listOf())
     val contacts: StateFlow<List<Contact>> = _contacts
@@ -85,10 +90,10 @@ class ChatsScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             combineChatListFlow.collect {
                 _combineChatList.value = it
-                Log.d(
-                    "4444",
-                    " ChatsScreenViewModel createCombineFlow _combineChatList=" + _combineChatList.value
-                    )
+//                Log.d(
+//                    "4444",
+//                    " ChatsScreenViewModel createCombineFlow _combineChatList=" + _combineChatList.value
+//                )
             }
 
         }
@@ -96,15 +101,27 @@ class ChatsScreenViewModel @Inject constructor(
 
     // поток нужен для сопоставления имен
     fun createContactsFlow(contacts: List<Contact>) {
-        Log.d("4444", " ChatsScreenViewModel сопоставление имен createContactsFlow contacts=" + contacts)
+//        Log.d(
+//            "4444",
+//            " ChatsScreenViewModel сопоставление имен createContactsFlow contacts=" + contacts
+//        )
         _contacts.value = contacts
-
         saveContactsToDb(contacts = contacts)
     }
 
     private fun saveContactsToDb(contacts: List<Contact>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            roomRepository.saveContacts(contacts = contacts)
+        // удалить из списка номера кроме
+        val filteredContacts: MutableList<Contact> = mutableListOf()
+
+        viewModelScope.launch(Dispatchers.Default) {
+            contacts.forEach {
+                if (it.phoneNumber.length == 10 && (it.phoneNumber.startsWith("9") || it.phoneNumber.startsWith("5"))) {
+                    filteredContacts.add(it)
+                }
+            }
+            withContext(Dispatchers.IO) {
+                roomRepository.saveContacts(contacts = filteredContacts)
+            }
         }
     }
 
@@ -114,24 +131,11 @@ class ChatsScreenViewModel @Inject constructor(
             val response = chatsRepository.getChats(sender = ownPhoneSender)
             _chatList.value = response
             // getOnlineUserStateList()
-            Log.d("4444", " ChatsScreenViewModel список послед сообщ createChatListFlow _chatList=" + _chatList.value)
+            Log.d(
+                "4444",
+                " ChatsScreenViewModel список послед сообщ createChatListFlow _chatList=" + _chatList.value
+            )
         }
-    }
-
-    fun createOnlineUserStateList() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            chatSocketRepository.observeOnlineUserState().collect { value ->
-//                if (value.type == "userList") {
-//                    val json = Json { ignoreUnknownKeys = true }
-//                    val parsedJson = json.decodeFromString<List<OnlineUserState>>(value.payloadJson)
-//                    _onlineUserStateList.value = parsedJson
-//                    Log.d(
-//                        "4444",
-//                        " ChatsScreenViewModel онлайн createOnlineUserStateList _onlineUserStateList=" + _onlineUserStateList.value
-//                    )
-//                }
-//            }
-//        }
     }
 
     fun onClickHideNavigationBar(isHide: Boolean) {
@@ -157,5 +161,11 @@ class ChatsScreenViewModel @Inject constructor(
 
     fun canGetChatList(can: Boolean) {
         _getChatListFlag.value = can
+    }
+
+    fun saveHideDialogPermissionNotification(hide: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.saveHideDialogPermissionNotification(hide = hide)
+        }
     }
 }

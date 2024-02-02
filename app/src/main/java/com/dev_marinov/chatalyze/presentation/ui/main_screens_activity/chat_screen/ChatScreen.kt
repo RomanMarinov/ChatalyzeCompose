@@ -1,18 +1,27 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_screen
 
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -22,7 +31,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -32,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -43,63 +57,17 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
-
-import com.dev_marinov.chatalyze.domain.model.chat.Message
-import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
-import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
+import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-
-
-//fun ServiceConnection() : ServiceConnection {
-//    val serviceConnection = object : ServiceConnection {
-//        override fun onServiceConnected(className: ComponentName, binder: IBinder) {
-//            val myBinder = binder as SocketService.MyBinder
-//            val service = myBinder.getService()
-//            // Теперь у вас есть доступ к методам службы через 'service'
-//
-////            service.MyBinder().getService()
-////            scope.launch {
-////                val messageToSend = MessageToSend(
-////                    sender = "5551234567",
-////                    recipient = "9303454564",
-////                    textMessage = "swcfwecwecwecercecerc",
-////                    refreshToken = "_refreshToken"
-////                )
-////                service.sendMessage(messageToSend)
-////            }
-//
-//
-//        }
-//
-//        override fun onServiceDisconnected(className: ComponentName) {
-//            // Вызывается, когда соединение с службой потеряно
-//        }
-//    }
-//
-//    return serviceConnection
-//
-//
-//
-//}
-
-
 
 @OptIn(ExperimentalComposeUiApi::class, FlowPreview::class)
 @Composable
@@ -108,7 +76,7 @@ fun ChatScreen(
     navHostController: NavHostController,
     recipientName: String?,
     recipientPhone: String?,
-    senderPhone: String?
+    senderPhone: String?,
 ) {
 
     BackHandler {
@@ -127,6 +95,11 @@ fun ChatScreen(
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
 
+    val onlineUserStateList by viewModel.onlineUserStateList.collectAsStateWithLifecycle(emptyList())
+    var onlineOrOffline by remember { mutableStateOf("") }
+
+    val name by viewModel.recipientName.collectAsStateWithLifecycle("")
+
     val myPhone = "89303493563"
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
     val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
@@ -135,18 +108,29 @@ fun ChatScreen(
     var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
     var sendClickState by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
+
 
     viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
     viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
     viewModel.getChatPosition(userName = chatName)
 
+    viewModel.getNameAndOnlineOrOffline(recipientPhone = recipientPhone)
+
     LaunchedEffect(isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
-          Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
+            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
             viewModel.getAllMessageChat()
             // хуй пока закрыл ебаная ошибка
             viewModel.observeMessages()
+        }
+    }
+
+    LaunchedEffect(onlineUserStateList) {
+        onlineUserStateList.forEach {
+            if (it.userPhone == recipientPhone) {
+                onlineOrOffline = it.onlineOrOffline
+                return@forEach
+            }
         }
     }
 
@@ -306,16 +290,16 @@ fun ChatScreen(
                         .padding(4.dp)
                         .layoutId("nameAndStatusNetworkUser")
                 ) {
-                    recipientName?.let {
+                   // (name.ifEmpty { recipientPhone })?.let {
                         Text(
-                            text = it,
+                            text = "it",
                             color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                         )
-                    }
+                //    }
                     Text(
-                        text = "в сети",
+                        text = onlineOrOffline,
                         color = Color.White,
                         fontSize = 12.sp,
                     )
@@ -403,12 +387,11 @@ fun ChatScreen(
                             ) {
                                 items(state.messages) { item ->
                                     // add object message
-                                   // Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
-
+                                    // Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
 
 
                                     /////////////////////////////////
-                                  //  Log.d("4444", " chatMessage=" + chatMessage)
+                                    //  Log.d("4444", " chatMessage=" + chatMessage)
                                     val isOwnMessage = item.sender == senderPhone
                                     Box(
                                         contentAlignment = if (isOwnMessage) {
@@ -481,7 +464,7 @@ fun ChatScreen(
                                 }
                                 // Добавьте другие элементы списка здесь
                             }
-                           // }
+                            // }
                         }
 
                         LaunchedEffect(lazyListState) {
@@ -491,7 +474,7 @@ fun ChatScreen(
                                 .debounce(500L)
                                 .collectLatest { firstIndex ->
                                     firstIndex?.let {
-                                   // Log.d("4444", " lastVisibleIndex =" + it)
+                                        // Log.d("4444", " lastVisibleIndex =" + it)
                                         viewModel.saveScrollChatPosition(
                                             keyUserName = chatName,
                                             position = it
@@ -573,7 +556,10 @@ fun ChatScreen(
                             viewModel = viewModel,
                             onSendClick = {
                                 sendClickState = true
-                                Log.d("4444", " TextFieldHintWriteMessage sendClickState=" + sendClickState)
+                                Log.d(
+                                    "4444",
+                                    " TextFieldHintWriteMessage sendClickState=" + sendClickState
+                                )
                             }
                         )
                     }
@@ -581,15 +567,24 @@ fun ChatScreen(
             }
 
             LaunchedEffect(state.messages) {
-                Log.d("4444", " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState)
+                Log.d(
+                    "4444",
+                    " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState
+                )
                 viewModel.clearMessageTextField()
                 if (sendClickState) { // это сработает у отправителя
                     lazyListState.animateScrollToItem(state.messages.size)
                     sendClickState = false
                 } else {
                     // это сработает у получателя
-                    Log.d("4444", " сработал LaunchedEffect(chatMessage) chatPosition=" + chatPosition)
-                    Log.d("4444", " сработал LaunchedEffect(chatMessage) chatPosstate.messages.size=" + state.messages.size)
+                    Log.d(
+                        "4444",
+                        " сработал LaunchedEffect(chatMessage) chatPosition=" + chatPosition
+                    )
+                    Log.d(
+                        "4444",
+                        " сработал LaunchedEffect(chatMessage) chatPosstate.messages.size=" + state.messages.size
+                    )
 
                     if (chatPosition in state.messages.size - 7..state.messages.size) {
                         lazyListState.animateScrollToItem(state.messages.size)

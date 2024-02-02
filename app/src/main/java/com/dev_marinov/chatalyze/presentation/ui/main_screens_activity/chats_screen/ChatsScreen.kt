@@ -1,8 +1,18 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,9 +36,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -40,8 +53,61 @@ import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_scr
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.*
 import kotlinx.coroutines.*
+import org.webrtc.ContextUtils.getApplicationContext
 import kotlin.system.exitProcess
 
+
+private fun openSystemSettingNotification(context: Context) {
+//    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//    context.startActivity(intent)
+
+
+    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+    context.startActivity(intent)
+
+
+//APP_NOTIFICATION_SETTINGS
+    //ACTION_APPLICATION_DETAILS_SETTINGS
+    //ACTION_APP_NOTIFICATION_SETTINGS
+    // "android.settings.APP_NOTIFICATION_SETTINGS"
+
+
+    // ошибка
+//    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+//    val packageName = context.packageName // замените на пакет вашего приложения
+//    val uri = Uri.fromParts("package", packageName, null)
+//    intent.data = uri
+//    context.startActivity(intent)
+
+
+//    val intent = Intent().apply {
+//        when {
+//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+//                action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+//                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+//            }
+//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+//                action = "android.settings.APP_NOTIFICATION_SETTINGS"
+//                putExtra("app_package", context.packageName)
+//                putExtra("app_uid", context.applicationInfo.uid)
+//            }
+//            else -> {
+//                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+//                addCategory(Intent.CATEGORY_DEFAULT)
+//                data = Uri.parse("package:" + context.packageName)
+//            }
+//        }
+//    }
+//    context.startActivity(intent)
+
+
+}
+
+
+@RequiresApi(Build.VERSION_CODES.S)
+@SuppressLint("Range", "HardwareIds")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ChatsScreen(
@@ -59,15 +125,21 @@ fun ChatsScreen(
     GradientBackgroundHelper.SetMonochromeBackground()
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
-    //viewModel.onClickHideNavigationBar(false)
     val chatList = viewModel.chatList.collectAsStateWithLifecycle()
-    val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
-    val combineChatList = viewModel.combineChatList.collectAsStateWithLifecycle(initialValue = listOf())
+    val contacts = viewModel.filteredContacts.collectAsStateWithLifecycle(initialValue = listOf())
+    val combineChatList =
+        viewModel.combineChatList.collectAsStateWithLifecycle(initialValue = listOf())
 
     // раскоментировать
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
     val getOwnPhoneSender by viewModel.getOwnPhoneSender.collectAsStateWithLifecycle("")
     val isTheLifecycleEventNow by viewModel.isTheLifecycleEventNow.collectAsStateWithLifecycle("")
+
+    val hideDialogPermissionNotificationFlow by viewModel.hideDialogPermissionNotificationFlow.collectAsStateWithLifecycle(
+        true
+    )
+
+    var stateHideDialogNotification by remember { mutableStateOf(false) }
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
 
@@ -76,23 +148,23 @@ fun ChatsScreen(
 
     // сюда добавить статус соедения удачу сокета
     LaunchedEffect(getOwnPhoneSender, isSessionState, isTheLifecycleEventNow) {
-        Log.d("4444", " ChatsScreen isSessionState="+ isSessionState)
+        Log.d("4444", " ChatsScreen isSessionState=" + isSessionState)
         if (isSessionState == Constants.SESSION_SUCCESS) {
             Log.d(
                 "4444", " ChatsScreen isGrantedPermissions="
                         + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow
             )
-            viewModel.createOnlineUserStateList() // список онлайн юзеров
             viewModel.canGetChatList(can = true)
         }
     }
 
-//    LaunchedEffect(combineChatList) {
-//        viewModel.createOnlineUserStateList()
-//    }
+    LaunchedEffect(Unit) { // нужно после возврата с экрана звонка
+        delay(500L)
+        viewModel.onClickHideNavigationBar(isHide = false)
+    }
 
-    //viewModel.getOnlineUserStateList()
-    ////////////
+
+
     if (getChatListFlag) {
         val contactsFlow = RememberContacts(context = context)
         LaunchedEffect(key1 = true) {
@@ -100,20 +172,29 @@ fun ChatsScreen(
                 contactsFlow.collect { originalContacts ->
                     Log.d("4444", " list contact =" + originalContacts)
                     viewModel.createContactsFlow(contacts = originalContacts)
-//                    viewModel.createOnlineUserStateList() // список онлайн юзеров
-
 
                     viewModel.createChatListFlow() // список последних сообщений
                     viewModel.createCombineFlow() // список итоговый комбайн
-
-
-
                 }
             }
         }
     }
 
+    if (!hideDialogPermissionNotificationFlow) {
+        if (!stateHideDialogNotification) {
+            DialogShowSettingNotification(
+                viewModel,
+                onDismiss = {
+                    stateHideDialogNotification = it
+                },
+                onConfirm = {
+                    openSystemSettingNotification(context = context)
+                }
+            )
+        }
+    }
 
+    // openSystemSettingNotification(context = context)
 
     val localLifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(
@@ -123,15 +204,10 @@ fun ChatsScreen(
                 when (event) {
                     Lifecycle.Event.ON_START -> {
                         Log.d("4444", " ChatsScreen Lifecycle.Event.ON_START")
-
-                        // val res = viewModel.combineChatList.value
-                        viewModel.createOnlineUserStateList()
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
                         Log.d("4444", " ChatsScreen Lifecycle.Event.ON_STOP")
-                        //viewModel.resetDataFlow()
-                        // viewModel.ebnutCombine()
                     }
 
                     Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
@@ -141,11 +217,6 @@ fun ChatsScreen(
                     else -> {}
                 }
             }
-
-            // последняя пробелма в том что долго обновяется статус онланй
-            // и не дописана логика по отправке сообщений с новым наблюдателем
-
-
             localLifecycleOwner.lifecycle.addObserver(observer)
             onDispose {
                 localLifecycleOwner.lifecycle.removeObserver(observer)
@@ -174,7 +245,20 @@ fun ChatsScreen(
                 sheetState.show()
             }
         }
+    }
 
+    // закрытие не через крестик
+    LaunchedEffect(Unit) {
+        snapshotFlow { sheetState.currentValue }
+            .collect {
+                if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
+                    scope.launch {
+                        isSheetOpen = false
+                        viewModel.onClickHideNavigationBar(isHide = false)
+                        sheetState.hide()
+                    }
+                }
+            }
     }
 
     Column(
@@ -221,6 +305,37 @@ fun ChatsScreen(
                     .height(50.dp)
                     // .background(Color.Green)
                     .layoutId("header_chat_text")
+                    .clickable {
+
+
+                        val telephonyManager =
+                            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                        val ownPhoneSender = telephonyManager.line1Number.toString()
+
+
+                        if (ActivityCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.READ_PHONE_STATE
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Log.d("4444", " telefonus НЕ РАЗРЕШЕНО")
+                            ActivityCompat.requestPermissions(
+                                context as Activity,
+                                arrayOf(Manifest.permission.READ_PHONE_STATE),
+                                0
+                            )
+                        } else {
+                            Log.d("4444", " telefonus РАЗРЕШЕНО ownPhoneSender=" + ownPhoneSender)
+                        }
+
+
+                        //
+                        val android_id = Settings.Secure.getString(
+                            context.contentResolver,
+                            Settings.Secure.ANDROID_ID
+                        )
+                        Log.d("4444", " telefonus android_id=" + android_id)
+                    }
             )
             IconButton(
                 modifier = Modifier
@@ -298,7 +413,7 @@ fun ChatsScreen(
 //                                )
 //                            }
 
-                              //Log.d("4444", " combineChatList.value=" + combineChatList.value)
+                            //Log.d("4444", " combineChatList.value=" + combineChatList.value)
                             items(combineChatList.value) { item ->
                                 // Log.d("4444", " chats item=" + item)
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -594,6 +709,15 @@ fun uiFormatPhoneNumber(phone: String): String {
 }
 
 
+fun uiFormatPhoneNumber2(phone: String): String {
+    return if ('9' == phone.first()) {
+        "+7".plus(phone)
+    } else {
+        "+1".plus(phone)
+    }
+}
+
+
 @Composable
 fun BottomSheetContentItem(
     navController: NavHostController,
@@ -620,7 +744,9 @@ fun BottomSheetContentItem(
 
                 navController.navigate(
                     route = ScreenRoute.ChatScreen.withArgs(
-                        recipientName = contact.name,
+                        recipientName = contact.name ?: CorrectNumberFormatHelper.getCorrectNumber(
+                            contact.phoneNumber
+                        ),
                         recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(contact.phoneNumber),
                         senderPhone = CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)
                     )
@@ -644,7 +770,7 @@ fun BottomSheetContentItem(
                 .padding(start = 8.dp, end = 8.dp)
         ) {
             Text(
-                text = contact.name,
+                text = contact.name ?: contact.phoneNumber,
                 color = colorResource(id = R.color.main_violet),
                 fontWeight = FontWeight.Bold
             )
@@ -657,6 +783,104 @@ fun BottomSheetContentItem(
                 color = Color.Gray,
                 thickness = 1.dp
             )
+        }
+    }
+}
+
+@Composable
+fun DialogShowSettingNotification(
+    viewModel: ChatsScreenViewModel,
+    onDismiss: (Boolean) -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = {
+            onDismiss(true)
+        },
+        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.White),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(1.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colorResource(id = R.color.main_violet_light)),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .weight(1f),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        text = stringResource(id = R.string.important),
+                        color = Color.White
+                    )
+                    IconButton(
+                        modifier = Modifier,
+                        onClick = {
+                            viewModel.saveHideDialogPermissionNotification(hide = true)
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_close_new_chat),
+                            contentDescription = "",
+                            tint = colorResource(id = R.color.white)
+                        )
+                    }
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorResource(id = R.color.main_yellow_new_chat_screen))
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                            fontSize = 20.sp,
+                            text = stringResource(id = R.string.setting_notification),
+                            color = colorResource(id = R.color.main_violet_dialog_permission)
+                        )
+                    }
+
+                    Button(
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet_light)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, top = 16.dp, end = 4.dp, bottom = 4.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.go_to_settings),
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

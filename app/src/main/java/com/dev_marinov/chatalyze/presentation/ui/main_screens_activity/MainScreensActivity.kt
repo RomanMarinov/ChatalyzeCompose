@@ -9,10 +9,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +68,7 @@ import com.dev_marinov.chatalyze.presentation.util.isAlwaysDenied
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -84,16 +87,18 @@ class MainScreensActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SetPermissionsAndNavigation(
     viewModel: MainScreensViewModel = hiltViewModel(),
 ) {
+    Log.d("4444", " SetPermissionsAndNavigation выполнился")
+
     ExecuteGrantedPermissions(viewModel = viewModel)
 
     //val backStackEntry = navController.currentBackStackEntryAsState()
     val navController = rememberNavController()
-
 
     val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(false)
 
@@ -149,12 +154,16 @@ fun SetPermissionsAndNavigation(
                 .padding(paddingValues = paddingValues)
         ) {
             // было
+
+            Log.d("4444", " SetPermissionsAndNavigation box ")
             MainScreensNavigationGraph(navHostController = navController)
         }
     }
 }
 
-@SuppressLint("CoroutineCreationDuringComposition", "RememberReturnType")
+@SuppressLint("CoroutineCreationDuringComposition", "RememberReturnType",
+    "PermissionLaunchedDuringComposition"
+)
 @ExperimentalPermissionsApi
 @Composable
 fun ExecuteGrantedPermissions(
@@ -166,6 +175,9 @@ fun ExecuteGrantedPermissions(
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
     val isTheLifecycleEventNow by viewModel.isTheLifecycleEventNow.collectAsStateWithLifecycle("")
     val canStartWebSocket by viewModel.canStartService.collectAsStateWithLifecycle(false)
+
+
+
 
 //    val context = LocalContext.current
 //    val socketBroadcastReceiver = remember {
@@ -196,6 +208,12 @@ fun ExecuteGrantedPermissions(
     // сохранение ивентов socketBroadcastReceiver нужен только для возможности вызваать методы
     // получения чатов гет месседж и возможности писать звонить и тд
     val context = LocalContext.current
+
+
+
+
+
+
 //    DisposableEffect(context) {
 //        val socketBroadcastReceiver = object : BroadcastReceiver() {
 //            override fun onReceive(context: Context, intent: Intent) {
@@ -228,18 +246,20 @@ fun ExecuteGrantedPermissions(
 //    }
 
     Log.d("4444", " 1 ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket)
-    LaunchedEffect(isGrantedPermissions, canStartWebSocket) {
+    LaunchedEffect(isGrantedPermissions, canStartWebSocket, isTheLifecycleEventNow) {
         Log.d("4444", " 2 ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket)
 
         if (isGrantedPermissions
             && isTheLifecycleEventNow == Constants.EVENT_ON_START
             && canStartWebSocket) {
 
+
             val ownPhoneSender = getOwnPhoneSender(context = context)
+            Log.d("4444", " LaunchedEffect(isGrantedPermissions ownPhoneSender=" + ownPhoneSender)
             if (ownPhoneSender.isNotEmpty()) {
                 viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
 
-                viewModel.openServerConnection(ownPhoneSender = ownPhoneSender)
+                viewModel.openServerWebSocketConnection(ownPhoneSender = ownPhoneSender)
                 viewModel.canStartWebSocket(can = false)
             }
         }
@@ -253,6 +273,7 @@ fun ExecuteGrantedPermissions(
             Manifest.permission.RECORD_AUDIO
         )
     )
+
     val localLifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(
         key1 = localLifecycleOwner,
@@ -532,12 +553,24 @@ fun DialogPermissions(
     }
 }
 
+
+@SuppressLint("HardwareIds")
 fun getOwnPhoneSender(context: Context) : String {
     Log.d("4444", " getOwnPhoneSender запрашиваем номер телефона")
+    Log.d("4444", " checkReadPhoneNumberPermission(context = context)=" + checkReadPhoneNumberPermission(context = context))
+
+
+
+
+
+
     return if (checkReadPhoneNumberPermission(context = context)) {
-        val telephonyManager =
-            context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+
+
+
+        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         val ownPhoneSender = telephonyManager?.line1Number.toString()
+        Log.d("4444", " getOwnPhoneSender ownPhoneSender=" + ownPhoneSender)
         return CorrectNumberFormatHelper.getCorrectNumber(number = ownPhoneSender)
     } else {
         ""

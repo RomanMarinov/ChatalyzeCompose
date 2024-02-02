@@ -1,47 +1,60 @@
 package com.dev_marinov.chatalyze.data.firebase.notification
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Context
+import android.content.Context.POWER_SERVICE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
+import android.view.Window
+import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.data.firebase.BroadcastReceiverNotification
 import com.dev_marinov.chatalyze.data.firebase.RingtoneService
-import com.dev_marinov.chatalyze.domain.repository.RoomRepository
-import com.dev_marinov.chatalyze.domain.repository.PushNotificationManager
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
+import com.dev_marinov.chatalyze.domain.repository.PushNotificationManager
+import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.MainScreensActivity
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
 
 @Singleton
 class PushNotificationManagerImpl @Inject constructor(
     private val context: Context,
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
     private val roomRepository: RoomRepository,
-
-    ) :
+) :
     PushNotificationManager {
+
+    val scope = CoroutineScope(Dispatchers.IO)
 
     val CHANNEL_ID = "0"
     val CHANNEL_NAME = "channel_name"
@@ -50,133 +63,192 @@ class PushNotificationManagerImpl @Inject constructor(
     lateinit var broadcastReceiver: BroadcastReceiverNotification
     val REQUEST_CODE_NEW = 333
 
-    override fun showNotificationCall(
-        title: String,
-        sender: String,
-        recipient: String,
+    override fun showNotificationMessage(
+        senderPhone: String,
+        recipientPhone: String,
         textMessage: String,
     ) {
 
+    }
+
+    override fun showNotificationCall(senderPhone: String, recipientPhone: String) {
         val coroutineScope = CoroutineScope(context = Dispatchers.IO)
         coroutineScope.launch {
             ringtoneStart()
 
-            showPreviewScreen(
-                title = title,
-                sender = sender,
-                recipient = recipient,
-                textMessage = textMessage
-            )
+//            showPreviewScreen(
+//                senderPhone = senderPhone,
+//                recipientPhone = recipientPhone
+//            )
 //            showPushCall(
-//                title = title,
-//                sender = sender,
-//                recipient = recipient,
-//                textMessage = textMessage,
+////                title = title,
+//                senderPhone = senderPhone,
+//                recipientPhone = recipientPhone,
+////                textMessage = textMessage,
 //                context = context
 //            )
 //
 
 //
-//            // написать условие если нет разрешения показывать по верх экрана
-//            // то отрисовать пуш с сообщением Звонок в домофон Включить показ на экране смартфона
-//
-//            // есть ли у приложения разрешение на отображение наложений поверх других приложений
-//            val hasOverlayPermission = Settings.canDrawOverlays(context)
-//
-//            val keyguardManager =
-//                context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-//            val isScreenLocked =
-//                keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
-//            Log.d(
-//                "4444",
-//                " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
-//            )
-//
-//            // на 12 андр рабочий
-//            // не включается экрран при звонке
-//            // если нет разрешения и есть пароль и экран выключен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
-//            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=true
-//            // если нет разрешения и нет пароля и экран включен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
-//            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=false
-//
-//
-//            if (isScreenLocked) { // экран погашен
-//                if (hasOverlayPermission) {
-//                    showPreviewScreen(title = title, sender = sender, recipient = recipient, textMessage = textMessage)
-//                } else {
-//                    // отрисовать пуш
-//                    showPushCall(title = title, sender = sender, recipient = recipient, textMessage = textMessage, context = context)
-//                }
-//            } else { // экран включен
-//                Log.d(
-//                    "4444",
-//                    " 222 BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
-//                )
-//                // НО НАДО УЧИТЫВАТЬ НАХОДУЖЬ ЛИ Я СЕЙЧАС В ПРИЛОЖЕНИИ
-//
-//                // проблема в том что если я не нахожучь в приле то просто играет мелодия
-//                // и внутри появляется экран (ну и он покажется как тогда я зайду)
-//
-//                // т.е по идее надо запускать приложение тут
-//
-//                // решение просто запретить в full_screen под hasOverlayPermission показывать calldomofonActivity
-//
-//                // а если нахожусь в приле то будет экран
-////                                       showCallDomofonActivity(address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid)
-//
-//
-////                // все круто раотает
-////                надо написать экран со свапами
-////                и дипликанми разрулить
-//
-//                var stateTemp = ""
-//                val res = preferencesDataStoreRepository.isTheLifecycleEventNow
-//                runBlocking {
-//                    stateTemp = res.first()
-//                }
-//                Log.d("4444", " Constants.LifeCycleState.stateTemp=" + stateTemp)
-//                when (stateTemp) {
-//                    Constants.EVENT_ON_START -> {
-//                        Log.d("4444", " Constants.LifeCycleState.ON_START")
-//                        showPreviewScreen(title = title, sender = sender, recipient = recipient, textMessage = textMessage)
-//                    }
-//
-//                    Constants.EVENT_ON_STOP -> {
-//                        Log.d("4444", " Constants.LifeCycleState.ON_STOP")
-//                        if (hasOverlayPermission) {
-//                            showPreviewScreen(title = title, sender = sender, recipient = recipient, textMessage = textMessage)
-//                        } else {
-//                            showPushCall(title = title, sender = sender, recipient = recipient, textMessage = textMessage, context = context)
-//                        }
-//                    }
-//
-//                    Constants.EVENT_ON_DESTROY -> {
-//                        Log.d("4444", " Constants.LifeCycleState.ON_DESTROY")
-//                        if (hasOverlayPermission) {
-//                            showPreviewScreen(title = title, sender = sender, recipient = recipient, textMessage = textMessage)
-//                        } else {
-//                            showPushCall(title = title, sender = sender, recipient = recipient, textMessage = textMessage, context = context)
-//                        }
-//                    }
+            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+            if (!powerManager.isInteractive) { // if screen is not already on, turn it on (get wake_lock)
+                @SuppressLint("InvalidWakeLockTag") val wl = powerManager.newWakeLock(
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+                    "id:wakeupscreen"
+                )
+                wl.acquire(10*60*1000L /*10 minutes*/)
+            }
+
+
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) { // для Android выше от 8.1
+//                Log.d("4444", "unlockAndTurnOnTheScreen выполнился для Android выше от 8.1")
+//                //val context = LocalContext.current
+//                val keyguardManager =
+//                    context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+//                val windowContext = context as? Activity
+//                windowContext?.apply {
+//                    setShowWhenLocked(true) // позволяет отобразить активити поверх блокировки экрана.
+//                    setTurnScreenOn(true) // позволяет включить экран.
+//                    keyguardManager.requestDismissKeyguard(this, null)
 //                }
 //            }
+
+            // написать условие если нет разрешения показывать по верх экрана
+            // то отрисовать пуш с сообщением Звонок в домофон Включить показ на экране смартфона
+
+            // есть ли у приложения разрешение на отображение наложений поверх других приложений
+            val hasOverlayPermission = Settings.canDrawOverlays(context)
+
+            val keyguardManager =
+                context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            val isScreenLocked =
+                keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
+            Log.d(
+                "4444",
+                " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
+            )
+//
+            // на 12 андр рабочий
+            // не включается экрран при звонке
+            // если нет разрешения и есть пароль и экран выключен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
+            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=true
+            // если нет разрешения и нет пароля и экран включен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
+            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=false
+
+
+            if (isScreenLocked) { // экран погашен
+                if (hasOverlayPermission) {
+                    showPreviewScreen(senderPhone = senderPhone, recipientPhone = recipientPhone)
+                } else {
+                    showPushCall(
+                        senderPhone = senderPhone,
+                        recipientPhone = recipientPhone,
+                        context = context
+                    )
+                }
+            } else { // экран включен
+                Log.d(
+                    "4444",
+                    " 222 BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
+                )
+                // НО НАДО УЧИТЫВАТЬ НАХОДУЖЬ ЛИ Я СЕЙЧАС В ПРИЛОЖЕНИИ
+
+                // проблема в том что если я не нахожучь в приле то просто играет мелодия
+                // и внутри появляется экран (ну и он покажется как тогда я зайду)
+
+                // т.е по идее надо запускать приложение тут
+
+                // решение просто запретить в full_screen под hasOverlayPermission показывать calldomofonActivity
+
+                // а если нахожусь в приле то будет экран
+//                                       showCallDomofonActivity(address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid)
+
+
+//                // все круто раотает
+//                надо написать экран со свапами
+//                и дипликанми разрулить
+
+                var stateTemp = ""
+                val res = preferencesDataStoreRepository.isTheLifecycleEventNow
+                runBlocking {
+                    stateTemp = res.first()
+                }
+                Log.d("4444", " Constants.LifeCycleState.stateTemp=" + stateTemp)
+                when (stateTemp) {
+                    Constants.EVENT_ON_START -> {
+                        Log.d("4444", " Constants.LifeCycleState.ON_START")
+                        showPreviewScreen(
+                            senderPhone = senderPhone,
+                            recipientPhone = recipientPhone
+                        )
+                    }
+
+                    Constants.EVENT_ON_STOP -> {
+                        Log.d("4444", " Constants.LifeCycleState.ON_STOP")
+                        if (hasOverlayPermission) {
+                            showPreviewScreen(
+                                senderPhone = senderPhone,
+                                recipientPhone = recipientPhone
+                            )
+                        } else {
+                            showPushCall(
+                                senderPhone = senderPhone,
+                                recipientPhone = recipientPhone,
+                                context = context
+                            )
+                        }
+                    }
+
+                    Constants.EVENT_ON_DESTROY -> {
+                        Log.d("4444", " Constants.LifeCycleState.ON_DESTROY")
+                        if (hasOverlayPermission) {
+                            showPreviewScreen(
+                                senderPhone = senderPhone,
+                                recipientPhone = recipientPhone
+                            )
+                        } else {
+                            showPushCall(
+                                senderPhone = senderPhone,
+                                recipientPhone = recipientPhone,
+                                context = context
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
+    override fun giveStateReadyStream(
+        senderPhone: String,
+        recipientPhone: String,
+        typeFirebaseCommand: String,
+    ) {
+        scope.launch {
+            roomRepository.saveStateReadyStream(
+                senderPhone = senderPhone,
+                recipientPhone = recipientPhone,
+                typeFirebaseCommand = typeFirebaseCommand
+            )
+        }
+    }
+
+
     private fun showPreviewScreen(
-        title: String,
-        sender: String,
-        recipient: String,
-        textMessage: String,
+        senderPhone: String,
+        recipientPhone: String,
     ) {
         Log.d("4444", " выполнился showPreviewScreen")
+
+        saveHideNavigationBar(hide = true)
+
         try {
             val intent = Intent(context, BroadcastReceiverNotification::class.java)
             intent.action = "full_screen"
             //  intent.putExtra("title", title)
-            intent.putExtra("sender", sender)
-            intent.putExtra("recipient", recipient)
-            intent.putExtra("textMessage", textMessage)
+            intent.putExtra("senderPhone", senderPhone)
+            intent.putExtra("recipientPhone", recipientPhone)
+            // intent.putExtra("textMessage", textMessage)
             intent.putExtra("channelID", CHANNEL_ID)
             context.sendBroadcast(intent)
             //  LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
@@ -185,18 +257,28 @@ class PushNotificationManagerImpl @Inject constructor(
         }
     }
 
+    private fun saveHideNavigationBar(hide: Boolean) {
+        scope.launch {
+            preferencesDataStoreRepository.saveHideNavigationBar(
+                Constants.HIDE_BOTTOM_BAR,
+                isHide = hide
+            )
+        }
+
+    }
+
     private fun showPushCall(
-        title: String,
-        sender: String,
-        recipient: String,
-        textMessage: String,
+//        title: String,
+        senderPhone: String,
+        recipientPhone: String,
+//        textMessage: String,
         context: Context,
     ) {
         Log.d("4444", " showPushCall")
 
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
-            roomRepository.contactBySenderPhone(sender = sender)
+            roomRepository.contactBySenderPhone(sender = senderPhone)
                 .collect { contact ->
                     withContext(Dispatchers.Main) {
                         // проверяю есть ли разрешения для уведомлений (true / false)
@@ -220,8 +302,10 @@ class PushNotificationManagerImpl @Inject constructor(
                                         .setSmallIcon(R.drawable.ic_launcher_background)
                                         //.setColor(context.resources.getColor(R.color.bazanet_red_color_anim))
                                         //.setLargeIcon(Picasso.get().load(imageUrl).get())
-                                        .setContentTitle("Входящий звонок " + contact.name.ifEmpty { contact.phoneNumber }) // Заголовок
+                                        //.setContentTitle("Входящий звонок от Мой дружище") // Заголовок
                                         //.setContentText(address) // Основной текст
+                                        .setContentTitle("Входящий звонок " + contact.name?.ifEmpty { contact.phoneNumber }) // Заголовок
+//                                        //.setContentText(address) // Основной текст
                                         .setDeleteIntent(pendingIntent)
                                         .setPriority(NotificationCompat.PRIORITY_HIGH) // Приоритет уведомления
                                         .setVibrate(longArrayOf(100, 1000, 200, 340))
@@ -234,10 +318,10 @@ class PushNotificationManagerImpl @Inject constructor(
                                         .setCategory(NotificationCompat.CATEGORY_ALARM)
                                         .setContentIntent(
                                             getCallPendingIntent(
-                                                name = contact.name,
-                                                sender = sender,
-                                                recipient = recipient,
-                                                textMessage = textMessage,
+                                                name = (contact.name?.ifEmpty { contact.phoneNumber }),
+                                                sender = senderPhone,
+                                                recipient = recipientPhone,
+//                                                textMessage = textMessage,
                                                 context = context
                                             )
                                         )
@@ -276,10 +360,10 @@ class PushNotificationManagerImpl @Inject constructor(
     }
 
     private fun getCallPendingIntent(
-        name: String,
+        name: String?,
         sender: String,
         recipient: String,
-        textMessage: String,
+//        textMessage: String,
         context: Context,
     ): PendingIntent {
         val typeEvent = Constants.INCOMING_CALL_EVENT

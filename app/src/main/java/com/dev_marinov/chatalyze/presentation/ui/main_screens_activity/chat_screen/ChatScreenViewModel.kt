@@ -13,11 +13,10 @@ import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
+import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +29,11 @@ class ChatScreenViewModel @Inject constructor(
     //private val messageRepository: MessageRepository,
     private val chatSocketRepository: ChatSocketRepository,
     private val savedStateHandle: SavedStateHandle,
+    private val roomRepository: RoomRepository
 ) : ViewModel() {
+
+
+    val onlineUserStateList = roomRepository.onlineUserStateList
 
     val isSessionState = preferencesDataStoreRepository.isSessionState
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
@@ -45,6 +48,9 @@ class ChatScreenViewModel @Inject constructor(
 
     private var _chatPosition = MutableStateFlow(0)
     val chatPosition: StateFlow<Int> = _chatPosition
+
+    private var _recipientName = MutableStateFlow("")
+    val recipientName: StateFlow<String> = _recipientName
 
     private var _chatMessage: MutableStateFlow<List<Message>> = MutableStateFlow(listOf())
     val chatMessage: StateFlow<List<Message>> = _chatMessage
@@ -274,23 +280,6 @@ class ChatScreenViewModel @Inject constructor(
                     refreshToken = _refreshToken
                 )
                 chatSocketRepository.sendMessage(messageToSend)
-
-//                val intent = Intent("receiver_socket_action_2")
-//                // intent.action = "receiver_socket_action_2"
-//                intent.putExtra("sender", _sender)
-//                intent.putExtra("recipient", _recipient)
-//                intent.putExtra("messageText", messageText.value)
-//                intent.putExtra("refreshToken", _refreshToken)
-//                context.sendBroadcast(intent)
-
-//                val serviceConnection = ServiceConnection()
-//                val intent = Intent(context, SocketService::class.java)
-//                intent.action = "send_message"
-//                intent.putExtra("sender", _sender)
-//                intent.putExtra("recipient", _recipient)
-//                intent.putExtra("messageText", messageText.value)
-//                intent.putExtra("refreshToken", _refreshToken)
-//                context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
             }
         }
     }
@@ -327,6 +316,27 @@ class ChatScreenViewModel @Inject constructor(
                 messages = newList
             )
         }
+    }
+
+    fun getNameAndOnlineOrOffline(recipientPhone: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            recipientPhone?.let {
+                Log.d("4444", " getNameAndOnlineOrOffline recipientPhone=" + recipientPhone)
+                roomRepository.contactBySenderPhone(sender = it).collect { contact ->
+                    Log.d("4444", " contact=" + contact)
+
+
+//                    работает только для виво name
+//
+//                    запилить перезапись в бд двух таблиц
+
+                    //_recipientName.value = contact.name
+                }
+            }
+        }
+
+
+
     }
 
     ///////////////////////////////////////

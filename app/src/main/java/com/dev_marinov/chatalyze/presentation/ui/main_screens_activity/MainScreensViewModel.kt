@@ -138,7 +138,7 @@ class MainScreensViewModel @Inject constructor(
         _canStartService.value = can
     }
 
-    fun openServerConnection(ownPhoneSender: String) {
+    fun openServerWebSocketConnection(ownPhoneSender: String) {
         Log.d("4444", " выполнился openServerConnection")
         viewModelScope.launch(Dispatchers.IO) {
             val result = chatSocketRepository.initSession(sender = ownPhoneSender)
@@ -167,7 +167,7 @@ class MainScreensViewModel @Inject constructor(
                 if (value.type == "userList") {
                     val json = Json { ignoreUnknownKeys = true }
                     val parsedJson = json.decodeFromString<List<OnlineUserState>>(value.payloadJson)
-                    Log.d("4444", " parsedJson=" + parsedJson)
+                    //Log.d("4444", " parsedJson=" + parsedJson)
                     saveOnlineUserStateListToDb(onlineUserStateList = parsedJson)
                 }
             }

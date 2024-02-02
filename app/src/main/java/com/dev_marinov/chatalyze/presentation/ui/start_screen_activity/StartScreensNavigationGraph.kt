@@ -24,6 +24,8 @@ fun StartScreensNavigationGraph() {
             SplashScreen(navController = navController)
         }
         composable(route = ScreenRoute.AuthScreen.route) {
+
+
             AuthScreen(navController = navController)
         }
         composable(ScreenRoute.SignUpScreen.route) {
