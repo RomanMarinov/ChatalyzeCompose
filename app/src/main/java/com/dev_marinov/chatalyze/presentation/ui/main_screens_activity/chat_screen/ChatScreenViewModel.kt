@@ -3,21 +3,27 @@ package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_scr
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
+import com.dev_marinov.chatalyze.domain.model.chat.ChatCompanion
 import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.model.chat.MessageToSend
 import com.dev_marinov.chatalyze.domain.model.chat.UserPairChat
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
-import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
+import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
+import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,12 +32,9 @@ class ChatScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository,
-    //private val messageRepository: MessageRepository,
     private val chatSocketRepository: ChatSocketRepository,
-    private val savedStateHandle: SavedStateHandle,
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
 ) : ViewModel() {
-
 
     val onlineUserStateList = roomRepository.onlineUserStateList
 
@@ -40,30 +43,30 @@ class ChatScreenViewModel @Inject constructor(
 
     val refreshToken = authRepository.getRefreshTokensFromDataStore
 
-//    private var _userPairChat = MutableStateFlow<UserPairChat?>(null)
-//    private val userPairChat: StateFlow<UserPairChat?> = _userPairChat
-
     private var _userPairChat = mutableStateOf(UserPairChat())
     private val userPairChat: State<UserPairChat> = _userPairChat
 
     private var _chatPosition = MutableStateFlow(0)
     val chatPosition: StateFlow<Int> = _chatPosition
 
-    private var _recipientName = MutableStateFlow("")
-    val recipientName: StateFlow<String> = _recipientName
-
     private var _chatMessage: MutableStateFlow<List<Message>> = MutableStateFlow(listOf())
     val chatMessage: StateFlow<List<Message>> = _chatMessage
+
+    private val _messageText = mutableStateOf("")
+    val messageText: State<String> = _messageText
+
+    private val _state = mutableStateOf(ChatState())
+    val state: State<ChatState> = _state
+
+    private val _toastEvent = MutableSharedFlow<String>()
+    val toastEvent = _toastEvent.asSharedFlow()
 
     private var _recipient = ""
     private var _sender = ""
     private var _refreshToken = ""
 
     init {
-        // getFakeChatMessage()
         saveRefreshTokenToViewModel()
-
-        //connectToChat()
     }
 
     private fun saveRefreshTokenToViewModel() {
@@ -74,13 +77,6 @@ class ChatScreenViewModel @Inject constructor(
         }
     }
 
-//    private fun getFakeChatMessage() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val result = chatRepository.getChatMessage()
-//            _chatMessage.value = result
-//        }
-//    }
-
     fun saveHideNavigationBar(isHide: Boolean) {
         viewModelScope.launch {
             preferencesDataStoreRepository.saveHideNavigationBar(
@@ -90,14 +86,12 @@ class ChatScreenViewModel @Inject constructor(
         }
     }
 
-    fun getChatPosition(userName: String) {
+    fun getChatPosition(keyUserName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val result =
-                preferencesDataStoreRepository.getScrollChatPosition(keyUserName = userName)
+                preferencesDataStoreRepository.getScrollChatPosition(keyUserName = keyUserName)
             result.collectLatest { position ->
                 position?.let {
-
-                    //    _chatPosition.emit(it)
                     _chatPosition.value = it
                 }
             }
@@ -113,163 +107,51 @@ class ChatScreenViewModel @Inject constructor(
         }
     }
 
-//    fun sendMessage(messageText: String, currentDateTime: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            chatRepository.getChatMessage(
-//                ChatMessage(
-//                    messageText = messageText,
-//                    currentDateTime = currentDateTime
-//                )
-//            )
-//        }
-//    }
+    fun observeMessages2(
+        sender: String,
+        recipient: String,
+        textMessage: String,
+        createdAt: String,
+    ) {
+        val message = Message(
+            sender = sender,
+            recipient = recipient,
+            textMessage = textMessage,
+            createdAt = createdAt
+        )
 
-
-    //////////////////////////////////////////////
-
-    private val _messageText = mutableStateOf("")
-    val messageText: State<String> = _messageText
-
-    private val _state = mutableStateOf(ChatState())
-    val state: State<ChatState> = _state
-
-    private val _toastEvent = MutableSharedFlow<String>()
-    val toastEvent = _toastEvent.asSharedFlow()
-
-    //////////////////////////////
-    /////////////////////////////////
-
-
-    /////////////////////////////////
-    /////////////////////////////////
-
-
-
-    // хуй пока закрыл ебаная ошибка
-    fun observeMessages() {
-        viewModelScope.launch {
-            Log.d("4444", " connectToChat Resource.Success")
-            chatSocketRepository.observeMessages()
-                .onEach { message ->
-                    Log.d("4444", " connectToChat Resource.Success message=" + message)
-
-
-                    // connectToChat Resource.Success message=MessageWrapper(type=userList, payloadJson=[{"userPhone":"9203333333","onlineOrDate":"online"},{"userPhone":"9303454564","onlineOrDate":"offline"}])
-                    // connectToChat Resource.Success message=MessageWrapper(type=singleMessage, payloadJson={"sender":"5551234567","recipient":"9303454564","textMessage":"Пппп","createdAt":"2023-12-16T12:27:51.161455Z"})
-
-//                    val newList = state.value.messages.toMutableList().apply {
-//                        add(_state.value.messages.size, message)
-//                    }
-//                    _state.value = state.value.copy(
-//                        messages = newList
-//                    )
-                }.launchIn(viewModelScope)
+        val newList = state.value.messages.toMutableList().apply {
+            add(_state.value.messages.size, message)
         }
+        _state.value = state.value.copy(
+            messages = newList
+        )
     }
-//
-//// хуй пока закрыл ебаная ошибка
-//    fun observeMessages() {
-//        viewModelScope.launch {
-//            Log.d("4444", " connectToChat Resource.Success")
-//            chatSocketRepository.observeMessages()
-//                .onEach { message ->
-//                    Log.d("4444", " connectToChat Resource.Success message=" + message)
-//                    val newList = state.value.messages.toMutableList().apply {
-//                        add(_state.value.messages.size, message)
-//                    }
-//                    _state.value = state.value.copy(
-//                        messages = newList
-//                    )
-//                }.launchIn(viewModelScope)
-//        }
-//    }
-
-
-//    fun connectToChat() {
-//        // сюда передать объект message
-//        //getAllMessageChat()
-//        //   getAllMessages()
-//        Log.d("4444", " connectToChat execute")
-//        // savedStateHandle.get<String>("username")?.let { username ->
-//        viewModelScope.launch {
-//            val result = chatSocketRepository.initSession(sender = _sender)
-//            Log.d("4444", " connectToChat result.message=" + result.message)
-//            when (result) {
-//                is Resource.Success -> {
-//                    Log.d("4444", " connectToChat Resource.Success")
-//                    chatSocketRepository.observeMessages()
-//                        .onEach { message ->
-//                            Log.d("4444", " connectToChat Resource.Success message=" + message)
-//                            val newList = state.value.messages.toMutableList().apply {
-//                                add(_state.value.messages.size, message)
-//                            }
-//                            _state.value = state.value.copy(
-//                                messages = newList
-//                            )
-//
-//                            // тут вызвать как-то getChats
-//
-//                        }.launchIn(viewModelScope)
-//
-//                    /////////////////////////////
-//                    // test ping pong
-//
-////                    chatSocketService.observePingPong()
-////                        .onEach {
-////                            Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-////                        }
-////
-////                    val res = chatSocketService.method("ping")
-////                    Log.d("4444", " connectToChat ping res=" + res)
-//
-//
-//                }
-//                is Resource.Error -> {
-//                    Log.d("4444", " connectToChat Resource.Error")
-//                    _toastEvent.emit(result.message ?: "Unknown error")
-//                }
-//            }
-//        }
-//
-//        viewModelScope.launch(Dispatchers.IO) {
-//           // chatSocketService.getStateUsersConnection()
-//
-//            //chatSocketService.observePing().collect {
-//           //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-//         //   }
-//        }
-//
-//
-//        // }
-//    }
 
     fun onMessageChange(message: String) {
         _messageText.value = message
     }
 
     fun getAllMessageChat() {
-        // хуй
-//        viewModelScope.launch {
-//            _state.value = state.value.copy(isLoading = true)
-//
-//            val jobResponse: Deferred<List<Message>> = async {
-//                chatSocketRepository.getAllMessages(userPairChat = userPairChat.value)
-//            }
-//
-////            val result: List<Message> = messageService.getAllMessages(userPairChat = userPairChat.value)
-////            _chatMessage.value = result
-//
-//            _chatMessage.value = jobResponse.await()
-//            Log.d("4444", " getAllMessages result=" + jobResponse.await())
-//
-//            _state.value = state.value.copy(
-//                messages = jobResponse.await(),
-//                isLoading = false
-//            )
-//        }
+        viewModelScope.launch {
+            _state.value = state.value.copy(isLoading = true)
+
+            val jobResponse: Deferred<List<Message>> = async {
+                chatSocketRepository.getAllMessages(userPairChat = userPairChat.value)
+            }
+
+            _chatMessage.value = jobResponse.await()
+
+            Log.d("4444", " ChatScreenViewModel getAllMessages result=" + jobResponse.await())
+
+            _state.value = state.value.copy(
+                messages = jobResponse.await(),
+                isLoading = false
+            )
+        }
     }
 
-    fun sendMessage() {
+    fun sendMessage() { // клик отправки сообщения на сервер
         viewModelScope.launch(Dispatchers.IO) {
             Log.d("4444", " sendMessage=" + messageText.value)
             if (messageText.value.isNotEmpty()) {
@@ -300,106 +182,13 @@ class ChatScreenViewModel @Inject constructor(
         )
     }
 
-    fun receiveMessage(sender: String, recipient: String, textMessage1: String, createdAt: String) {
-        val message = Message(
-            sender = sender,
-            recipient = recipient,
-            textMessage = textMessage1,
-            createdAt = createdAt
-        )
+    fun saveCompanionOnTheServer(senderPhone: String, recipientPhone: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("4444", " receiveMessage message=" + message)
-            val newList = state.value.messages.toMutableList().apply {
-                add(_state.value.messages.size, message)
-            }
-            _state.value = state.value.copy(
-                messages = newList
+            val chatCompanion = ChatCompanion(
+                senderPhone = senderPhone,
+                companionPhone = recipientPhone
             )
+            val response = chatRepository.saveCompanionOnTheServer(chatCompanion = chatCompanion)
         }
     }
-
-    fun getNameAndOnlineOrOffline(recipientPhone: String?) {
-        viewModelScope.launch(Dispatchers.IO) {
-            recipientPhone?.let {
-                Log.d("4444", " getNameAndOnlineOrOffline recipientPhone=" + recipientPhone)
-                roomRepository.contactBySenderPhone(sender = it).collect { contact ->
-                    Log.d("4444", " contact=" + contact)
-
-
-//                    работает только для виво name
-//
-//                    запилить перезапись в бд двух таблиц
-
-                    //_recipientName.value = contact.name
-                }
-            }
-        }
-
-
-
-    }
-
-    ///////////////////////////////////////
-    // скопировал из какой-то вью модели на всякий пожарный
-
-
-//    fun connectToChat(senderPhone: String?, recipientPhone: String?) {
-//        // сюда передать объект message
-//
-//        getAllMessages()
-//        //   getAllMessages()
-//        Log.d("4444", " connectToChat execute")
-//        // savedStateHandle.get<String>("username")?.let { username ->
-//        viewModelScope.launch {
-//            val result = chatSocketRepository.initSession(sender = _sender)
-//            Log.d("4444", " connectToChat result.message=" + result.message)
-//            when (result) {
-//                is Resource.Success -> {
-//                    Log.d("4444", " connectToChat Resource.Success")
-//                    chatSocketRepository.observeMessages()
-//                        .onEach { message ->
-//                            Log.d("4444", " connectToChat Resource.Success message=" + message)
-//                            val newList = state.value.messages.toMutableList().apply {
-//                                add(_state.value.messages.size, message)
-//                            }
-//                            _state.value = state.value.copy(
-//                                messages = newList
-//                            )
-//
-//                            // тут вызвать как-то getChats
-//
-//                        }.launchIn(viewModelScope)
-//
-//                    /////////////////////////////
-//                    // test ping pong
-//
-////                    chatSocketService.observePingPong()
-////                        .onEach {
-////                            Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-////                        }
-////
-////                    val res = chatSocketService.method("ping")
-////                    Log.d("4444", " connectToChat ping res=" + res)
-//
-//
-//                }
-//                is Resource.Error -> {
-//                    Log.d("4444", " connectToChat Resource.Error")
-//                    _toastEvent.emit(result.message ?: "Unknown error")
-//                }
-//            }
-//        }
-//
-//        viewModelScope.launch(Dispatchers.IO) {
-//            // chatSocketService.getStateUsersConnection()
-//
-//            //chatSocketService.observePing().collect {
-//            //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-//            //   }
-//        }
-//
-//
-//        // }
-//    }
-
 }

@@ -1,14 +1,10 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -36,12 +32,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -49,11 +42,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen.getCurrentDateTimeString
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.*
 import kotlinx.coroutines.*
-import org.webrtc.ContextUtils.getApplicationContext
+import kotlinx.datetime.Clock
+import java.sql.Date
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.system.exitProcess
 
 
@@ -183,12 +186,15 @@ fun ChatsScreen(
     if (!hideDialogPermissionNotificationFlow) {
         if (!stateHideDialogNotification) {
             DialogShowSettingNotification(
-                viewModel,
+                //viewModel,
                 onDismiss = {
                     stateHideDialogNotification = it
                 },
                 onConfirm = {
                     openSystemSettingNotification(context = context)
+                },
+                onClickClose = {
+                    viewModel.saveHideDialogPermissionNotification(hide = true)
                 }
             )
         }
@@ -204,6 +210,10 @@ fun ChatsScreen(
                 when (event) {
                     Lifecycle.Event.ON_START -> {
                         Log.d("4444", " ChatsScreen Lifecycle.Event.ON_START")
+                        viewModel.saveCompanionOnTheServer(
+                            senderPhone = viewModel.ownPhoneSender,
+                            recipientPhone = ""
+                        )
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
@@ -305,37 +315,6 @@ fun ChatsScreen(
                     .height(50.dp)
                     // .background(Color.Green)
                     .layoutId("header_chat_text")
-                    .clickable {
-
-
-                        val telephonyManager =
-                            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                        val ownPhoneSender = telephonyManager.line1Number.toString()
-
-
-                        if (ActivityCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_PHONE_STATE
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            Log.d("4444", " telefonus НЕ РАЗРЕШЕНО")
-                            ActivityCompat.requestPermissions(
-                                context as Activity,
-                                arrayOf(Manifest.permission.READ_PHONE_STATE),
-                                0
-                            )
-                        } else {
-                            Log.d("4444", " telefonus РАЗРЕШЕНО ownPhoneSender=" + ownPhoneSender)
-                        }
-
-
-                        //
-                        val android_id = Settings.Secure.getString(
-                            context.contentResolver,
-                            Settings.Secure.ANDROID_ID
-                        )
-                        Log.d("4444", " telefonus android_id=" + android_id)
-                    }
             )
             IconButton(
                 modifier = Modifier
@@ -482,6 +461,14 @@ fun ChatsScreen(
         },
         sheetState = sheetState
     )
+
+
+}
+
+fun getCurrentDateTimeString2(): String {
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    return currentDateTime.format(formatter)
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -581,37 +568,21 @@ fun ChatsContentItem(
     ownPhoneSender: String,
     viewModel: ChatsScreenViewModel,
 ) {
-    Log.d("4444", " ChatsContentItem combineChat=" + combineChat)
     val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // .clip(RoundedCornerShape(50.dp))
             .clickable {
+                Log.d("4444", " ChatsScreen click item")
                 viewModel.onClickHideNavigationBar(isHide = true)
                 scope.launch {
                     delay(50L) // костыль потому что ui у перехода не красивый
                     withContext(Dispatchers.Main) {
-                        Log.d(
-                            "4444",
-                            " BottomSheetContentItem recipientName=" + "name потом исправить"
-                                    + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                                combineChat.recipient
-                            )
-                                    + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                                combineChat.sender
-                            )
-                        )
 
-                        // правильные аргументы
-                        // recipientName=Roman recipientPhone=9303454564 senderPhone=5551234567
-                        // ошибочные аргументы
-                        // BottomSheetContentItem recipientName=name потом исправить recipientPhone=9303454564 senderPhone=
                         navController.navigate(
                             route = ScreenRoute.ChatScreen.withArgs(
-                                recipientName = CorrectNumberFormatHelper.getCorrectNumber(
-                                    combineChat.recipient
-                                ),
+                                recipientName = combineChat.name
+                                    ?: CorrectNumberFormatHelper.getCorrectNumber(combineChat.recipient),
                                 recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
                                     if (combineChat.recipient == CorrectNumberFormatHelper.getCorrectNumber(
                                             ownPhoneSender
@@ -643,6 +614,9 @@ fun ChatsContentItem(
                 contentDescription = "",
                 tint = colorResource(id = R.color.main_yellow_new_chat_screen),
             )
+
+
+
             Icon(
                 // online state
                 modifier = Modifier
@@ -656,25 +630,36 @@ fun ChatsContentItem(
             )
         }
 
+        // как получить имя
+        // сравнить свой номер
+
+
+        Log.d("4444", " ChatsScreen combineChat.recipientName=" + combineChat.name)
+        val titleName =
+            combineChat.name ?: (EditFormatPhoneHelper.edit(phone = combineChat.recipient))
+
+//        val titleName = combineChat.senderName
+//            ?: (EditFormatPhoneHelper.edit(phone = combineChat.sender).takeUnless {
+//                it == EditFormatPhoneHelper.edit(phone = ownPhoneSender)
+//            }
+//                ?: EditFormatPhoneHelper.edit(phone = combineChat.recipient))
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-
+                Log.d("4444", " ChatsScreen combineChat.name=" + combineChat.name)
                 Text( // phone title // перепроверить
                     modifier = Modifier.weight(1f),
-                    text = combineChat.name
-                        ?: (uiFormatPhoneNumber(phone = combineChat.sender).takeUnless {
-                            it == uiFormatPhoneNumber(phone = ownPhoneSender)
-                        }
-                            ?: uiFormatPhoneNumber(phone = combineChat.recipient)),
+                    text = titleName,
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold
                 )
                 Text( // last message
-                    text = CorrectDateTimeHelper.formatDateTime(combineChat.createdAt),
+//                    text = CustomDateTimeHelper.formatDateTime(combineChat.createdAt),
+                    text = CustomDateTimeHelper.formatDateTime(combineChat.createdAt),
 //                    text = combineChat.createdAt.substring(0, 3),
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold,
@@ -682,41 +667,23 @@ fun ChatsContentItem(
                 )
             }
 
-            Text(
-                text = "from " + uiFormatPhoneNumber(phone = combineChat.sender),
-                color = colorResource(id = R.color.main_yellow_splash_screen),
-            )
+            // это от кого последнее сообщение
+//            Text(
+//                text = "from " + (combineChat.senderName ?: EditFormatPhoneHelper.edit(combineChat.sender)),
+//                color = colorResource(id = R.color.main_yellow_splash_screen),
+//            )
             Text(
                 text = combineChat.textMessage ?: "",
                 color = colorResource(id = R.color.main_yellow_splash_screen),
             )
             Divider(
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 16.dp),
                 color = colorResource(id = R.color.main_yellow_new_chat_screen),
                 thickness = 1.dp
             )
         }
     }
 }
-
-@Composable
-fun uiFormatPhoneNumber(phone: String): String {
-    return if ('9' == phone.first()) {
-        "+7".plus(phone)
-    } else {
-        "+1".plus(phone)
-    }
-}
-
-
-fun uiFormatPhoneNumber2(phone: String): String {
-    return if ('9' == phone.first()) {
-        "+7".plus(phone)
-    } else {
-        "+1".plus(phone)
-    }
-}
-
 
 @Composable
 fun BottomSheetContentItem(
@@ -783,104 +750,6 @@ fun BottomSheetContentItem(
                 color = Color.Gray,
                 thickness = 1.dp
             )
-        }
-    }
-}
-
-@Composable
-fun DialogShowSettingNotification(
-    viewModel: ChatsScreenViewModel,
-    onDismiss: (Boolean) -> Unit,
-    onConfirm: () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = {
-            onDismiss(true)
-        },
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(1.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(colorResource(id = R.color.main_violet_light)),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .weight(1f),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        text = stringResource(id = R.string.important),
-                        color = Color.White
-                    )
-                    IconButton(
-                        modifier = Modifier,
-                        onClick = {
-                            viewModel.saveHideDialogPermissionNotification(hide = true)
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_close_new_chat),
-                            contentDescription = "",
-                            tint = colorResource(id = R.color.white)
-                        )
-                    }
-                }
-
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorResource(id = R.color.main_yellow_new_chat_screen))
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 16.dp, top = 16.dp, end = 16.dp),
-                            fontSize = 20.sp,
-                            text = stringResource(id = R.string.setting_notification),
-                            color = colorResource(id = R.color.main_violet_dialog_permission)
-                        )
-                    }
-
-                    Button(
-                        onClick = onConfirm,
-                        colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet_light)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 4.dp, top = 16.dp, end = 4.dp, bottom = 4.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.go_to_settings),
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-            }
         }
     }
 }

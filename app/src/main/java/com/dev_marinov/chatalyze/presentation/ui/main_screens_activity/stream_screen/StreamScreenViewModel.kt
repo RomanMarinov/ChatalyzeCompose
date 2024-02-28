@@ -6,7 +6,7 @@ import com.dev_marinov.chatalyze.domain.repository.CallRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen.getCurrentDateTimeString
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen.model.HistoryCall
-import com.dev_marinov.chatalyze.presentation.util.CorrectDateTimeHelper
+import com.dev_marinov.chatalyze.presentation.util.CustomDateTimeHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -90,7 +90,7 @@ class StreamScreenViewModel @Inject constructor(
 
     fun saveHistoryCalls(recipientPhone: String, senderPhone: String, clientCallPhone: String) {
         val dateTimeString = getCurrentDateTimeString()
-        val createdAt = CorrectDateTimeHelper.formatDateTime(dateTimeString)
+        val createdAt = CustomDateTimeHelper.formatDateTime(dateTimeString)
         val historyCall = HistoryCall(
             clientCallPhone = clientCallPhone,
             senderPhone = senderPhone,

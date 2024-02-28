@@ -34,7 +34,11 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.FirebaseCommand
+import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import io.getstream.video.android.compose.permission.LaunchCallPermissions
 import io.getstream.video.android.compose.theme.VideoTheme
 import io.getstream.video.android.compose.ui.components.call.controls.ControlActions
@@ -67,8 +71,15 @@ fun StreamScreen(
 ) {
     Log.d("4444", " StreamScreen loaded")
 
+    SystemUiControllerHelper.SetNavigationBars(isVisible = true)
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    val recipientNameState = remember { mutableStateOf(recipientName) }
+    val recipientPhoneState = remember { mutableStateOf(recipientPhone) }
+    val senderPhoneState = remember { mutableStateOf(senderPhone) }
+    val typeEventState = remember { mutableStateOf(typeEvent) }
 
     val userToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidjhybXQzZmFlcmNrIn0.48dmUEoA5zMV_dRwTh7M_sz5qCfOx78aMc1oEN0Hs3g"
@@ -88,8 +99,8 @@ fun StreamScreen(
         token = userToken
     ).build()
 
-    Log.d("4444", " senderPhone=" + senderPhone)
-    val call = client.call("default", senderPhone ?: "") // это все раскоментить потом
+    Log.d("4444", " senderPhone=" + senderPhoneState.value)
+    val call = client.call("default", senderPhoneState.value ?: "") // это все раскоментить потом
 
     scope.launch {
         val result = call.join(create = true)
@@ -98,6 +109,7 @@ fun StreamScreen(
         }
     }
 
+    // ПРОВЕРИТЬ СКОЛЬКО РАЗ ВЫЗЫВАЕТСЯ ГОТОВ ПОСТРИМИТЬСЯ
 //    LaunchedEffect(senderPhone, recipientPhone) {
 //        IfLetHelper.execute(senderPhone, recipientPhone) { phoneList ->
 //            viewModel.sendStateReadyToStream(
@@ -106,6 +118,7 @@ fun StreamScreen(
 //                    topic = "",
 //                    senderPhone = phoneList[0],
 //                    recipientPhone = phoneList[1],
+//                    textMessage = "",
 //                    typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
 //                )
 //            )
@@ -138,9 +151,9 @@ fun StreamScreen(
                 // тут надо записывась в бд иторию звонка
                 // просто от кого и кому
                 viewModel.saveHistoryCalls(
-                    recipientPhone = recipientPhone ?: "",
-                    senderPhone = senderPhone ?: "",
-                    clientCallPhone = senderPhone ?: "",
+                    recipientPhone = recipientPhoneState.value ?: "",
+                    senderPhone = senderPhoneState.value ?: "",
+                    clientCallPhone = senderPhoneState.value ?: "",
                 )
             }
         }
@@ -150,7 +163,7 @@ fun StreamScreen(
             if (connection == RealtimeConnection.Disconnected) {
                 Log.d("4444", " Disconnected check")
                 // условие для того кто является принимающим
-                if (viewModel.ownPhoneSender != senderPhone) {
+                if (viewModel.ownPhoneSender != senderPhoneState.value) {
                     val uri = "scheme_chatalyze://calls_screen".toUri()
                     val deepLink = Intent(Intent.ACTION_VIEW, uri)
                     val pendingIntent: PendingIntent =
@@ -209,15 +222,15 @@ fun StreamScreen(
                     // убрать джоины или прогресс бар или анимацию или ничего
 
                   //  еще если виво звонил а мак принял и если виво отключил то мак не уходит с экрана звонка
-                    if (recipientName != null) {
+                    if (recipientNameState.value != null) {
                         Text(
-                            text = "${connectionState.value}\n$recipientName...",
+                            text = "${connectionState.value}\n${recipientNameState.value}...",
                             fontSize = 30.sp,
                             color = VideoTheme.colors.textHighEmphasis
                         )
                     } else {
                         Text(
-                            text = "${connectionState.value}\n$recipientPhone...",
+                            text = "${connectionState.value}\n${recipientPhoneState.value}...",
                             fontSize = 30.sp,
                             color = VideoTheme.colors.textHighEmphasis
                         )

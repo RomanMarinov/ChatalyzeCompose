@@ -5,65 +5,8 @@
 на клиенте
 
 
-[{"userPhone":"9203333333","onlineOrDate":"online"},{"userPhone":"9303454564","onlineOrDate":"offline"}]
-[{"userPhone":"9203333333","onlineOrDate":"online"},{"userPhone":"9303454564","onlineOrDate":"offline"}]
-
-
- val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(key1 = lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-
-
-                viewModel.connectToChat(senderPhone, recipientPhone)
-            } else if (event == Lifecycle.Event.ON_STOP) {
-
-
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-
-
-если стартовать бродкаст в чаты то и его нужно отключать???
-
-что если бродкаст будет работать до тех пор пока прила не будет закрыто или свернуто
-
-
-
-
-
-
-
-
-
-
-
-написать функцию авторизатион для проверки токена
-
-
-проблема
-при нажатии кнопки назад на экране чата
-ботом шит не показывается
-а при нажатии системной кнопки назд боттом щит показывается
-
-проблема при нажатии кнопки закрыть крестик у боттом щит не показывается визуальный клик
-
-
-
-
 for update gradle compose compiler and kotlin versions
 https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-
-
-
-добавить проверку пермишина на предоставление номера и списка контактов
-по клику на элемент списка на ChatsScreen
-
 
 
 

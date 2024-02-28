@@ -23,14 +23,14 @@ class FirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-      //  Log.d("4444", " onMessageReceived message=" + message.data)
+        Log.d("4444", " onMessageReceived message=" + message.data)
         //onMessageReceived message={sender=9303454564, topic=, recipient=5551234567, firebaseToken=cf2jBrO0TbmWNhVkaQX7vc:APA91bE2AbQBOzpQJpFW2TIastWXyjmTWjS6zMMrADNhy5hIXHt2bXlT62V_LCb-mraeLI_LFTBomJ7rvzdrQcY4rnz1aJKZ3--FVTnFR5Dkj0Jz3ut38aJ_0kinzlMxS8bO-1V7AfK7}
 
         if (message.data.isNotEmpty()) {
             val title = message.data["title"]
             val senderPhone = message.data["senderPhone"]
             val recipientPhone = message.data["recipientPhone"]
-            val textMessage = message.data["text_message"]
+            val textMessage = message.data["textMessage"]
             val typeFirebaseCommand = message.data["typeFirebaseCommand"]
 
 
@@ -40,16 +40,22 @@ class FirebaseService : FirebaseMessagingService() {
 
             when(typeFirebaseCommand) {
                 Constants.TYPE_FIREBASE_MESSAGE_MESSAGE -> {
-                    IfLetHelper.execute(senderPhone, recipientPhone) { remoteMessageDataList ->
-                        pushNotificationManager.showNotificationMessage(
-                            senderPhone = remoteMessageDataList[0],
-                            recipientPhone = remoteMessageDataList[1],
-                            textMessage = "remoteMessageDataList[3]"
-                        )
+                    Log.d("4444", " TYPE_FIREBASE_MESSAGE_MESSAGE")
+                    try {
+                        IfLetHelper.execute(senderPhone, recipientPhone, textMessage) { remoteMessageDataList ->
+                            pushNotificationManager.showNotificationMessage(
+                                senderPhone = remoteMessageDataList[0],
+                                recipientPhone = remoteMessageDataList[1],
+                                textMessage = remoteMessageDataList[2]
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.d("4444", " try catch TYPE_FIREBASE_MESSAGE_MESSAGE e=" + e)
                     }
                 }
                 Constants.TYPE_FIREBASE_MESSAGE_CALL -> {
                     IfLetHelper.execute(senderPhone, recipientPhone) { remoteMessageDataList ->
+                        Log.d("4444", " TYPE_FIREBASE_MESSAGE_CALL")
                         pushNotificationManager.showNotificationCall(
                             senderPhone = remoteMessageDataList[0],
                             recipientPhone = remoteMessageDataList[1]
@@ -57,9 +63,8 @@ class FirebaseService : FirebaseMessagingService() {
                     }
                 }
                 Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM -> {
-
-
                     IfLetHelper.execute(senderPhone, recipientPhone, typeFirebaseCommand) { remoteMessageDataList ->
+                        Log.d("4444", " TYPE_FIREBASE_MESSAGE_READY_STREAM")
                         pushNotificationManager.giveStateReadyStream(
                             senderPhone = remoteMessageDataList[0],
                             recipientPhone = remoteMessageDataList[1],

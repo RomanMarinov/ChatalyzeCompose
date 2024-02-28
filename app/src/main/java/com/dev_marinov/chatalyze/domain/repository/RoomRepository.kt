@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface RoomRepository {
     val filteredContacts: Flow<List<Contact>>
-    fun contactBySenderPhone(sender: String): Flow<Contact>
+    suspend fun contactBySenderPhone(sender: String): Contact
     suspend fun saveContacts(contacts: List<Contact>)
 
     val onlineUserStateList: Flow<List<OnlineUserState>>

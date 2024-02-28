@@ -2,6 +2,8 @@ package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,12 +11,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -60,7 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.model.ChatalyzeBottomNavItem
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.ui.theme.ChatalyzeTheme
+import com.dev_marinov.chatalyze.presentation.ui.theme.ChatalyzeTheme
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
@@ -68,47 +68,81 @@ import com.dev_marinov.chatalyze.presentation.util.isAlwaysDenied
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import dagger.hilt.android.AndroidEntryPoint
 
+
 @AndroidEntryPoint
 class MainScreensActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            Log.d("4444", " MainScreensActivity loaded")
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             ChatalyzeTheme {
-                Log.d("4444", " MainScreensActivity loaded")
-                WindowCompat.setDecorFitsSystemWindows(window, false)
                 SetPermissionsAndNavigation()
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        when (intent?.action) {
+            "notification_action" -> {
+                Log.d("4444", " MainScreensActivity notification_action")
+
+                val name = intent.getStringExtra("name")
+                val sender = intent.getStringExtra("sender")
+                val recipient = intent.getStringExtra("recipient")
+
+                val deepLink =
+                    Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
+                //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
+
+                val taskDetailIntent = Intent(
+                    Intent.ACTION_VIEW,
+                    deepLink,
+//                    this,
+//                    MainScreensActivity::class.java
+                    //MainActivity::class.java
+                )
+
+                val pendingIntent: PendingIntent = TaskStackBuilder.create(applicationContext).run {
+                    addNextIntentWithParentStack(taskDetailIntent)
+                    // addParentStack(MainScreensActivity::class.java)
+                    getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+                }
+                pendingIntent.send()
             }
         }
     }
 }
 
+@SuppressLint("RememberReturnType")
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SetPermissionsAndNavigation(
     viewModel: MainScreensViewModel = hiltViewModel(),
 ) {
-    Log.d("4444", " SetPermissionsAndNavigation выполнился")
+    Log.d("4444", " MainScreensActivity SetPermissionsAndNavigation выполнился")
 
     ExecuteGrantedPermissions(viewModel = viewModel)
+    val navController = rememberNavController()
 
     //val backStackEntry = navController.currentBackStackEntryAsState()
-    val navController = rememberNavController()
 
     val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(false)
 
-    viewModel.saveHideNavigationBar(false)
-    //  viewModel.onMovieClickedHideNavigationBar(false)
+    LaunchedEffect(Unit) {
+        viewModel.saveHideNavigationBar(false)
+    }
 
     Scaffold(
         modifier = Modifier.navigationBarsPadding(),
         bottomBar = {
-            //  Log.d("4444", " isHideBottomBar=" + isHideBottomBar)
             BottomNavigationBarItem(
                 modifier = Modifier
                     .background(colorResource(id = R.color.main_violet_light))
@@ -121,13 +155,13 @@ fun SetPermissionsAndNavigation(
                         name = "Chat",
                         route = ScreenRoute.ChatsScreen.route,
                         icon = Icons.Default.Chat,
-                        badgeCount = 2
+                        // badgeCount = 2
                     ),
                     ChatalyzeBottomNavItem(
                         name = "Call",
                         route = ScreenRoute.CallsScreen.route,
                         icon = Icons.Default.Call,
-                        badgeCount = 4
+                        // badgeCount = 4
                     ),
                     ChatalyzeBottomNavItem(
                         name = "Profile",
@@ -154,14 +188,16 @@ fun SetPermissionsAndNavigation(
                 .padding(paddingValues = paddingValues)
         ) {
             // было
+            Log.d("4444", " MainScreensActivity SetPermissionsAndNavigation box ")
+            //вызывается 3 раза
 
-            Log.d("4444", " SetPermissionsAndNavigation box ")
             MainScreensNavigationGraph(navHostController = navController)
         }
     }
 }
 
-@SuppressLint("CoroutineCreationDuringComposition", "RememberReturnType",
+@SuppressLint(
+    "CoroutineCreationDuringComposition", "RememberReturnType",
     "PermissionLaunchedDuringComposition"
 )
 @ExperimentalPermissionsApi
@@ -169,97 +205,30 @@ fun SetPermissionsAndNavigation(
 fun ExecuteGrantedPermissions(
     viewModel: MainScreensViewModel,
 ) {
-
-    val scope = rememberCoroutineScope()
-
+    val context = LocalContext.current
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
     val isTheLifecycleEventNow by viewModel.isTheLifecycleEventNow.collectAsStateWithLifecycle("")
     val canStartWebSocket by viewModel.canStartService.collectAsStateWithLifecycle(false)
 
-
-
-
-//    val context = LocalContext.current
-//    val socketBroadcastReceiver = remember {
-//        object : BroadcastReceiver() {
-//            override fun onReceive(context: Context, intent: Intent) {
-//                when (intent.action) {
-//                    "receiver_action" -> {
-//                        Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
-//                    }
-//
-//                    "SESSION_ACTION_ERROR" -> {
-//                        Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ERROR")
-//                    }
-//
-//                    "SESSION_ACTION_ClOSE" -> {
-//                        Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ClOSE")
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    LaunchedEffect(key1 = true){
-//        val intentFilter = IntentFilter("receiver_action")
-//        context.registerReceiver(socketBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
-//    }
-
-
-    // сохранение ивентов socketBroadcastReceiver нужен только для возможности вызваать методы
-    // получения чатов гет месседж и возможности писать звонить и тд
-    val context = LocalContext.current
-
-
-
-
-
-
-//    DisposableEffect(context) {
-//        val socketBroadcastReceiver = object : BroadcastReceiver() {
-//            override fun onReceive(context: Context, intent: Intent) {
-//                if (intent.action == "receiver_socket_action") {
-//                    when (intent.getStringExtra("session")) {
-//                        "session_success" -> {
-//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
-//                            viewModel.saveSessionState(sessionState = Constants.SESSION_SUCCESS)
-//                        }
-//                        "session_error" -> {
-//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ERROR")
-//                            viewModel.saveSessionState(sessionState = Constants.SESSION_ERROR)
-//                        }
-//                        "session_close" -> {
-//                            Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_ClOSE")
-//                            viewModel.saveSessionState(sessionState = Constants.SESSION_CLOSE)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        //Log.d("4444", " socketBroadcastReceiver registerReceiver")
-//        val filter = IntentFilter("receiver_socket_action")
-//        context.registerReceiver(socketBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-//
-//        onDispose {
-//            //Log.d("4444", " socketBroadcastReceiver unregisterReceiver")
-//            context.unregisterReceiver(socketBroadcastReceiver)
-//        }
-//    }
-
-    Log.d("4444", " 1 ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket)
     LaunchedEffect(isGrantedPermissions, canStartWebSocket, isTheLifecycleEventNow) {
-        Log.d("4444", " 2 ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket)
+        Log.d(
+            "4444",
+            " MainScreensActivity ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket
+        )
 
         if (isGrantedPermissions
             && isTheLifecycleEventNow == Constants.EVENT_ON_START
-            && canStartWebSocket) {
-
-
+            && canStartWebSocket
+        ) {
             val ownPhoneSender = getOwnPhoneSender(context = context)
-            Log.d("4444", " LaunchedEffect(isGrantedPermissions ownPhoneSender=" + ownPhoneSender)
+            Log.d("4444", " MainScreensActivity выполнился метод запроса телефона getOwnPhoneSender=" + ownPhoneSender)
             if (ownPhoneSender.isNotEmpty()) {
                 viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
 
-                viewModel.openServerWebSocketConnection(ownPhoneSender = ownPhoneSender)
+                viewModel.openServerWebSocketConnection(
+                    ownPhoneSender = ownPhoneSender,
+                    context = context
+                )
                 viewModel.canStartWebSocket(can = false)
             }
         }
@@ -281,30 +250,25 @@ fun ExecuteGrantedPermissions(
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_START -> {
-                        Log.d("4444", " ExecuteGrantedPermissions Lifecycle.Event.ON_START")
+                        Log.d("4444", " MainScreensActivity ExecuteGrantedPermissions Lifecycle.Event.ON_START")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_START)
                         permissionsState.launchMultiplePermissionRequest()
-
                         viewModel.canStartWebSocket(can = true)
                         //tryCallService(scope = scope, viewModel = viewModel)
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
-                        Log.d("4444", " ExecuteGrantedPermissions Lifecycle.Event.ON_STOP")
+                        Log.d("4444", " MainScreensActivity ExecuteGrantedPermissions Lifecycle.Event.ON_STOP")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_STOP)
-                        //Intent(context, SocketService::class.java).also { context.stopService(it) }
-
-                        viewModel.closeWebSocketConnection()
+                        //viewModel.closeWebSocketConnection()
                     }
 
                     Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
-                        Log.d("4444", " ExecuteGrantedPermissions Lifecycle.Event.ON_DESTROY")
+                        Log.d("4444", " MainScreensActivity ExecuteGrantedPermissions Lifecycle.Event.ON_DESTROY")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_DESTROY)
-//                        Intent(context, SocketService::class.java).also {
-//                            context.stopService(it)
-//                        }
                         viewModel.closeWebSocketConnection()
                     }
+
                     else -> {}
                 }
             }
@@ -325,12 +289,12 @@ fun ExecuteGrantedPermissions(
                 Manifest.permission.READ_PHONE_NUMBERS -> {
                     when {
                         it.status.isGranted -> {
-                            Log.d("4444", "READ_PHONE_NUMBERS 1 ")
+                            Log.d("4444", " MainScreensActivity READ_PHONE_NUMBERS isGranted")
                             savePermissionReadPhoneNumbers(viewModel = viewModel, isGranted = true)
                         }
 
                         it.status.shouldShowRationale -> {
-                            Log.d("4444", "READ_PHONE_NUMBERS 2 ")
+                            Log.d("4444", " MainScreensActivity READ_PHONE_NUMBERS shouldShowRationale ")
                             savePermissionReadPhoneNumbers(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_READ_PHONE_NUMBERS),
@@ -342,7 +306,7 @@ fun ExecuteGrantedPermissions(
                         }
 
                         it.isAlwaysDenied() -> {
-                            Log.d("4444", "READ_PHONE_NUMBERS 3 ")
+                            Log.d("4444", " MainScreensActivity READ_PHONE_NUMBERS isAlwaysDenied")
                             savePermissionReadPhoneNumbers(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_denied_READ_PHONE_NUMBERS),
@@ -358,11 +322,12 @@ fun ExecuteGrantedPermissions(
                 Manifest.permission.READ_CONTACTS -> {
                     when {
                         it.status.isGranted -> {
-                            Log.d("4444", "READ_CONTACTS 1 ")
+                            Log.d("4444", " MainScreensActivity READ_CONTACTS isGranted")
                             savePermissionReadContacts(viewModel = viewModel, isGranted = true)
                         }
 
                         it.status.shouldShowRationale -> {
+                            Log.d("4444", " MainScreensActivity READ_CONTACTS shouldShowRationale")
                             savePermissionReadContacts(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_CONTACTS),
@@ -374,6 +339,7 @@ fun ExecuteGrantedPermissions(
                         }
 
                         it.isAlwaysDenied() -> {
+                            Log.d("4444", " MainScreensActivity READ_CONTACTS isAlwaysDenied")
                             savePermissionReadContacts(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_denied_CONTACTS),
@@ -386,15 +352,15 @@ fun ExecuteGrantedPermissions(
                     }
                 }
 
-                //////////////
                 Manifest.permission.CAMERA -> {
                     when {
                         it.status.isGranted -> {
-                            Log.d("4444", "CAMERA 1 ")
+                            Log.d("4444", " MainScreensActivity CAMERA isGranted")
                             savePermissionCamera(viewModel = viewModel, isGranted = true)
                         }
 
                         it.status.shouldShowRationale -> {
+                            Log.d("4444", " MainScreensActivity CAMERA shouldShowRationale")
                             savePermissionCamera(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_CAMERA),
@@ -406,6 +372,7 @@ fun ExecuteGrantedPermissions(
                         }
 
                         it.isAlwaysDenied() -> {
+                            Log.d("4444", " MainScreensActivity CAMERA isAlwaysDenied")
                             savePermissionCamera(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_denied_CAMERA),
@@ -421,11 +388,12 @@ fun ExecuteGrantedPermissions(
                 Manifest.permission.RECORD_AUDIO -> {
                     when {
                         it.status.isGranted -> {
-                            Log.d("4444", "RECORD_AUDIO 1 ")
+                            Log.d("4444", " MainScreensActivity RECORD_AUDIO isGranted")
                             savePermissionRecordAudio(viewModel = viewModel, isGranted = true)
                         }
 
                         it.status.shouldShowRationale -> {
+                            Log.d("4444", " MainScreensActivity RECORD_AUDIO shouldShowRationale")
                             savePermissionRecordAudio(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_RECORD_AUDIO),
@@ -437,6 +405,7 @@ fun ExecuteGrantedPermissions(
                         }
 
                         it.isAlwaysDenied() -> {
+                            Log.d("4444", " MainScreensActivity RECORD_AUDIO isAlwaysDenied")
                             savePermissionRecordAudio(viewModel = viewModel, isGranted = false)
                             DialogPermissions(
                                 message = stringResource(id = R.string.justification_denied_RECORD_AUDIO),
@@ -555,22 +524,12 @@ fun DialogPermissions(
 
 
 @SuppressLint("HardwareIds")
-fun getOwnPhoneSender(context: Context) : String {
-    Log.d("4444", " getOwnPhoneSender запрашиваем номер телефона")
-    Log.d("4444", " checkReadPhoneNumberPermission(context = context)=" + checkReadPhoneNumberPermission(context = context))
-
-
-
-
-
-
+fun getOwnPhoneSender(context: Context): String {
     return if (checkReadPhoneNumberPermission(context = context)) {
-
-
-
-        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val telephonyManager =
+            context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         val ownPhoneSender = telephonyManager?.line1Number.toString()
-        Log.d("4444", " getOwnPhoneSender ownPhoneSender=" + ownPhoneSender)
+        Log.d("4444", " MainScreensActivity getOwnPhoneSender ownPhoneSender=" + ownPhoneSender)
         return CorrectNumberFormatHelper.getCorrectNumber(number = ownPhoneSender)
     } else {
         ""
@@ -589,4 +548,5 @@ fun openAppSettings(context: Context) {
         .setData(Uri.fromParts("package", context.packageName, null))
     context.startActivity(intent)
 }
+
 

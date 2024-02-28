@@ -29,4 +29,5 @@
 
 <!--    new chat screen -->
     <color name="main_yellow_new_chat_screen">#FAFAC9</color>
+    <color name="color_companion_chat">#754677</color>
 </resources>

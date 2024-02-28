@@ -4,5 +4,6 @@ data class FirebaseCommand(
     val topic: String,
     val senderPhone: String,
     val recipientPhone: String,
+    val textMessage: String,
     val typeFirebaseCommand: String
 )

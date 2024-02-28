@@ -10,7 +10,6 @@ import androidx.annotation.RequiresApi
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-
 class RingtoneService : Service() {
 
     companion object {

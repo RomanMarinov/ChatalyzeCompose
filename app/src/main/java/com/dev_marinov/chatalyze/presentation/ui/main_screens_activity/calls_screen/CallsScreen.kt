@@ -1,17 +1,14 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,8 +23,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -37,56 +32,47 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.domain.model.call.HistoryCallWithName
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen.model.HistoryCall
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.CustomBackStackOnlyBottomSheetInChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.uiFormatPhoneNumber
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
+import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.RememberContacts
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -94,7 +80,8 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalPermissionsApi::class)
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CallsScreen(
     navController: NavHostController,
@@ -107,16 +94,15 @@ fun CallsScreen(
     SystemUiControllerHelper.SetSystemBars(true)
     SystemUiControllerHelper.SetStatusBarColor()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     GradientBackgroundHelper.SetMonochromeBackground()
     // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
 //    val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
-    val contacts = viewModel.filteredContacts.collectAsStateWithLifecycle(initialValue = listOf())
-
+    val contacts = viewModel.filteredContacts.collectAsStateWithLifecycle(initialValue = emptyList())
+    val contactsState = remember { mutableStateOf(contacts) }
 
     val historyCallsCombine =
-        viewModel.historyCallsCombine.collectAsStateWithLifecycle(initialValue = listOf())
+        viewModel.historyCallsCombine.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
     val getOwnPhoneSender by viewModel.getOwnPhoneSender.collectAsStateWithLifecycle("")
@@ -128,7 +114,48 @@ fun CallsScreen(
 
     val makeCallStatusCode by viewModel.makeCallStatusCode.collectAsStateWithLifecycle()
 
-    Log.d("4444", " combineChatList=" + historyCallsCombine.value)
+    val isSheetOpen = rememberSaveable { mutableStateOf(false) }
+    val openBottomSheet = rememberSaveable { mutableStateOf(false) }
+
+    val hasOverlayPermissionState = remember { mutableStateOf(false) }
+
+
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " CallsScreen Lifecycle.Event.ON_START")
+                        // есть ли у приложения разрешение на отображение наложений поверх других приложений
+                        hasOverlayPermissionState.value = Settings.canDrawOverlays(context)
+                        //LaunchedEffect(hasOverlayPermission) {
+
+                    }
+
+                    Lifecycle.Event.ON_STOP -> { // когда свернул
+                        Log.d("4444", " CallsScreen Lifecycle.Event.ON_STOP")
+                    }
+
+                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+                        Log.d("4444", " CallsScreen Lifecycle.Event.ON_DESTROY")
+                    }
+
+                    else -> {}
+                }
+            }
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
+
+
+
+
+//    Log.d("4444", " combineChatList=" + historyCallsCombine.value)
     // сюда добавить статус соедения удачу сокета
     LaunchedEffect(getOwnPhoneSender, isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
@@ -155,10 +182,7 @@ fun CallsScreen(
         }
     }
 
-    // есть ли у приложения разрешение на отображение наложений поверх других приложений
-    val hasOverlayPermission = Settings.canDrawOverlays(context)
-    //LaunchedEffect(hasOverlayPermission) {
-    if (!hasOverlayPermission && pushTypeDisplay != 0) {
+    if (!hasOverlayPermissionState.value && pushTypeDisplay != 0) {
         DialogShowPushOrScreen(
             onDismiss = { },
             onConfirm = { selectedBoxIndex ->
@@ -176,8 +200,7 @@ fun CallsScreen(
         skipHalfExpanded = true
     )
 
-    var isSheetOpen by rememberSaveable { mutableStateOf(false) }
-    var openBottomSheet by rememberSaveable { mutableStateOf(false) }
+
 
     val isOpenModalBottomSheet by viewModel.isOpenModalBottomSheet.collectAsStateWithLifecycle()
     if (isOpenModalBottomSheet) {
@@ -185,8 +208,8 @@ fun CallsScreen(
         LaunchedEffect(Unit) {
             scope.launch {
                 delay(50L)
-                openBottomSheet = !openBottomSheet
-                isSheetOpen = true
+                openBottomSheet.value = !openBottomSheet.value
+                isSheetOpen.value = true
                 sheetState.show()
             }
         }
@@ -198,7 +221,7 @@ fun CallsScreen(
             .collect {
                 if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
                     scope.launch {
-                        isSheetOpen = false
+                        isSheetOpen.value = false
                         viewModel.onClickHideNavigationBar(isHide = false)
                         sheetState.hide()
                     }
@@ -252,129 +275,6 @@ fun CallsScreen(
                 modifier = Modifier
                     .height(50.dp)
                     .layoutId("header_calls_text")
-                    .clickable {
-                        try {
-                            Log.d("4444", " StreamScreen click")
-
-                          //  navController.navigate(route = ScreenRoute.StreamScreen.route)
-
-//                            navController.navigate(
-//                                route = ScreenRoute.StreamScreen.withArgs(
-//                                    recipientName = "roma",
-//                                    recipientPhone = "9303454564",
-//                                    senderPhone = "5551234567",
-//                                    typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
-//                                )
-//                            )
-//                            Log.d(
-//                                "4444",
-//                                " ScreenRoute.CallScreen.route=" + ScreenRoute.CallScreen.route
-//                            )
-//                            Log.d("4444", " ScreenRoute.CallScreen=" + ScreenRoute.CallScreen)
-
-//                            navController.navigate(
-//                                route = ScreenRoute.StreamScreen.withArgs(
-//                                    recipientName = "roman",
-//                                    recipientPhone = "5551234567",
-//                                    senderPhone = "9303454564",
-//                                    typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM // не используется хуй
-//                                )
-//                            )
-
-//                        val uri = "chatalyze://${"call_screen"}/${"roma"}${"9303454564"}/${"5551234567"}/${Constants.OUTGOING_CALL_EVENT}".toUri()
-                            // val uri = "scheme_chatalyze://${"call_screen"}/${"roma"}/${"9303454564"}/${"5551234567"}/${Constants.INCOMING_CALL_EVENT}".toUri()
-
-                            //val uri = "scheme_chatalyze://${"create_password_screen"}".toUri()
-
-//                            val deepLink = Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java)
-//                            deepLink.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or
-//                                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-//                                    Intent.FLAG_ACTIVITY_CLEAR_TASK or
-//                                    Intent.FLAG_ACTIVITY_NEW_TASK
-//
-//                            val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-//                                addNextIntentWithParentStack(deepLink)
-//                                    .getPendingIntent(1, PendingIntent.FLAG_IMMUTABLE)
-//                            }
-//                            pendingIntent.send()
-
-//                            val deepLinkIntent = Intent(
-//                                Intent.ACTION_VIEW,
-//                                Uri.parse("profile_screen"),
-////                                Uri.parse("www.schemechatalyze.com"),
-////                                Uri.parse("www.schemechatalyze.com/${"profile_screen"}"),
-//                                context,
-//                                MainScreensActivity::class.java
-//                            )
-//
-//                            val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
-//                                        addNextIntentWithParentStack(deepLinkIntent)
-//                                        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-//                            }
-//                            deepLinkPendingIntent?.send()
-
-
-//                            val intent = Intent(context, MainActivity::class.java).apply {
-//                                putExtra("type", "хуй")
-//                            }
-//                            val pendingIntent = TaskStackBuilder.create(context).run {
-//                                addNextIntentWithParentStack(intent)
-//                                getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-//                            }
-//                            pendingIntent.send()
-
-////////////////////
-//                            val deepLinkIntent = Intent(
-//                                Intent.ACTION_VIEW,
-//                               // Uri.parse("profile_screen"),
-////                                Uri.parse("profile_screen"),
-//                                Uri.parse("create_password_screen"),
-////                                Uri.parse("www.schemechatalyze.com/${"profile_screen"}"),
-//                                context,
-//                                MainActivity::class.java
-//                            )
-//
-//                            val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
-//                                        addNextIntentWithParentStack(deepLinkIntent)
-//                                        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-//                            }
-//                            deepLinkPendingIntent?.send()
-/////////////////////////////
-
-
-//                            android:host="create_password_screen"
-//                            android:scheme="scheme_chatalyze" />
-
-
-                            //проверить эту ебаную ссылку просто повесить клик на любую кноку и че будет
-//                            val uri = "scheme_chatalyze://${ScreenRoute.CallScreen.route}/${"roma"}/${"9303454564"}/${"5551234567"}/${Constants.INCOMING_CALL_EVENT}".toUri()
-//                            val uri =
-//                                "scheme_chatalyze://call_screen/roma/9303454564/5551234567/${Constants.INCOMING_CALL_EVENT}".toUri()
-//                            Log.d("4444", " usri блять=" + uri)
-//
-//                            val deepLink = Intent(
-//                                Intent.ACTION_VIEW,
-//                                uri,
-////                                context,
-////                                MainScreensActivity::class.java
-//                            )
-//
-//                            val pendingIntent: PendingIntent = TaskStackBuilder
-//                                .create(context)
-//                                .run {
-//                                    addNextIntentWithParentStack(deepLink)
-//                                    getPendingIntent(
-//                                        0,
-//                                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//                                    )
-//                                }
-//                            pendingIntent.send()
-
-
-                        } catch (e: Exception) {
-                            Log.d("4444", " try catch CALLSSCREEN=" + e)
-                        }
-                    }
             )
             IconButton(
                 modifier = Modifier
@@ -439,23 +339,9 @@ fun CallsScreen(
                                     shape = RoundedCornerShape(20.dp)
                                 )
                                 .padding(start = 8.dp, end = 8.dp),
-                            //  state = lazyListState
                         ) {
-//                            items(chatList.value) { item ->
-//                               // Log.d("4444", " chats item=" + item)
-//                                Spacer(modifier = Modifier.height(16.dp))
-//                                ChatsContentItem(
-//                                    navController = navController,
-//                                    chat = item,
-//                                    ownPhoneSender = viewModel.ownPhoneSender,
-//                                    viewModel = viewModel
-//                                )
-//                            }
-
-                            //  Log.d("4444", " combineChatList.value=" + combineChatList.value)
                             items(items = historyCallsCombine.value.reversed()) { item ->
-                                // Log.d("4444", " chats item=" + item)
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 CallContentItem(
                                     navController = navController,
                                     historyCallWithName = item,
@@ -469,7 +355,7 @@ fun CallsScreen(
             }
         }
 
-        if (isSheetOpen) {
+        if (isSheetOpen.value) {
             ModalBottomSheetLayout(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -481,7 +367,7 @@ fun CallsScreen(
                     BottomSheetCallContentTop(
                         isHide = {
                             scope.launch {
-                                isSheetOpen = false
+                                isSheetOpen.value = false
                                 if (it) {
                                     viewModel.onClickHideNavigationBar(isHide = false)
                                     sheetState.hide()
@@ -494,7 +380,7 @@ fun CallsScreen(
                                 .fillMaxSize()
                                 .padding(start = 8.dp, end = 8.dp)
                         ) {
-                            items(contacts.value) { item ->
+                            items(contactsState.value.value) { item ->
                                 Log.d("4444", " item=" + item)
                                 BottomSheetCallContentItem(
                                     navController = navController,
@@ -512,9 +398,9 @@ fun CallsScreen(
     }
     CustomBackStackOnlyBottomSheetInChatsScreen(
         navController = navController,
-        isSheetOpen = isSheetOpen,
+        isSheetOpen = isSheetOpen.value,
         onSheetOpenChanged = { isOpen ->
-            isSheetOpen = isOpen
+            isSheetOpen.value = isOpen
             if (!isOpen) {
                 viewModel.onClickHideNavigationBar(isHide = false)
             }
@@ -557,41 +443,19 @@ fun CallContentItem(
     ownPhoneSender: String,
     viewModel: CallsScreenViewModel,
 ) {
-    Log.d("4444", " CallContentItem combineChat=" + historyCallWithName)
+    Log.d("4444", " CallContentItem loaded")
+
+    val isMakeCallState = remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             // .clip(RoundedCornerShape(50.dp))
             .clickable {
-                viewModel.onClickHideNavigationBar(isHide = true)
-                scope.launch {
-                    delay(50L) // костыль потому что ui у перехода не красивый
-                    withContext(Dispatchers.Main) {
-                        // правильные аргументы
-                        // recipientName=Roman recipientPhone=9303454564 senderPhone=5551234567
-                        // ошибочные аргументы
-                        // BottomSheetContentItem recipientName=name потом исправить recipientPhone=9303454564 senderPhone=
-
-                       // клик по элементу из списка
-//                        navController.navigate(
-//                            route = ScreenRoute.CallScreen.withArgs2(
-//                                recipientName = getRecipientName(historyCall = historyCall),
-//                                recipientPhone = getRecipientPhone(
-//                                    historyCall = historyCall,
-//                                    ownPhoneSender = ownPhoneSender
-//                                ),
-//                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(
-//                                    ownPhoneSender
-//                                ),
-//                                typeEvent = Constants.OUTGOING_CALL_EVENT
-//                            )
-//                        )
-                    }
-                }
-
+                isMakeCallState.value = true
             },
-
         // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -612,98 +476,124 @@ fun CallContentItem(
             )
         }
 
-
-
-        val res = if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) "outgoing" else "incoming"
-        if (res == "incoming") {
-
-        }
-
-        Log.d("4444", " historyCallWithName.senderPhoneName=" + historyCallWithName.senderPhoneName)
-        Log.d("4444", " historyCallWithName.recipientPhoneName=" + historyCallWithName.recipientPhoneName)
-        Log.d("4444", " historyCallWithName.clientCallPhone=" + historyCallWithName.clientCallPhone)
-
-
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Text( // phone title // перепроверить
+
+                Text(
                     modifier = Modifier.weight(1f),
-                    text =  if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) {
-                        historyCallWithName.senderPhoneName.ifEmpty { uiFormatPhoneNumber(phone = historyCallWithName.senderPhone) }
-                    } else {
-                        historyCallWithName.clientCallPhone.ifEmpty { uiFormatPhoneNumber(phone = historyCallWithName.recipientPhone) }
-                    },
-                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
-                    fontWeight = FontWeight.Bold
+                    text = if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) "outgoing" else "incoming",
+                    color = colorResource(id = R.color.main_yellow_splash_screen),
                 )
 
                 Text(
                     text = historyCallWithName.createdAt,
-//                    text = combineChat.createdAt.substring(0, 3),
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.wrapContentWidth()
                 )
             }
 
+            Log.d("4444", " historyCallWithName=" + historyCallWithName)
+
+
+            val phone = if (historyCallWithName.clientCallPhone != viewModel.ownPhoneSenderLocal) {
+                historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(historyCallWithName.clientCallPhone) }
+            } else {
+                historyCallWithName.recipientPhoneName.ifEmpty { EditFormatPhoneHelper.edit(historyCallWithName.recipientPhone) }
+            }
+
             Text(
-                text = if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) "outgoing" else "incoming",
-                color = colorResource(id = R.color.main_yellow_splash_screen),
+                // modifier = Modifier.weight(1f),
+                text =  phone,
+                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+                fontWeight = FontWeight.Bold
             )
+
+            // исправная рабочая компановка
+//////////////////////////////////////////////////////////////////////////
+//                Text(
+//                    modifier = Modifier.weight(1f),
+//                    text = if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) "outgoing" else "incoming",
+//                    color = colorResource(id = R.color.main_yellow_splash_screen),
+//                )
+//
+//                Text(
+//                    text = historyCallWithName.createdAt,
+//                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
+//                    fontWeight = FontWeight.Bold,
+//                    modifier = Modifier.wrapContentWidth()
+//                )
+//            }
+//
+//            val from = "from"
+//            Text( // phone title // перепроверить
+//                // modifier = Modifier.weight(1f),
+//                text =  "$from " + if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) {
+//                    historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.senderPhone) }
+//                } else {
+//                    historyCallWithName.clientCallPhone.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.recipientPhone) }
+//                },
+//                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+//                fontWeight = FontWeight.Bold
+//            )
+//
+//            val to = "to"
+//            Text( // phone title // перепроверить
+//                // modifier = Modifier.weight(1f),
+//                text =  "$to " + if (historyCallWithName.clientCallPhone == historyCallWithName.senderPhone) {
+//                    historyCallWithName.recipientPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.recipientPhone) }
+//                } else {
+//                    historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.senderPhone) }
+//                },
+//                color = colorResource(id = R.color.main_yellow_new_chat_screen),
+//                fontWeight = FontWeight.Bold
+//            )
+////////////////////////////////
+
 //            Text(
 //                text = historyCallWithName.conversationTime,
 //                color = colorResource(id = R.color.main_yellow_splash_screen),
 //            )
             Divider(
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 8.dp),
                 color = colorResource(id = R.color.main_yellow_new_chat_screen),
                 thickness = 1.dp
             )
         }
     }
-}
 
-private fun getRecipientName(historyCall: HistoryCall): String {
-    var recipientName = ""
-    "callHistory.name"?.let {
-        recipientName = it
-        return recipientName
-    }
-    historyCall.recipientPhone?.let {
-        recipientName = CorrectNumberFormatHelper.getCorrectNumber(it)
-        return recipientName
-    }
-    return recipientName
-}
-
-private fun getRecipientPhone(historyCall: HistoryCall, ownPhoneSender: String): String {
-    var recipientPhone = ""
-    historyCall.recipientPhone?.let { recipient ->
-        if (recipient == CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)) {
-            historyCall.senderPhone?.let { sender ->
-                recipientPhone = sender
-                return recipientPhone
+    if (isMakeCallState.value) {
+        DialogShowMakeCallFromCallsScreen(
+            recipientName = historyCallWithName.recipientPhoneName,
+            recipientPhone = historyCallWithName.recipientPhone,
+            onDismiss = {
+                isMakeCallState.value = false
+            },
+            onConfirm = {
+                isMakeCallState.value = false
+                viewModel.onClickHideNavigationBar(isHide = true)
+                scope.launch {
+                    delay(50L) // костыль потому что ui у перехода не красивый
+                    withContext(Dispatchers.Main) {
+                        navController.navigate(
+                            route = ScreenRoute.CallScreen.withArgs2(
+                                recipientName = historyCallWithName.recipientPhoneName ?: historyCallWithName.recipientPhone,
+                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
+                                    historyCallWithName.recipientPhone
+                                ),
+                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(historyCallWithName.senderPhone),
+                                typeEvent = Constants.OUTGOING_CALL_EVENT
+                            )
+                        )
+                    }
+                }
             }
-        } else {
-            recipientPhone = recipient
-            return recipientPhone
-        }
+        )
     }
-    return recipientPhone
-
-
-//    CorrectNumberFormatHelper.getCorrectNumber(
-//        if (combineCall.recipient == CorrectNumberFormatHelper.getCorrectNumber(ownPhoneSender)) {
-//            combineCall.sender
-//        } else {
-//            combineCall.recipient
-//        }
-//    )
 }
 
 @Composable
@@ -770,7 +660,6 @@ fun BottomSheetCallContentTop(
     }
 }
 
-
 @Composable
 fun BottomSheetCallContentItem(
     navController: NavHostController,
@@ -821,171 +710,6 @@ fun BottomSheetCallContentItem(
                 color = Color.Gray,
                 thickness = 1.dp
             )
-        }
-    }
-}
-
-@Composable
-fun DialogShowPushOrScreen(
-    onDismiss: () -> Unit,
-    onConfirm: (Int) -> Unit,
-) {
-
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.finger_tap_dialog))
-
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever, // бесконечно
-        isPlaying = true, // пауза/воспроизведение
-        speed = 1f,
-        restartOnPlay = false // передать false, чтобы продолжить анимацию на котором он был приостановлен
-    )
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(1.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(colorResource(id = R.color.main_violet_light)),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-
-                        .padding(16.dp),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    text = stringResource(id = R.string.important),
-                    color = Color.White
-                )
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorResource(id = R.color.main_yellow_new_chat_screen))
-                ) {
-
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(16.dp),
-                            fontSize = 20.sp,
-                            text = stringResource(id = R.string.select_display),
-                            color = colorResource(id = R.color.main_violet_dialog_permission)
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(top = 8.dp, end = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            LottieAnimation(
-                                composition = composition,
-                                progress = progress,
-                                modifier = Modifier
-                                    .size(100.dp)
-                                //.alpha(visibility)
-                            )
-                        }
-                    }
-
-                    val boxes = listOf("Box 1", "Box 2")
-                    var selectedBoxIndex by remember { mutableIntStateOf(-1) }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        for (i in boxes.indices) {
-                            val borderColor =
-                                if (selectedBoxIndex == i) colorResource(id = R.color.main_violet) else Color.Transparent
-                            val painter: Painter = when (i) {
-                                0 -> painterResource(id = R.drawable.image_call_push)
-                                1 -> painterResource(id = R.drawable.image_call_screen)
-                                else -> {
-                                    painterResource(id = R.drawable.image_call_screen)
-                                }
-                            }
-                            Box(
-                                Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    //.background(backgroundColor)
-                                    .border(
-                                        BorderStroke(4.dp, borderColor),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable(onClick = {
-                                        selectedBoxIndex = i
-                                    })
-                                    .size(
-                                        if (selectedBoxIndex == i) 100.dp else 98.dp,
-                                        if (selectedBoxIndex == i) 210.dp else 208.dp
-                                    )
-                            ) {
-                                Image(
-                                    painter = painter,
-                                    contentDescription = "Logo",
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(4.dp)),
-                                    contentScale = ContentScale.Crop // Пример использования contentScale
-                                )
-                            }
-                        }
-                    }
-
-                    if (selectedBoxIndex == 1) {
-                        Text(
-                            modifier = Modifier
-                                .padding(start = 16.dp, top = 16.dp, end = 16.dp),
-                            fontSize = 20.sp,
-                            text = stringResource(id = R.string.enable_сhatalyze),
-                            color = colorResource(id = R.color.main_violet_dialog_permission)
-                        )
-                    }
-
-                    Button(
-                        onClick = { onConfirm(selectedBoxIndex) },
-                        enabled = selectedBoxIndex != -1,
-                        colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet_light)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 4.dp, top = 16.dp, end = 4.dp, bottom = 4.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                    ) {
-                        Text(
-                            text = if (selectedBoxIndex == 0) {
-                                stringResource(id = R.string.accept_push_type)
-                            } else {
-                                stringResource(id = R.string.go_to_settings)
-                            },
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
-            }
         }
     }
 }

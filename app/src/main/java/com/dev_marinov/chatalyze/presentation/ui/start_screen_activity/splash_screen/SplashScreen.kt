@@ -23,13 +23,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.MainScreensActivity
+import com.dev_marinov.chatalyze.presentation.util.DecodeToken
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.TokenPayload
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun SplashScreen(
     navController: NavController,
-    viewModel: SplashScreenViewModel = hiltViewModel()
+    viewModel: SplashScreenViewModel = hiltViewModel(),
 ) {
     StartAnimationLogoAndCheckTokenSignIn(
         navController = navController,
@@ -40,7 +44,7 @@ fun SplashScreen(
 @Composable
 fun StartAnimationLogoAndCheckTokenSignIn(
     navController: NavController,
-    viewModel: SplashScreenViewModel
+    viewModel: SplashScreenViewModel,
 ) {
     val context = LocalContext.current
 
@@ -66,6 +70,20 @@ fun StartAnimationLogoAndCheckTokenSignIn(
           // тут перейти на MainScreensActivity через intent
            val intent = Intent(context, MainScreensActivity::class.java)
            context.startActivity(intent)
+
+            val res: TokenPayload = DecodeToken.execute(token = refreshToken)
+            val simpleDateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm:ss", Locale.getDefault())
+
+
+
+            res.expiresIn?.let { tokenTimestamp ->
+                //val min: Long = it.div(60000)
+                val minutes = DecodeToken.howManyMoreMinutes(tokenTimestamp = tokenTimestamp)
+
+               // val res1 = simpleDateFormat.format(it * 1000L)
+                Log.d("4444", " SplashScreen refreshToken=" + tokenTimestamp)
+                //Log.d("4444", " SplashScreen refreshToken res.userId=" + res.userId + " res1=" + res1)
+            }
 
          //  navController.navigate(ScreenRoute.ChatalyzeScreen.route)
        } else {

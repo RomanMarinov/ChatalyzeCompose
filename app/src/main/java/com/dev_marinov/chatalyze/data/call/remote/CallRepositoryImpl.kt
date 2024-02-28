@@ -23,6 +23,7 @@ class CallRepositoryImpl @Inject constructor(
                 topic = firebaseCommand.topic,
                 senderPhone = firebaseCommand.senderPhone,
                 recipientPhone = firebaseCommand.recipientPhone,
+                textMessage = firebaseCommand.textMessage,
                 typeFirebaseCommand = firebaseCommand.typeFirebaseCommand
             )
            // Log.d("4444", " CallRepositoryImpl userCallDto=" + firebaseCommandDTO)

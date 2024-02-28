@@ -7,6 +7,5 @@ data class CombineChat(
     val createdAt: String,
     val onlineOrOffline: String?,
     val name: String?,
-
     val typeEvent: String
 )

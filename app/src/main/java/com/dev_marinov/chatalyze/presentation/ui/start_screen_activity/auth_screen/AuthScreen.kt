@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.MainScreensActivity
+
 import com.dev_marinov.chatalyze.presentation.util.CheckEmailPasswordTextFieldHelper
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute

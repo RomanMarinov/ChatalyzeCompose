@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.profile_screen
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Intent
@@ -43,15 +44,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.MainActivity
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.uiFormatPhoneNumber
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.uiFormatPhoneNumber2
 import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.ShowToastHelper
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ProfileScreen(
     navHostController: NavHostController,
@@ -110,18 +113,26 @@ fun ProfileScreen(
 
     val tryAgainLater = stringResource(id = R.string.try_again_later)
 
-    LaunchedEffect(statusCode) {
-        if (statusCode == 200) {
-//            TransitionToAuthScreen()
-
-            //authHostController.navigate(ScreenRoute.AuthScreen.route)
-        } else if (statusCode != 0) {
-            ShowToastHelper.createToast(message = tryAgainLater, context = context)
-        }
-    }
+//    LaunchedEffect(statusCode) {
+//        if (statusCode == 200) {
+//            navHostController.navigate(ScreenRoute.ChatsScreen.route)
+//            delay(50L)
+//
+//
+//
+//    }
 
     if (statusCode == 200) {
+        //navHostController.navigate(ScreenRoute.ChatsScreen.route)
+        scope.launch {
+            delay(100L)
+        }
         TransitionToAuthScreen()
+//        navHostController.navigate(ScreenRoute.ChatsScreen.route)
+//        delay()
+//        TransitionToAuthScreen()
+    } else if (statusCode != 0) {
+        ShowToastHelper.createToast(message = tryAgainLater, context = context)
     }
 
     Column(
@@ -208,7 +219,7 @@ fun ProfileScreen(
             ) {
                 LaunchedEffect(ownPhoneSender) {
                     if (ownPhoneSender.isNotEmpty()) {
-                        ownPhoneSenderState.value = uiFormatPhoneNumber2(phone = ownPhoneSender)
+                        ownPhoneSenderState.value = EditFormatPhoneHelper.edit(phone = ownPhoneSender)
                     }
                 }
                 Text(
@@ -222,7 +233,7 @@ fun ProfileScreen(
             Button(
                 modifier = Modifier
                     .layoutId("bt_log_out")
-                    .padding(top = 16.dp),
+                    .padding(top = 24.dp),
                 onClick = {
                     showDialog = true
                     descriptionDialog = descriptionLogout
@@ -295,11 +306,17 @@ fun TransitionToAuthScreen() {
         MainActivity::class.java
     )
 
+
     val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
-        addNextIntentWithParentStack(deepLinkIntent)
+        addNextIntent(deepLinkIntent)
         getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
     deepLinkPendingIntent?.send()
+//    val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
+//        addNextIntentWithParentStack(deepLinkIntent)
+//        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+//    }
+//    deepLinkPendingIntent?.send()
 ///////////////////////////
 }
 
@@ -401,4 +418,5 @@ fun DialogProfile(
             }
         }
     }
+
 }

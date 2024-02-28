@@ -11,16 +11,14 @@ interface AuthRepository {
     suspend fun signInUser(email: String, password: String) : String?
     suspend fun sendEmail(email: String) : MessageResponse?
 
+    suspend fun sendCode(userCode: UserCode) : MessageResponse?
+    suspend fun sendRefreshPassword(forgotPasswordPassword: ForgotPasswordPassword) : MessageResponse?
+
     val getPairTokensFromDataStore: Flow<PairTokens>
     val getRefreshTokensFromDataStore: Flow<String>
-
     suspend fun savePairTokens(pairTokens: PairTokens)
-    suspend fun logout(token: String, senderPhone: String) : MessageResponse?
-    suspend fun deleteProfile(token: String) : MessageResponse?
-
     suspend fun deletePairTokensToDataStore()
 
-    suspend fun sendCode(userCode: UserCode) : MessageResponse?
-
-    suspend fun sendRefreshPassword(forgotPasswordPassword: ForgotPasswordPassword) : MessageResponse?
+    suspend fun logout(token: String, senderPhone: String) : MessageResponse?
+    suspend fun deleteProfile(token: String) : MessageResponse?
 }

@@ -119,22 +119,33 @@ fun CallScreen(
     UnlockAndTurnOnTheScreen()
 
     SystemUiControllerHelper.SetStatusBarColor()
+    SystemUiControllerHelper.SetNavigationBars(isVisible = true)
 
     val isFinishCallScreen by viewModel.isFinishCallScreen.observeAsState()
+
+    val recipientNameState by remember { mutableStateOf(recipientName) }
+    val recipientPhoneState by remember { mutableStateOf(recipientPhone) }
+    val senderPhoneState by remember { mutableStateOf(senderPhone) }
+    val typeEventState by remember { mutableStateOf(typeEvent) }
+
     LaunchedEffect(isFinishCallScreen) {
         if (isFinishCallScreen == true) {
 //            navController.popBackStack()
         }
     }
 
-    when (typeEvent) {
+
+
+
+
+    when (typeEventState) {
         Constants.OUTGOING_CALL_EVENT -> { // исходящий
             Log.d("4444", " CallScreen Constants.OUTGOING_CALL_EVENT")
             OutgoingCallContent(
                 navController = navController,
-                recipientName = recipientName,
-                recipientPhone = recipientPhone,
-                senderPhone = senderPhone,
+                recipientName = recipientNameState,
+                recipientPhone = recipientPhoneState,
+                senderPhone = senderPhoneState,
                 viewModel = viewModel,
                 onDeclineCall = {
                     navController.popBackStack(ScreenRoute.CallsScreen.route, false)
@@ -146,11 +157,11 @@ fun CallScreen(
             //Log.d("4444", " CallScreen Constants.INCOMING_CALL_EVENT")
             IncomingCallContent( // входящий
                 context = context,
-                recipientName = recipientName,
-                recipientPhone = recipientPhone,
+                recipientName = recipientNameState,
+                recipientPhone = recipientPhoneState,
                 viewModel = viewModel,
                 navController = navController,
-                senderPhone = senderPhone,
+                senderPhone = senderPhoneState,
                 onAcceptCall = {
                     Log.d("4444", " CallScreen IncomingCallContent")
 
@@ -158,16 +169,17 @@ fun CallScreen(
                         firebaseCommand =
                         FirebaseCommand(
                             topic = "",
-                            senderPhone = senderPhone ?: "",
-                            recipientPhone = recipientPhone ?: "",
+                            senderPhone = senderPhoneState ?: "",
+                            recipientPhone = recipientPhoneState ?: "",
+                            textMessage = "",
                             typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
                         )
                     )
                     navController.navigate(
                         route = ScreenRoute.StreamScreen.withArgs(
-                            recipientName = recipientName,
-                            recipientPhone = recipientPhone,
-                            senderPhone = senderPhone,
+                            recipientName = recipientNameState,
+                            recipientPhone = recipientPhoneState,
+                            senderPhone = senderPhoneState,
                             typeEvent = Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM
                         )
                     )
@@ -223,6 +235,7 @@ fun OutgoingCallContent(
                     topic = "",
                     senderPhone = it[0],
                     recipientPhone = it[1],
+                    textMessage = "",
                     typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_CALL
                 )
                 viewModel.sendCommandToFirebase(firebaseCommand = firebaseCommand)
@@ -231,7 +244,9 @@ fun OutgoingCallContent(
     }
 
     LaunchedEffect(getReadyStream) {
-        getReadyStream?.let {
+        getReadyStream?.let { // тут после фб открываем стрим с тем кто готов
+            Log.d("4444", " ГОТОВ ПОСТРИМИТЬСЯ getReadyStream=" + getReadyStream)
+
             if (it.typeFirebaseCommand == Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM) {
                 navController.navigate(
                     route = ScreenRoute.StreamScreen.withArgs(
@@ -327,7 +342,7 @@ fun OutgoingCallContent(
                     ) {
                         onDeclineCall()
 
-                       // viewModel.executeFinishCallScreen(finish = true)
+                        // viewModel.executeFinishCallScreen(finish = true)
                     },
                 contentAlignment = Alignment.Center
             ) {

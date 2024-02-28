@@ -2,28 +2,24 @@ package com.dev_marinov.chatalyze.data.firebase.notification
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
+import android.content.ComponentName
 import android.content.Context
-import android.content.Context.POWER_SERVICE
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
-import android.view.Window
-import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -35,8 +31,11 @@ import com.dev_marinov.chatalyze.domain.repository.PushNotificationManager
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.MainScreensActivity
 import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.google.firebase.messaging.FirebaseMessagingService
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -68,151 +67,158 @@ class PushNotificationManagerImpl @Inject constructor(
         recipientPhone: String,
         textMessage: String,
     ) {
+        Log.d("4444", " showNotificationMessage")
 
+        val scope = CoroutineScope(Dispatchers.IO)
+
+        scope.launch {
+            var sessionState = ""
+            val result: Deferred<String> = async {
+                preferencesDataStoreRepository.isSessionState.first()
+            }
+            sessionState = result.await()
+
+            val contact = roomRepository.contactBySenderPhone(sender = senderPhone)
+            // .collect { contact ->
+            withContext(Dispatchers.Main) {
+                // проверяю есть ли разрешения для уведомлений (true / false)
+                if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                    try {
+                        unlockScreen()
+
+//                                val intent = Intent(context, MainScreensActivity::class.java)
+////                                startActivityForResult( MainScreensActivity, 0)
+////                                startActivityForResult()
+                        Log.d("4444", " showNotificationMessage contact=" + contact)
+
+                        createNotificationChannel()
+
+                        val deleteIntent =
+                            Intent(context, BroadcastReceiverNotification::class.java)
+                        deleteIntent.action = "message_notification_swipe"
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context, 0, deleteIntent,
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+
+                        val notification =
+                            NotificationCompat.Builder(context, CHANNEL_ID)
+                                .setSmallIcon(R.drawable.ic_splash_screen)
+                                //.setColor(context.resources.getColor(R.color.bazanet_red_color_anim))
+                                //.setLargeIcon(Picasso.get().load(imageUrl).get())
+                                .setContentTitle("Message from " + contact.name?.ifEmpty { contact.phoneNumber }) // Заголовок
+                                .setContentText(textMessage)
+                                .setDeleteIntent(pendingIntent)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                .setVibrate(longArrayOf(100, 1000, 200, 340))
+                                .setAutoCancel(true) // удаляется после клика
+                                .setTicker("Notific")
+                                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // звуковой файл по умолчанию для уведомления.
+                                .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
+                                .setDefaults(Notification.DEFAULT_LIGHTS) // включает мигание светодиода уведомления
+                                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                                .setContentIntent(
+                                    getMessagePendingIntent2(
+                                        name = contact.name?.ifEmpty { contact.phoneNumber },
+                                        sender = senderPhone,
+                                        recipient = recipientPhone,
+                                        context = context,
+                                        sessionState = sessionState
+                                    )
+                                )
+                                .setOngoing(false) // false - уведомление не является постоянным, то есть может быть удалено пользователем.
+
+                        // Отображаем уведомление
+                        with(NotificationManagerCompat.from(context)) {
+                            if (ActivityCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                // here to request the missing permissions, and then overriding
+                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                //                                          int[] grantResults)
+                                // to handle the case where the user grants the permission. See the documentation
+                                // for ActivityCompat#requestPermissions for more details.
+                                //return
+                            }
+                            notify(NOTIF_ID, notification.build())
+                        }
+                    } catch (e: Exception) {
+                        Log.d("4444", " try catch notification e=" + e)
+                    }
+
+                }
+            }
+            //   }
+        }
     }
 
     override fun showNotificationCall(senderPhone: String, recipientPhone: String) {
-        val coroutineScope = CoroutineScope(context = Dispatchers.IO)
-        coroutineScope.launch {
-            ringtoneStart()
 
-//            showPreviewScreen(
-//                senderPhone = senderPhone,
-//                recipientPhone = recipientPhone
-//            )
-//            showPushCall(
-////                title = title,
-//                senderPhone = senderPhone,
-//                recipientPhone = recipientPhone,
-////                textMessage = textMessage,
-//                context = context
-//            )
-//
+        val hasOverlayPermission = Settings.canDrawOverlays(context)
 
-//
-            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
-            if (!powerManager.isInteractive) { // if screen is not already on, turn it on (get wake_lock)
-                @SuppressLint("InvalidWakeLockTag") val wl = powerManager.newWakeLock(
-                    PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
-                    "id:wakeupscreen"
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val isScreenLocked =
+            keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
+        Log.d(
+            "4444",
+            " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
+        )
+
+        if (isScreenLocked) { // экран погашен
+            if (hasOverlayPermission) {
+                showPreviewScreen(senderPhone = senderPhone, recipientPhone = recipientPhone)
+            } else {
+                showPushCall(
+                    senderPhone = senderPhone,
+                    recipientPhone = recipientPhone,
+                    context = context
                 )
-                wl.acquire(10*60*1000L /*10 minutes*/)
             }
-
-
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) { // для Android выше от 8.1
-//                Log.d("4444", "unlockAndTurnOnTheScreen выполнился для Android выше от 8.1")
-//                //val context = LocalContext.current
-//                val keyguardManager =
-//                    context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-//                val windowContext = context as? Activity
-//                windowContext?.apply {
-//                    setShowWhenLocked(true) // позволяет отобразить активити поверх блокировки экрана.
-//                    setTurnScreenOn(true) // позволяет включить экран.
-//                    keyguardManager.requestDismissKeyguard(this, null)
-//                }
-//            }
-
-            // написать условие если нет разрешения показывать по верх экрана
-            // то отрисовать пуш с сообщением Звонок в домофон Включить показ на экране смартфона
-
-            // есть ли у приложения разрешение на отображение наложений поверх других приложений
-            val hasOverlayPermission = Settings.canDrawOverlays(context)
-
-            val keyguardManager =
-                context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-            val isScreenLocked =
-                keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
-            Log.d(
-                "4444",
-                " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
-            )
-//
-            // на 12 андр рабочий
-            // не включается экрран при звонке
-            // если нет разрешения и есть пароль и экран выключен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
-            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=true
-            // если нет разрешения и нет пароля и экран включен  (НЕ ВАЖНО ЕСТЬ ПАРОЛЬ)
-            // BroadcastReceiver Notification hasOverlayPermission=false isScreenLocked=false
-
-
-            if (isScreenLocked) { // экран погашен
-                if (hasOverlayPermission) {
+        } else { // экран включен
+            var stateTemp = ""
+            val res = preferencesDataStoreRepository.isTheLifecycleEventNow
+            runBlocking {
+                stateTemp = res.first()
+            }
+            Log.d("4444", " Constants.LifeCycleState.stateTemp=" + stateTemp)
+            when (stateTemp) {
+                Constants.EVENT_ON_START -> {
+                    Log.d("4444", " Constants.LifeCycleState.ON_START")
                     showPreviewScreen(senderPhone = senderPhone, recipientPhone = recipientPhone)
-                } else {
-                    showPushCall(
-                        senderPhone = senderPhone,
-                        recipientPhone = recipientPhone,
-                        context = context
-                    )
                 }
-            } else { // экран включен
-                Log.d(
-                    "4444",
-                    " 222 BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
-                )
-                // НО НАДО УЧИТЫВАТЬ НАХОДУЖЬ ЛИ Я СЕЙЧАС В ПРИЛОЖЕНИИ
 
-                // проблема в том что если я не нахожучь в приле то просто играет мелодия
-                // и внутри появляется экран (ну и он покажется как тогда я зайду)
-
-                // т.е по идее надо запускать приложение тут
-
-                // решение просто запретить в full_screen под hasOverlayPermission показывать calldomofonActivity
-
-                // а если нахожусь в приле то будет экран
-//                                       showCallDomofonActivity(address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid)
-
-
-//                // все круто раотает
-//                надо написать экран со свапами
-//                и дипликанми разрулить
-
-                var stateTemp = ""
-                val res = preferencesDataStoreRepository.isTheLifecycleEventNow
-                runBlocking {
-                    stateTemp = res.first()
-                }
-                Log.d("4444", " Constants.LifeCycleState.stateTemp=" + stateTemp)
-                when (stateTemp) {
-                    Constants.EVENT_ON_START -> {
-                        Log.d("4444", " Constants.LifeCycleState.ON_START")
+                Constants.EVENT_ON_STOP -> {
+                    Log.d("4444", " Constants.LifeCycleState.ON_STOP")
+                    if (hasOverlayPermission) {
                         showPreviewScreen(
                             senderPhone = senderPhone,
                             recipientPhone = recipientPhone
                         )
+                    } else {
+                        showPushCall(
+                            senderPhone = senderPhone,
+                            recipientPhone = recipientPhone,
+                            context = context
+                        )
                     }
+                }
 
-                    Constants.EVENT_ON_STOP -> {
-                        Log.d("4444", " Constants.LifeCycleState.ON_STOP")
-                        if (hasOverlayPermission) {
-                            showPreviewScreen(
-                                senderPhone = senderPhone,
-                                recipientPhone = recipientPhone
-                            )
-                        } else {
-                            showPushCall(
-                                senderPhone = senderPhone,
-                                recipientPhone = recipientPhone,
-                                context = context
-                            )
-                        }
-                    }
-
-                    Constants.EVENT_ON_DESTROY -> {
-                        Log.d("4444", " Constants.LifeCycleState.ON_DESTROY")
-                        if (hasOverlayPermission) {
-                            showPreviewScreen(
-                                senderPhone = senderPhone,
-                                recipientPhone = recipientPhone
-                            )
-                        } else {
-                            showPushCall(
-                                senderPhone = senderPhone,
-                                recipientPhone = recipientPhone,
-                                context = context
-                            )
-                        }
+                Constants.EVENT_ON_DESTROY -> {
+                    Log.d("4444", " Constants.LifeCycleState.ON_DESTROY")
+                    if (hasOverlayPermission) {
+                        showPreviewScreen(
+                            senderPhone = senderPhone,
+                            recipientPhone = recipientPhone
+                        )
+                    } else {
+                        showPushCall(
+                            senderPhone = senderPhone,
+                            recipientPhone = recipientPhone,
+                            context = context
+                        )
                     }
                 }
             }
@@ -233,27 +239,37 @@ class PushNotificationManagerImpl @Inject constructor(
         }
     }
 
-
     private fun showPreviewScreen(
         senderPhone: String,
         recipientPhone: String,
     ) {
         Log.d("4444", " выполнился showPreviewScreen")
+        unlockScreen()
+
+        ringtoneStart()
 
         saveHideNavigationBar(hide = true)
 
-        try {
-            val intent = Intent(context, BroadcastReceiverNotification::class.java)
-            intent.action = "full_screen"
-            //  intent.putExtra("title", title)
-            intent.putExtra("senderPhone", senderPhone)
-            intent.putExtra("recipientPhone", recipientPhone)
-            // intent.putExtra("textMessage", textMessage)
-            intent.putExtra("channelID", CHANNEL_ID)
-            context.sendBroadcast(intent)
-            //  LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
-        } catch (e: Exception) {
-            Log.d("4444", " try catch showPreviewScreen e=" + e)
+        val intent = Intent(context, BroadcastReceiverNotification::class.java)
+        intent.action = "full_screen"
+        //  intent.putExtra("title", title)
+        intent.putExtra("senderPhone", senderPhone)
+        intent.putExtra("recipientPhone", recipientPhone)
+        // intent.putExtra("textMessage", textMessage)
+        intent.putExtra("channelID", CHANNEL_ID)
+        context.sendBroadcast(intent)
+        //  LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+    }
+
+    private fun unlockScreen() {
+        val powerManager =
+            context.getSystemService(FirebaseMessagingService.POWER_SERVICE) as PowerManager
+        if (!powerManager.isInteractive) { // if screen is not already on, turn it on (get wake_lock)
+            @SuppressLint("InvalidWakeLockTag") val wl = powerManager.newWakeLock(
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+                "id:wakeupscreen"
+            )
+            wl.acquire(1000L)
         }
     }
 
@@ -264,122 +280,399 @@ class PushNotificationManagerImpl @Inject constructor(
                 isHide = hide
             )
         }
-
     }
 
     private fun showPushCall(
-//        title: String,
         senderPhone: String,
         recipientPhone: String,
-//        textMessage: String,
         context: Context,
     ) {
         Log.d("4444", " showPushCall")
 
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
-            roomRepository.contactBySenderPhone(sender = senderPhone)
-                .collect { contact ->
-                    withContext(Dispatchers.Main) {
-                        // проверяю есть ли разрешения для уведомлений (true / false)
-                        if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                            try {
-                                createNotificationChannel()
+            val contact = roomRepository.contactBySenderPhone(sender = senderPhone)
 
-                                val deleteIntent =
-                                    Intent(context, BroadcastReceiverNotification::class.java)
-                                deleteIntent.action = "call_notification_swipe"
-                                val pendingIntent = PendingIntent.getBroadcast(
-                                    context, 0, deleteIntent,
-                                    PendingIntent.FLAG_IMMUTABLE
-                                ) // вместо PendingIntent.FLAG_IMMUTABLE был 0
+            withContext(Dispatchers.Main) {
+                // проверяю есть ли разрешения для уведомлений (true / false)
+                if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                    try {
+                        unlockScreen()
 
-                                // https://api.baza.net/domofon/preview/0a2a0820-6774-48ea-80bb-a0fd5d04efe0?ts=1670592955&token=YjZhODY2OWJiZTE3NGNhN2Q1NTQ4MjRmZjM2NzgyZmFiNmEzZjE1OC4xNjcxMTk3NzU1
-                                // val icon = Picasso.get().load(imageUrl).placeholder(R.drawable.img_placeholder_camera_dialog).get()
+                        ringtoneStart()
 
-                                val notification =
-                                    NotificationCompat.Builder(context, CHANNEL_ID)
-                                        .setSmallIcon(R.drawable.ic_launcher_background)
-                                        //.setColor(context.resources.getColor(R.color.bazanet_red_color_anim))
-                                        //.setLargeIcon(Picasso.get().load(imageUrl).get())
-                                        //.setContentTitle("Входящий звонок от Мой дружище") // Заголовок
-                                        //.setContentText(address) // Основной текст
-                                        .setContentTitle("Входящий звонок " + contact.name?.ifEmpty { contact.phoneNumber }) // Заголовок
-//                                        //.setContentText(address) // Основной текст
-                                        .setDeleteIntent(pendingIntent)
-                                        .setPriority(NotificationCompat.PRIORITY_HIGH) // Приоритет уведомления
-                                        .setVibrate(longArrayOf(100, 1000, 200, 340))
-                                        .setAutoCancel(true) // удаляется после клика
-                                        .setTicker("Notific")
-                                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                                        .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // звуковой файл по умолчанию для уведомления.
-                                        .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
-                                        .setDefaults(Notification.DEFAULT_LIGHTS) // включает мигание светодиода уведомления
-                                        .setCategory(NotificationCompat.CATEGORY_ALARM)
-                                        .setContentIntent(
-                                            getCallPendingIntent(
-                                                name = (contact.name?.ifEmpty { contact.phoneNumber }),
-                                                sender = senderPhone,
-                                                recipient = recipientPhone,
-//                                                textMessage = textMessage,
-                                                context = context
-                                            )
-                                        )
-                                        .setOngoing(false) // false - уведомление не является постоянным, то есть может быть удалено пользователем.
+                        createNotificationChannel()
 
-                                // Отображаем уведомление
-                                with(NotificationManagerCompat.from(context)) {
-                                    if (ActivityCompat.checkSelfPermission(
-                                            context,
-                                            Manifest.permission.POST_NOTIFICATIONS
-                                        ) != PackageManager.PERMISSION_GRANTED
-                                    ) {
+                        val deleteIntent =
+                            Intent(context, BroadcastReceiverNotification::class.java)
+                        deleteIntent.action = "call_notification_swipe"
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context, 0, deleteIntent,
+                            PendingIntent.FLAG_IMMUTABLE
+                        ) // вместо PendingIntent.FLAG_IMMUTABLE был 0
 
-                                        // here to request the missing permissions, and then overriding
-                                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                        //                                          int[] grantResults)
-                                        // to handle the case where the user grants the permission. See the documentation
-                                        // for ActivityCompat#requestPermissions for more details.
-                                        //return
-                                    }
-                                    notify(NOTIF_ID, notification.build())
-                                }
+                        // https://api.baza.net/domofon/preview/0a2a0820-6774-48ea-80bb-a0fd5d04efe0?ts=1670592955&token=YjZhODY2OWJiZTE3NGNhN2Q1NTQ4MjRmZjM2NzgyZmFiNmEzZjE1OC4xNjcxMTk3NzU1
+                        // val icon = Picasso.get().load(imageUrl).placeholder(R.drawable.img_placeholder_camera_dialog).get()
 
-                                ringtoneStart()
-                            } catch (e: Exception) {
-                                Log.d("4444", " try catch notification e=" + e)
+                        val notification =
+                            NotificationCompat.Builder(context, CHANNEL_ID)
+                                .setSmallIcon(R.drawable.ic_launcher_background)
+                                //.setColor(context.resources.getColor(R.color.bazanet_red_color_anim))
+                                //.setLargeIcon(Picasso.get().load(imageUrl).get())
+                                //.setContentText(address) // Основной текст
+                                .setContentTitle("Входящий звонок " + contact.name?.ifEmpty { contact.phoneNumber }) // Заголовок
+                                .setDeleteIntent(pendingIntent)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH) // Приоритет уведомления
+                                .setVibrate(longArrayOf(100, 1000, 200, 340))
+                                .setAutoCancel(true) // удаляется после клика
+                                .setTicker("Notific")
+                                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // звуковой файл по умолчанию для уведомления.
+                                .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
+                                .setDefaults(Notification.DEFAULT_LIGHTS) // включает мигание светодиода уведомления
+                                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                                .setContentIntent(
+                                    getCallPendingIntent(
+                                        name = contact.name?.ifEmpty { contact.phoneNumber },
+                                        sender = senderPhone,
+                                        recipient = recipientPhone,
+                                        context = context
+                                    )
+                                )
+                                .setOngoing(false) // false - уведомление не является постоянным, то есть может быть удалено пользователем.
+
+                        // Отображаем уведомление
+                        with(NotificationManagerCompat.from(context)) {
+                            if (ActivityCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+
+                                // here to request the missing permissions, and then overriding
+                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                //                                          int[] grantResults)
+                                // to handle the case where the user grants the permission. See the documentation
+                                // for ActivityCompat#requestPermissions for more details.
+                                //return
                             }
-
-                        } else {
-//            val message = context.getString(R.string.notification_allow)
-//            showToastPermission(toastMessage = message)
+                            notify(NOTIF_ID, notification.build())
                         }
+
+                    } catch (e: Exception) {
+                        Log.d("4444", " try catch notification e=" + e)
                     }
+
+                } else {
+
+                    val message = "Allow notifications for this application"
+                    showToastPermission(toastMessage = message)
                 }
+            }
+            //   }
         }
+    }
+
+
+//    private fun getMissedCallPendingIntent(context: Context): PendingIntent {
+//        Log.d("4444", " типа проверил accessToken")
+//        return NavDeepLinkBuilder(context)
+//            .setComponentName(MainActivity::class.java)
+//            .setGraph(R.navigation.nav_graph)
+//            .setDestination(R.id.historyCallFragment)
+//            .createPendingIntent()
+//    }
+
+    // Must be one or more of: PendingIntent.FLAG_ONE_SHOT,
+    // PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT,
+    // PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE,
+    // PendingIntent.FLAG_MUTABLE, PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT,
+    // Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES,
+    // Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS,
+    // Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA
+
+    //  какая то хуйня в deeplink
+    // @SuppressLint("WrongConstant")
+
+
+    private fun getMessagePendingIntent2(
+        name: String?,
+        sender: String,
+        recipient: String,
+        context: Context,
+        sessionState: String,
+    ): PendingIntent {
+        Log.d("4444", " getMessagePendingIntent2 name=" + name + " sender=" + sender + " recicpient=" + recipient)
+
+//        val intent = Intent(context, MainScreensActivity::class.java)
+//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+//        intent.action = "notification_action"
+//        intent.putExtra("name", name)
+//        intent.putExtra("sender", sender)
+//        intent.putExtra("recipient", recipient)
+//
+//        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+//
+
+
+//                val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
+//      val deepLinkIntent = Intent(
+//          Intent.ACTION_VIEW,
+//          deepLink,
+////          context,
+////          MainScreensActivity::class.java
+//      )
+//
+//      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+//          addNextIntentWithParentStack(deepLinkIntent)
+//          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+//      }
+//      return resultPendingIntent
+
+
+
+        return if (sessionState == Constants.SESSION_SUCCESS) {
+
+//                            val deepLink =
+//                    Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
+//                //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
+//
+//                val taskDetailIntent = Intent(
+//                    Intent.ACTION_VIEW,
+//                    deepLink,
+////                    this,
+////                    MainScreensActivity::class.java
+//                    //MainActivity::class.java
+//                )
+//                val pendingIntent: PendingIntent = TaskStackBuilder.create(context.applicationContext).run {
+//                    addNextIntentWithParentStack(taskDetailIntent)
+//                    //addParentStack(MainScreensActivity::class.java)
+//                    getPendingIntent(0,   PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+//                }
+//                pendingIntent
+
+
+            Log.d("4444", " зашло в первую")
+
+//            val componentName = ComponentName(context, MainScreensActivity::class.java)
+//            val activityInfo = context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
+//            activityInfo.documentLaunchMode = ActivityInfo.DOCUMENT_LAUNCH_INTO_EXISTING
+
+            val intent = Intent(context, MainScreensActivity::class.java)
+//            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            intent.action = "notification_action"
+            intent.putExtra("name", name)
+            intent.putExtra("sender", sender)
+            intent.putExtra("recipient", recipient)
+
+            PendingIntent.getActivity(context, 0, intent,
+                    PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        } else {
+
+
+            val componentName = ComponentName(context, MainScreensActivity::class.java)
+            val activityInfo = context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
+            activityInfo.documentLaunchMode = ActivityInfo.DOCUMENT_LAUNCH_NONE
+//            val deepLink =
+//                Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
+//            //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
+//
+//            val intent = Intent(
+//                Intent.ACTION_VIEW,
+//                deepLink,
+////          context.applicationContext,
+////          MainScreensActivity::class.java
+//            )
+//
+//            // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+//
+////        val notifyIntent = Intent(context, MainScreensActivity::class.java).apply {
+////            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+////        }
+//            return PendingIntent.getActivity(
+//                context.applicationContext, 0, intent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+
+            Log.d("4444", " зашло во вторую")
+
+
+            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$recipient}/{$sender}")
+
+            val deepLinkIntent = Intent(
+                Intent.ACTION_VIEW,
+                deepLink,
+//          context,
+//          MainScreensActivity::class.java
+            )
+            val stackBuilder = TaskStackBuilder.create(context.applicationContext)
+            stackBuilder.addNextIntentWithParentStack(deepLinkIntent)
+
+            deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+
+
+
+
+
+
+//            //////////////////
+//            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
+//      val deepLinkIntent = Intent(
+//          Intent.ACTION_VIEW,
+//          deepLink,
+////          context,
+////          MainScreensActivity::class.java
+//      )
+//
+//      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+//          addNextIntentWithParentStack(deepLinkIntent)
+//          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+//      }
+//      return resultPendingIntent
+        }
+
+    }
+
+
+    private fun getMessagePendingIntent(
+        name: String?,
+        sender: String,
+        recipient: String,
+        context: Context,
+    ): PendingIntent {
+
+        //////////////////////////////////
+      /////////////////////////////////
+      val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
+
+      val deepLinkIntent = Intent(
+          Intent.ACTION_VIEW,
+          deepLink,
+//          context,
+//          MainScreensActivity::class.java
+      )
+      val stackBuilder = TaskStackBuilder.create(context.applicationContext)
+      stackBuilder.addNextIntentWithParentStack(deepLinkIntent)
+
+      deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+      return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+    }
+//        //////////////////////////////////////
+////        val typeEvent = Constants.INCOMING_MESSAGE_EVENT
+////        val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{${name}}/{${recipient}}/{${sender}}/{${typeEvent}}")
+////
+////      val deepLinkIntent = Intent(
+////          Intent.ACTION_VIEW,
+////          deepLink,
+//////          context,
+//////          MainScreensActivity::class.java
+////      )
+////
+////
+////      PendingIntent.FLAG_IMMUTABLE
+////      PendingIntent.FLAG_UPDATE_CURRENT
+////      PendingIntent.FLAG_CANCEL_CURRENT
+////      PendingIntent.FLAG_ONE_SHOT
+////
+//
+//        ////////////////////////////////////
+////      val intent = Intent(context, MainScreensActivity::class.java)
+////      intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+////    //    val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{${name}}/{${recipient}}/{${sender}}")
+////        val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
+////      val deepLinkIntent = Intent(
+////          Intent.ACTION_VIEW,
+////          deepLink,
+//////          context,
+//////          MainScreensActivity::class.java
+////      )
+////
+////      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+////          addNextIntentWithParentStack(deepLinkIntent)
+////          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+////      }
+////      return resultPendingIntent
+//        ///////////////////////////
+//        // вызывается onStop и onDestroy
+//
+//
+//        // последний хуй
+////////////////////////////////////////
+// //       val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
+////
+////          val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
+////
+////        val intent = Intent(
+////            Intent.ACTION_VIEW,
+////            deepLink,
+//////          context,
+//////          MainScreensActivity::class.java
+////        )
+////
+//////        val  packageManager: PackageManager = context.packageManager
+//////        val intent2 = packageManager.getLaunchIntentForPackage("com.dev_marinov.chatalyze.presentation.ui.main_screens_activity")
+////
+////            //intent.setAction(Intent.ACTION_VIEW);
+////            intent.data = deepLink
+////
+////
+////        //intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+////       // intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+////      //  intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+////       // не знаю почему вызывается дестрой
+////       // intent2?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+////
+////        // если requestCode = 2 то не переходит
+////        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+//
+//        //////////////////////////////////////
+//
+////////        val typeEvent = Constants.INCOMING_MESSAGE_EVENT
+////        val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
+////
+////        val taskDetailIntent = Intent(
+////            Intent.ACTION_VIEW,
+////            deepLink,
+//////            context,
+//////            MainScreensActivity::class.java
+////            //MainActivity::class.java
+////        )
+////
+////      val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+////      val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+////            addNextIntentWithParentStack(taskDetailIntent)
+////            addNextIntent(taskDetailIntent)
+////
+////            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+////        }
+////        return pendingIntent
+//    }
+
+    fun addBackStack(context: Context, intent: Intent): PendingIntent? {
+        val stackBuilder = TaskStackBuilder.create(context.applicationContext)
+        stackBuilder.addNextIntentWithParentStack(intent)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun getCallPendingIntent(
         name: String?,
         sender: String,
         recipient: String,
-//        textMessage: String,
         context: Context,
     ): PendingIntent {
         val typeEvent = Constants.INCOMING_CALL_EVENT
 
         //"chatalyze://call_screen/{${RECIPIENT_NAME}}/{${RECIPIENT_PHONE}}/{${SENDER_PHONE}}"
 //        val deepLink = Uri.parse("chatalyze://call_screen/{${"RECIPIENT_NAME"}}/{${recipient}}/{${sender}}\"")
+
         val deepLink =
             Uri.parse("scheme_chatalyze://call_screen/{${name}}/{${recipient}}/{${sender}}/{${typeEvent}}")
 
-        //val uri = "www.schemechatalyze.com/${"profile_screen"}".toUri()
-//        val uri = "www.schemechatalyze.com/${"profile_screen"}".toUri()
-// ЭТО ПУШ
-
         val taskDetailIntent = Intent(
             Intent.ACTION_VIEW,
-//            Uri.parse("profile_screen"),
             deepLink,
             context,
             MainScreensActivity::class.java
@@ -392,147 +685,11 @@ class PushNotificationManagerImpl @Inject constructor(
         return pendingIntent
     }
 
-    private fun getManageOverlayPendingIntent(): PendingIntent {
-        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-    }
-
-//    override fun showNotificationMissedCall(
-//        address: String,
-//        imageUrl: String,
-//        uuid: String,
-//        content: String,
-//        title: String,
-//        token: String?,
-//        accessToken: String,
-//    ) {
-//        isCollectEnabledForMissedCall = true
-//        val coroutineScope = CoroutineScope(context = Dispatchers.IO)
-//        coroutineScope.launch {
-//            domofonRepository.getDomofonCallSelectable.collect {
-//                it?.let {
-//                    Log.d(
-//                        "4444",
-//                        " showNotificationCall isCollectEnabled =" + isCollectEnabledForCall
-//                    )
-//                    if (isCollectEnabledForMissedCall) {
-//                        disableCollectMissedCall()
-//                        for (i in it.indices) {
-//                            if (uuid == it[i].deviceID && it[i].isSelected == true) {
-//
-//                                Log.d(
-//                                    "4444",
-//                                    " NotificationManagerImpl showNotificationMissedCall address=" + address + " imageUrl=" + imageUrl
-//                                )
-//                                // проверяю есть ли разрешения для уведомлений (true / false)
-//                                if (NotificationManagerCompat.from(context)
-//                                        .areNotificationsEnabled()
-//                                ) {
-//                                    try {
-//                                        ringtoneStop()
-//
-//                                        createNotificationChannel()
-//
-//                                        val deleteIntent = Intent(
-//                                            context,
-//                                            BroadcastReceiverNotification::class.java
-//                                        )
-//                                        deleteIntent.action = "missed_call_notification_swipe"
-//                                        // deleteIntent.putExtra("channelID", "111")
-//                                        val pendingIntent = PendingIntent.getBroadcast(
-//                                            context,
-//                                            0,
-//                                            deleteIntent,
-//                                            PendingIntent.FLAG_IMMUTABLE
-//                                        ) // вместо PendingIntent.FLAG_IMMUTABLE был 0
-//
-//                                        // https://api.baza.net/domofon/preview/0a2a0820-6774-48ea-80bb-a0fd5d04efe0?ts=1670592955&token=YjZhODY2OWJiZTE3NGNhN2Q1NTQ4MjRmZjM2NzgyZmFiNmEzZjE1OC4xNjcxMTk3NzU1
-//                                        // val icon = Picasso.get().load(imageUrl).placeholder(R.drawable.img_placeholder_camera_dialog).get()
-//
-//                                        val notification =
-//                                            NotificationCompat.Builder(context, CHANNEL_ID)
-//                                                .setSmallIcon(R.drawable.notificationiconblack3)
-//                                                .setColor(context.resources.getColor(R.color.bazanet_red_color_anim))
-//                                                .setLargeIcon(Picasso.get().load(imageUrl).get())
-//                                                .setContentTitle(title) // Заголовок
-//                                                .setContentText(content) // Основной текст
-//                                                .setDeleteIntent(pendingIntent)
-//                                                .setStyle(
-//                                                    NotificationCompat.BigTextStyle()
-//                                                        .bigText("адрес: $address")
-//                                                )
-//                                                .setPriority(NotificationCompat.PRIORITY_HIGH) // Приоритет уведомления
-//                                                .setVibrate(longArrayOf(100, 1000, 200, 340))
-//                                                .setAutoCancel(true) // удаляется после клика
-//                                                .setTicker("Notific")
-//
-//                                                //.addAction(0, "Открыть", getMissedCallPendingIntent(context))
-//                                                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-//                                                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // звуковой файл по умолчанию для уведомления.
-//                                                .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
-//                                                .setDefaults(Notification.DEFAULT_LIGHTS) // включает мигание светодиода уведомления
-//                                                .setCategory(NotificationCompat.CATEGORY_ALARM)
-////                                                .setContentIntent(getMissedCallPendingIntent(context))
-////                                                .setContentIntent(getMissedCallPendingIntent(context))
-//                                                .setContentIntent(getMissedCallPendingIntent(context))
-//                                                .setOngoing(false) // false - уведомление не является постоянным, то есть может быть удалено пользователем.
-//
-//                                        // Отображаем уведомление
-//                                        with(NotificationManagerCompat.from(context)) {
-//                                            if (ActivityCompat.checkSelfPermission(
-//                                                    context,
-//                                                    Manifest.permission.POST_NOTIFICATIONS
-//                                                ) != PackageManager.PERMISSION_GRANTED
-//                                            ) {
-//
-//                                                //    ActivityCompat#requestPermissions
-//                                                // here to request the missing permissions, and then overriding
-//                                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                                                //                                          int[] grantResults)
-//                                                // to handle the case where the user grants the permission. See the documentation
-//                                                // for ActivityCompat#requestPermissions for more details.
-//                                                //return
-//                                            }
-//                                            notify(NOTIF_ID, notification.build())
-//                                        }
-//                                    } catch (e: Exception) {
-//                                        Log.d(
-//                                            "4444",
-//                                            " try catch showNotificationMissedCall e=" + e
-//                                        )
-//                                    }
-//                                } else {
-//                                    val message = context.getString(R.string.notification_allow)
-//                                    //                                  showToastPermission(toastMessage = message)
-//
-//                                    ShowToastHelper.createToast(
-//                                        message = message,
-//                                        context = context
-//                                    )
-//                                }
-//                            }
-//                        }
-//                        killCallDomofonActivity()
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    private fun killCallDomofonActivity() {
-
-        val intent = Intent(context, BroadcastReceiverNotification::class.java)
-        intent.action = "kill_screen"
-        context.sendBroadcast(intent)
-    }
-
     private fun ringtoneStart() {
         try {
             val intent = Intent(context, RingtoneService::class.java)
             intent.action = RingtoneService.ACTION_PLAY_RINGTONE
             context.startService(intent)
-            //8999 c.startForegroundService(intent2);
         } catch (e: Exception) {
             Log.d("4444", " try catch Ошибка воспроизведения звука звонка: ", e)
         }
@@ -560,22 +717,6 @@ class PushNotificationManagerImpl @Inject constructor(
         NotificationManagerCompat.from(context).createNotificationChannel(channel)
     }
 
-//    private fun getMissedCallPendingIntent(context: Context): PendingIntent {
-//        Log.d("4444", " типа проверил accessToken")
-//        return NavDeepLinkBuilder(context)
-//            .setComponentName(MainActivity::class.java)
-//            .setGraph(R.navigation.nav_graph)
-//            .setDestination(R.id.historyCallFragment)
-//            .createPendingIntent()
-//    }
-
-//    private fun getMissedCallPendingIntent(context: Context): PendingIntent {
-//        val intent = Intent(context, BroadcastReceiverNotification::class.java)
-//        intent.action = "click_notification_missed_call"
-//        context.sendBroadcast(intent)
-//        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-//    }
-
     private fun showToastPermission(toastMessage: String) {
         val scope = CoroutineScope(Dispatchers.Main)
         scope.launch {
@@ -588,134 +729,4 @@ class PushNotificationManagerImpl @Inject constructor(
             toast.show()
         }
     }
-
-    // оригинальный метод для нотификации пока сохранил
-//    override fun showNotificationCall(
-//        address: String,
-//        imageUrl: String,
-//        uuid: String,
-//        content: String,
-//        title: String,
-//        videoUrl: String
-//    ) {
-//        val packageName = context.packageName
-//        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-//        startActivityForResult(context, intent, REQUEST_CODE_NEW, null)
-
-///////////////////////////////////////////////////////////////////////////////////////
-//        isCollectEnabledForCall = true
-//        val coroutineScope = CoroutineScope(context = Dispatchers.IO)
-//        coroutineScope.launch {
-//            domofonCamerasRepository.getDomofonCallSelectable.collect {
-//        Log.d("4444", " showNotificationCall isCollectEnabled =" + isCollectEnabledForCall)
-//                if (isCollectEnabledForCall) {
-//                    disableCollectCall()
-//                    for (i in it.indices) {
-//                        if (uuid == it[i].deviceID && it[i].isSelected == true) {
-//
-////                             Создаём уведомление
-////        broadcastReceiver = MyBroadcastReceiver()
-////        val intentFilter = IntentFilter(FIRST_ACTION)
-////        context.registerReceiver(broadcastReceiver, intentFilter)
-//
-//
-//                            // проверяю есть ли разрешения для уведомлений (true / false)
-//                            if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-//                                try {
-//                                    createNotificationChannel()
-//
-//                                    val deleteIntent = Intent(context, BroadcastReceiverNotification::class.java)
-//                                    deleteIntent.action = "call_notification_swipe"
-//                                    val pendingIntent = PendingIntent.getBroadcast(
-//                                        context, 0, deleteIntent,
-//                                        PendingIntent.FLAG_IMMUTABLE
-//                                    ) // вместо PendingIntent.FLAG_IMMUTABLE был 0
-//
-//                                    // https://api.baza.net/domofon/preview/0a2a0820-6774-48ea-80bb-a0fd5d04efe0?ts=1670592955&token=YjZhODY2OWJiZTE3NGNhN2Q1NTQ4MjRmZjM2NzgyZmFiNmEzZjE1OC4xNjcxMTk3NzU1
-//                                    // val icon = Picasso.get().load(imageUrl).placeholder(R.drawable.img_placeholder_camera_dialog).get()
-//
-//                                    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-//                                            .setSmallIcon(R.drawable.notificationiconblack2)
-//                                            //.setLargeIcon(Picasso.get().load(imageUrl).get())
-//                                            .setContentTitle(title) // Заголовок
-//                                            .setContentText(content) // Основной текст
-//                                            .setDeleteIntent(pendingIntent)
-//                                        .addAction(0, "\uD83D\uDD34 Отклонить", getCallPendingIntentForIconTray(action = "drop",  uuid = uuid))
-//                                        .addAction(0, "\uD83D\uDFE2 Открыть дверь", getCallPendingIntentForIconTray(action = "open",  uuid = uuid))
-////                                            .addAction(0, "\uD83D\uDD34 Отклонить", getCallPendingIntent(context, "drop", address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid))
-////                                            .addAction(0, "\uD83D\uDFE2 Открыть дверь", getCallPendingIntent(context, "open", address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid))
-//                                            .setPriority(NotificationCompat.PRIORITY_HIGH) // Приоритет уведомления
-//                                            .setVibrate(longArrayOf(100, 1000, 200, 340))
-//                                            .setAutoCancel(true) // удаляется после клика
-//                                            .setTicker("Notific")
-//                                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-//                                            .setSound(Settings.System.DEFAULT_NOTIFICATION_URI) // звуковой файл по умолчанию для уведомления.
-//                                            .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
-//                                            .setDefaults(Notification.DEFAULT_LIGHTS) // включает мигание светодиода уведомления
-//                                            .setCategory(NotificationCompat.CATEGORY_ALARM)
-//                                            .setContentIntent(getCallPendingIntent(context, "get", address = address, imageUrl = imageUrl, videoUrl = videoUrl, uuid = uuid))
-//                                            .setOngoing(false) // false - уведомление не является постоянным, то есть может быть удалено пользователем.
-//
-//                                    // Отображаем уведомление
-//                                    with(NotificationManagerCompat.from(context)) {
-//                                        if (ActivityCompat.checkSelfPermission(
-//                                                context,
-//                                                Manifest.permission.POST_NOTIFICATIONS
-//                                            ) != PackageManager.PERMISSION_GRANTED
-//                                        ) {
-//
-//                                            //    ActivityCompat#requestPermissions
-//                                            // here to request the missing permissions, and then overriding
-//                                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                                            //                                          int[] grantResults)
-//                                            // to handle the case where the user grants the permission. See the documentation
-//                                            // for ActivityCompat#requestPermissions for more details.
-//                                            //return
-//                                        }
-//                                        notify(NOTIF_ID, notification.build())
-//                                    }
-//
-//                                    ringtoneStart()
-//                                } catch (e: Exception) {
-//                                    Log.d("4444", " try catch notification e=" + e)
-//                                }
-//
-//                            } else {
-//                                val message = context.getString(R.string.notification_allow)
-//                                showToastPermission(toastMessage = message)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-    ///////////////////////////////////////////////////////////////////////////////////////////
-//    }
-
-//    private fun getCallPendingIntent(
-//        context: Context,
-//        action: String,
-//        address: String,
-//        imageUrl: String,
-//        videoUrl: String,
-//        uuid: String
-//    ): PendingIntent {
-//
-//        val intent = Intent(context, CallDomofonActivity::class.java).setAction(action)
-//        // Настраиваем флаги для нового объекта Intent
-//        intent.putExtra("actionNew", action)
-//        // Передаем параметры action, imageUrl и videoUrl в Intent
-//        intent.putExtra("addressNew", address)
-//        intent.putExtra("imageUrlNew", imageUrl)
-//        intent.putExtra("videoUrlNew", videoUrl)
-//        intent.putExtra("channel_idNew", CHANNEL_ID)
-//        intent.putExtra("uuid", uuid)
-//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-//        // Создаем объект PendingIntent
-//        // Функция getActivity() возвращает объект PendingIntent
-//        // Если такой объект уже существует, он будет использован
-//        // FLAG_IMMUTABLE - если установлен этот флаг, PendingIntent будет иметь "немутабельный" тип и не может быть модифицирован
-//
-//        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-//    }
 }

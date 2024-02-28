@@ -21,5 +21,5 @@ interface ContactsDao {
     fun getAllFlow(): Flow<List<ContactsEntity>>
 
     @Query("SELECT * FROM contacts WHERE phone_number = :sender")
-    fun getContactBySenderPhoneFlow(sender: String): Flow<ContactsEntity>
+    suspend fun getContactBySenderPhoneFlow(sender: String): ContactsEntity
 }

@@ -35,6 +35,9 @@
     <string name="permission_read_phone_numbers_false">"Этому приложению нужен доступ к вашим контактам, чтобы вы имели возможность написать друзьям"</string>
     <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
+    <string name="make_call">Video call</string>
+    <string name="make_call_question">Do you want to call</string>
+    <string name="make_call_ok">OK</string>
 
     <!--    call screen-->
     <string name="call_screen_calls">Calls</string>
@@ -45,6 +48,7 @@
 
     <!--    new chat screen-->
     <string name="header_new_chat_screen">New chat</string>
+
 
     <!--    new call screen-->
     <string name="header_new_call_screen">New call</string>
@@ -91,5 +95,6 @@
 
 
     <string name="user_token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidjhybXQzZmFlcmNrIn0.48dmUEoA5zMV_dRwTh7M_sz5qCfOx78aMc1oEN0Hs3g</string>
+    <string name="title_activity_main2">MainActivity2</string>
 
 </resources>

@@ -28,11 +28,7 @@ fun BottomNavigationBarItem(
     modifier: Modifier = Modifier,
     onItemClick: (ChatalyzeBottomNavItem) -> Unit,
 ) {
-
     val backStackEntry = navController.currentBackStackEntryAsState()
-    // val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(initialValue = false)
-
-    //Log.d("4444", " ChatalyzeBottomNavigationBar isHideBottomBar=" + isHideBottomBar)
 
     BottomNavigation(
         backgroundColor = Color.Transparent,
@@ -44,26 +40,16 @@ fun BottomNavigationBarItem(
                 color = colorResource(id = R.color.main_yellow_new_chat_screen),
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
             ),
-        //  .background(colorResource(id = R.color.main_violet_light)),
-        // .height(height = if (isHideBottomBar == true) 0.dp else 70.dp),
         elevation = 60.dp
     ) {
         items.forEach { item ->
             val selected = item.route == backStackEntry.value?.destination?.route
             backStackEntry.value?.destination?.route?.let {
-                //  viewModel.saveCurrentRoute(route = it)
             }
 
             BottomNavigationItem(
                 modifier = Modifier
                     .background(colorResource(id = R.color.main_violet_light)),
-//                modifier = Modifier.background(
-//                    brush = Brush.verticalGradient(
-//                      //  colors = gradientColors,
-//                        startY = 0f,
-//                        endY = Float.POSITIVE_INFINITY // наибольшее возможное значение
-//                    )
-//                ),
                 selected = selected,
                 onClick = { onItemClick(item) },
                 selectedContentColor = colorResource(id = R.color.main_yellow_new_chat_screen),

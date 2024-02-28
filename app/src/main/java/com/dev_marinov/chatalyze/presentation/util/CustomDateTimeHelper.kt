@@ -5,7 +5,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-object CorrectDateTimeHelper {
+object CustomDateTimeHelper {
     fun formatDateTime(dateTimeString: String): String {
         val sourceFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'")
         val targetFormatter = DateTimeFormatter.ofPattern("HH:mm / yyyy-MM-dd")

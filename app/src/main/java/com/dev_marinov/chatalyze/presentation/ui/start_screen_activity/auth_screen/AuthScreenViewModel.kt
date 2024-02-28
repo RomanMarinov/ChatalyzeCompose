@@ -51,19 +51,6 @@ class AuthScreenViewModel @Inject constructor(
                 delay(1000L)
                 _notice.value = ""
             }
-
-
-
-            // тут делать провеку token из дата стор
-            // совпадает ли tokenRegister при регистрации с токеном при входе
-
-
-            // далее сохранять совпадение как tokenSignIn
-
-
-            // потом делать проверку на пустоту tokenSignIn в splashScreen
-            // и давать доступ на экран chatsScreen
-
         }
     }
 

@@ -60,23 +60,20 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
         preferences[preferencesKey] ?: ""
     }
 
-    override suspend fun saveOwnPhoneSender(key: String, ownPhoneSender: String, ) {
+    override suspend fun saveOwnPhoneSender(key: String, ownPhoneSender: String) {
         val preferencesKey = stringPreferencesKey(key)
         context.dataStore.edit { preferences ->
             preferences[preferencesKey] = ownPhoneSender
         }
     }
 
-//    override val isGrantedPermissions: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
-//        val preferencesKey = booleanPreferencesKey(Constants.IS_GRANTED_PERMISSIONS)
-//        value[preferencesKey] == true
-//    }
-
-    override val isGrantedPermissions: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
-        val preferencesKeyReadPhoneNumber = booleanPreferencesKey(Constants.KEY_READ_PHONE_NUMBERS)
-        val preferencesKeyReadContacts = booleanPreferencesKey(Constants.KEY_READ_CONTACTS)
-        value[preferencesKeyReadPhoneNumber] == true && value[preferencesKeyReadContacts] == true
-    }
+    override val isGrantedPermissions: Flow<Boolean> =
+        context.dataStore.data.map { value: Preferences ->
+            val preferencesKeyReadPhoneNumber =
+                booleanPreferencesKey(Constants.KEY_READ_PHONE_NUMBERS)
+            val preferencesKeyReadContacts = booleanPreferencesKey(Constants.KEY_READ_CONTACTS)
+            value[preferencesKeyReadPhoneNumber] == true && value[preferencesKeyReadContacts] == true
+        }
 
     override suspend fun saveGrantedPermissions(key: String, isGranted: Boolean) {
         val preferencesKey = booleanPreferencesKey(key)
@@ -116,7 +113,7 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
 
     override suspend fun saveFirebaseToken(firebaseToken: String) {
         val preferencesKey = stringPreferencesKey(Constants.KEY_FIREBASE_TOKEN)
-        context.dataStore.edit {  preferences ->
+        context.dataStore.edit { preferences ->
             preferences[preferencesKey] = firebaseToken
         }
     }
@@ -133,16 +130,17 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
         }
     }
 
-    override val hideDialogPermissionNotificationFlow: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
-        val preferencesKey = booleanPreferencesKey(Constants.HIDE_DIALOG_PERMISSION_NOTIFICATION)
-        value[preferencesKey] == true
-    }
+    override val hideDialogPermissionNotificationFlow: Flow<Boolean> =
+        context.dataStore.data.map { value: Preferences ->
+            val preferencesKey =
+                booleanPreferencesKey(Constants.HIDE_DIALOG_PERMISSION_NOTIFICATION)
+            value[preferencesKey] == true
+        }
 
     override suspend fun saveHideDialogPermissionNotification(hide: Boolean) {
         val preferencesKey = booleanPreferencesKey(Constants.HIDE_DIALOG_PERMISSION_NOTIFICATION)
         context.dataStore.edit {
             it[preferencesKey] = hide
         }
-
     }
 }

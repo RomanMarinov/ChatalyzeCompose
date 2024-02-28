@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.data.store.room
 
+import android.util.Log
 import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
 import com.dev_marinov.chatalyze.data.firebase.model.StateReadyStream
 import com.dev_marinov.chatalyze.data.store.room.local.contacts.ContactsDao
@@ -24,21 +25,20 @@ class RoomRepositoryImpl @Inject constructor(
 
     override val filteredContacts: Flow<List<Contact>> = fetchFilteredContacts()
 
-    override fun contactBySenderPhone(sender: String): Flow<Contact> {
+    override suspend fun contactBySenderPhone(sender: String): Contact {
         val response = contactsDao.getContactBySenderPhoneFlow(sender = sender)
-        val result = response.map {
-            Contact(
-                name = it.name,
-                phoneNumber = it.phoneNumber,
-                photo = it.photo
-            )
-        }
-        return result
+
+        Log.d("4444", " contactBySenderPhone response=" + response)
+        return Contact(
+            name = response.name,
+            phoneNumber = response.phoneNumber,
+            photo = response.photo
+        )
     }
 
     override suspend fun saveContacts(contacts: List<Contact>) {
-        contactsDao.deleteAll()
-
+       // contactsDao.deleteAll()
+        Log.d("4444", " saveContacts contacts=" + contacts)
         val contactsEntity: List<ContactsEntity> = contacts.mapIndexed { index, contact ->
             ContactsEntity(
                 id = index,

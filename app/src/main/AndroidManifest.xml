@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" >
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -10,7 +10,8 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" /> <!-- разрешение чтобы прила показывалась в списке (поверх других приложений) -->
-    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+    <uses-permission
+        android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,8 +21,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_APN_SETTINGS" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-<!--    <uses-permission android:name="android.permission.READ_SMS" />-->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" /> <!-- <uses-permission android:name="android.permission.READ_SMS" /> -->
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission
         android:name="android.permission.WRITE_APN_SETTINGS"
@@ -39,50 +39,80 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Chatalyze"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31">
+        tools:targetApi="31" >
 
         <activity
             android:name=".presentation.ui.main_screens_activity.MainScreensActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/title_activity_main_screens"
-            android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.Chatalyze">
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Chatalyze"
+            tools:ignore="AppLinkUrlError"
+            android:documentLaunchMode="intoExisting"
 
-            <!-- работает -->
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.VIEW" /> -->
-            <!-- <category android:name="android.intent.category.DEFAULT" /> -->
-            <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
-
-
-            <!-- <data android:scheme="scheme_chatalyze" /> -->
-            <!-- <data android:host="call_screen" /> -->
-            <!-- </intent-filter> -->
-
+            >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="scheme_chatalyze" />
+                <data android:host="chat_screen" />
+
                 <data android:host="call_screen" />
                 <data android:scheme="app" />
                 <data android:host="calls_screen" />
+
             </intent-filter>
 
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+
+
+
+
+        <!-- <activity -->
+        <!-- android:name=".presentation.ui.main_screens_activity.ui.MainScreensActivity" -->
+        <!-- android:exported="true" -->
+        <!-- android:label="@string/title_activity_main_screens" -->
+        <!-- android:launchMode="singleTop" -->
+        <!-- android:screenOrientation="portrait" -->
+        <!-- android:theme="@style/Theme.Chatalyze" -->
+        <!-- android:windowSoftInputMode="adjustResize"> -->
+        <!-- &lt;!&ndash; работает &ndash;&gt; -->
+        <!-- &lt;!&ndash; <intent-filter> &ndash;&gt; -->
+        <!-- &lt;!&ndash; <action android:name="android.intent.action.VIEW" /> &ndash;&gt; -->
+        <!-- &lt;!&ndash; <category android:name="android.intent.category.DEFAULT" /> &ndash;&gt; -->
+        <!-- &lt;!&ndash; <category android:name="android.intent.category.BROWSABLE" /> &ndash;&gt; -->
+        <!-- &lt;!&ndash; <data android:scheme="scheme_chatalyze" /> &ndash;&gt; -->
+        <!-- &lt;!&ndash; <data android:host="call_screen" /> &ndash;&gt; -->
+        <!-- &lt;!&ndash; </intent-filter> &ndash;&gt; -->
+        <!-- <intent-filter> -->
+        <!-- <action android:name="android.intent.action.VIEW" /> -->
+        <!-- <category android:name="android.intent.category.DEFAULT" /> -->
+        <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
+        <!-- <data android:scheme="scheme_chatalyze" /> -->
+        <!-- <data android:host="call_screen" /> -->
+        <!-- <data android:scheme="app" /> -->
+        <!-- <data android:host="calls_screen" /> -->
+        <!-- <data android:host="chat_screen" /> -->
+        <!-- <data android:host="chat_screen2" /> -->
+        <!-- </intent-filter> -->
+        <!-- <meta-data -->
+        <!-- android:name="android.app.lib_name" -->
+        <!-- android:value="" /> -->
+        <!-- </activity> -->
         <activity
             android:name=".presentation.ui.start_screen_activity.MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Chatalyze"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -135,7 +165,7 @@
         <service
             android:name=".data.firebase.notification.FirebaseService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true" >
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

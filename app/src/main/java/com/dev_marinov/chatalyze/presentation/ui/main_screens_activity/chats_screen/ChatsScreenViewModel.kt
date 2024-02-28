@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
+import com.dev_marinov.chatalyze.domain.model.chat.ChatCompanion
 import com.dev_marinov.chatalyze.domain.model.chats.Chat
+import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatsRepository
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
@@ -28,6 +30,7 @@ class ChatsScreenViewModel @Inject constructor(
     private val chatsRepository: ChatsRepository,
     private val chatSocketRepository: ChatSocketRepository,
     private val roomRepository: RoomRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
 
     val hideDialogPermissionNotificationFlow = preferencesDataStoreRepository.hideDialogPermissionNotificationFlow
@@ -57,24 +60,38 @@ class ChatsScreenViewModel @Inject constructor(
     private var _chatList = MutableStateFlow(emptyList<Chat>())
     val chatList: StateFlow<List<Chat>> = _chatList
 
-
-
     private var _contacts: MutableStateFlow<List<Contact>> = MutableStateFlow(listOf())
     val contacts: StateFlow<List<Contact>> = _contacts
 
     init {
-        Log.d("4444", " ChatsScreenViewModel сработал init")
         saveLocalOwnPhoneSender()
+
+//        viewModelScope.launch(Dispatchers.IO) {
+//            onlineUserStateList.collect {
+//                Log.d("4444", " ChatsScreenViewModel onlineUserStateList=" + it)
+//            }
+//        }
     }
 
     fun createCombineFlow() {
         val combineChatListFlow: Flow<List<CombineChat>> =
             combine(_chatList, onlineUserStateList, _contacts) { chats, stateList, cont ->
                 chats.map { chat ->
-                    val onlineUserState = stateList.firstOrNull {
-                        it.userPhone == chat.recipient
-                    }?.onlineOrOffline
-                    val name = cont.firstOrNull { it.phoneNumber == chat.recipient }?.name
+
+                    val onlineUserStateSender = getOnlineUserStateSender(
+                        stateList = stateList,
+                        chat = chat
+                        )
+                    val onlineUserStateRecipient = getOnlineUserStateRecipient(
+                        stateList = stateList,
+                        chat = chat
+                    )
+                    val onlineUserState = onlineUserStateSender ?: onlineUserStateRecipient
+
+                    val senderName = getSenderName(cont = cont, chat.sender)
+                    val recipientName = getRecipientName(cont = cont, chat.recipient)
+                    val name = senderName ?: recipientName
+
                     CombineChat(
                         sender = chat.sender,
                         recipient = chat.recipient,
@@ -95,8 +112,23 @@ class ChatsScreenViewModel @Inject constructor(
 //                    " ChatsScreenViewModel createCombineFlow _combineChatList=" + _combineChatList.value
 //                )
             }
-
         }
+    }
+
+    private fun getSenderName(cont: List<Contact>, sender: String): String? {
+        return cont.firstOrNull { it.phoneNumber == sender }?.name
+    }
+
+    private fun getRecipientName(cont: List<Contact>, recipient: String): String? {
+        return cont.firstOrNull { it.phoneNumber == recipient }?.name
+    }
+
+    private fun getOnlineUserStateSender(stateList: List<OnlineUserState>, chat: Chat): String? {
+        return stateList.firstOrNull { it.userPhone == chat.sender }?.onlineOrOffline
+    }
+
+    private fun getOnlineUserStateRecipient(stateList: List<OnlineUserState>, chat: Chat): String? {
+        return stateList.firstOrNull { it.userPhone == chat.recipient }?.onlineOrOffline
     }
 
     // поток нужен для сопоставления имен
@@ -166,6 +198,17 @@ class ChatsScreenViewModel @Inject constructor(
     fun saveHideDialogPermissionNotification(hide: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             preferencesDataStoreRepository.saveHideDialogPermissionNotification(hide = hide)
+        }
+    }
+
+    fun saveCompanionOnTheServer(senderPhone: String, recipientPhone: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val chatCompanion = ChatCompanion(
+                senderPhone = senderPhone,
+                companionPhone = recipientPhone
+            )
+            val response = chatRepository.saveCompanionOnTheServer(chatCompanion = chatCompanion)
+            Log.d("4444", " ChatsScreenViewModel saveCompanionOnTheServer response=" + response?.message)
         }
     }
 }

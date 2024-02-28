@@ -6,6 +6,7 @@ data class FirebaseCommandDTO(
     val topic: String,
     val senderPhone: String,
     val recipientPhone: String,
+    val textMessage: String,
     val typeFirebaseCommand: String
 ) {
     fun mapToDomain() : FirebaseCommand {
@@ -13,6 +14,7 @@ data class FirebaseCommandDTO(
             topic = topic,
             senderPhone = senderPhone,
             recipientPhone = recipientPhone,
+            textMessage = textMessage,
             typeFirebaseCommand = typeFirebaseCommand
         )
     }

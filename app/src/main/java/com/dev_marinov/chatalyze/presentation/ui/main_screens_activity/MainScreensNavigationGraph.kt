@@ -5,7 +5,6 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,6 +17,7 @@ import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_scre
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.ChatsScreen
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.profile_screen.ProfileScreen
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.stream_screen.StreamScreen
+import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import com.dev_marinov.chatalyze.presentation.util.RECIPIENT_NAME
 import com.dev_marinov.chatalyze.presentation.util.RECIPIENT_PHONE
 import com.dev_marinov.chatalyze.presentation.util.SENDER_PHONE
@@ -35,6 +35,12 @@ fun MainScreensNavigationGraph(navHostController: NavHostController) {
         }
         composable(
             route = ScreenRoute.ChatScreen.route,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "scheme_chatalyze://chat_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}"
+                    action = Intent.ACTION_VIEW
+                }
+            ),
             arguments = listOf(
                 navArgument(RECIPIENT_NAME) {
                     type = NavType.StringType
@@ -47,12 +53,17 @@ fun MainScreensNavigationGraph(navHostController: NavHostController) {
                 }
             )
         ) { entry ->
-            ChatScreen(
-                navHostController = navHostController,
-                recipientName = entry.arguments?.getString(RECIPIENT_NAME),
-                recipientPhone = entry.arguments?.getString(RECIPIENT_PHONE),
-                senderPhone = entry.arguments?.getString(SENDER_PHONE)
-            )
+            val recipientName = entry.arguments?.getString(RECIPIENT_NAME)
+            val recipientPhone = entry.arguments?.getString(RECIPIENT_PHONE)
+            val senderPhone = entry.arguments?.getString(SENDER_PHONE)
+            IfLetHelper.execute(recipientName, recipientPhone, senderPhone) {
+                ChatScreen(
+                    navHostController = navHostController,
+                    recipientName = it[0],
+                    recipientPhone = it[1],
+                    senderPhone = it[2]
+                )
+            }
         }
 
         composable(route = ScreenRoute.CallsScreen.route,
@@ -100,13 +111,6 @@ fun MainScreensNavigationGraph(navHostController: NavHostController) {
             )
         }
 
-//        composable(
-//            route = ScreenRoute.StreamScreen.route) { entry ->
-//            StreamScreen(
-//                navController = navHostController
-//            )
-//        }
-
         composable(
             route = ScreenRoute.StreamScreen.route,
             arguments = listOf(
@@ -134,8 +138,7 @@ fun MainScreensNavigationGraph(navHostController: NavHostController) {
 
         composable(route = ScreenRoute.ProfileScreen.route) {
             ProfileScreen(
-                navHostController = navHostController,
-                // authHostController = authHostController
+                navHostController = navHostController
             )
         }
     }

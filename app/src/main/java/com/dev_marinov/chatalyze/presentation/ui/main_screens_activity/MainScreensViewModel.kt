@@ -1,17 +1,21 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
+import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 import com.dev_marinov.chatalyze.domain.repository.FirebaseRegisterRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_screen.ChatState
 import com.dev_marinov.chatalyze.domain.model.firebase.UserFirebase
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.FirebaseCommand
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +35,7 @@ class MainScreensViewModel @Inject constructor(
     private val chatSocketRepository: ChatSocketRepository,
     private val firebaseRegisterRepository: FirebaseRegisterRepository,
     private val roomRepository: RoomRepository,
+
 ) : ViewModel() {
 
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
@@ -56,6 +61,8 @@ class MainScreensViewModel @Inject constructor(
     val toastEvent = _toastEvent.asSharedFlow()
 
     private var firebaseTokenLocal = ""
+
+    var closeSocket = true
 
     init {
         savePhoneInViewModel()
@@ -138,7 +145,7 @@ class MainScreensViewModel @Inject constructor(
         _canStartService.value = can
     }
 
-    fun openServerWebSocketConnection(ownPhoneSender: String) {
+    fun openServerWebSocketConnection(ownPhoneSender: String, context: Context) {
         Log.d("4444", " выполнился openServerConnection")
         viewModelScope.launch(Dispatchers.IO) {
             val result = chatSocketRepository.initSession(sender = ownPhoneSender)
@@ -146,7 +153,7 @@ class MainScreensViewModel @Inject constructor(
                 is Resource.Success -> {
                     Log.d("4444", " openServerConnection Success")
                     saveSessionState(sessionState = Constants.SESSION_SUCCESS)
-                    createOnlineUserStateListAndSave()
+                    createOnlineUserStateListAndSave(context = context)
                     registerUserFirebase()
                 }
 
@@ -157,18 +164,53 @@ class MainScreensViewModel @Inject constructor(
                     saveSessionState(sessionState = Constants.SESSION_ERROR)
                 }
 
+                else -> {}
             }
         }
     }
 
-    private fun createOnlineUserStateListAndSave() {
+    // переписать название метода
+    private fun createOnlineUserStateListAndSave(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            chatSocketRepository.observeOnlineUserState().collect { value ->
+            chatSocketRepository.observeMessages().collect { value ->
                 if (value.type == "userList") {
                     val json = Json { ignoreUnknownKeys = true }
                     val parsedJson = json.decodeFromString<List<OnlineUserState>>(value.payloadJson)
                     //Log.d("4444", " parsedJson=" + parsedJson)
                     saveOnlineUserStateListToDb(onlineUserStateList = parsedJson)
+                }
+
+                if (value.type == "singleMessage") {
+                    Log.d("4444", " получил с сервера событие singleMessage")
+                    val json = Json { ignoreUnknownKeys = true }
+                    val message = json.decodeFromString<Message>(value.payloadJson)
+
+                    val intent = Intent("receiver_single_message")
+                    intent.putExtra("sender", message.sender)
+                    intent.putExtra("recipient", message.recipient)
+                    intent.putExtra("textMessage", message.textMessage)
+                    intent.putExtra("createdAt", message.createdAt)
+                    context.sendBroadcast(intent)
+                }
+
+                if (value.type == "companionOffline") {
+                    val json = Json { ignoreUnknownKeys = true }
+                    val message = json.decodeFromString<Message>(value.payloadJson)
+
+                    Log.d("4444", " companionOffline")
+                    val firebaseCommand = FirebaseCommand(
+                        topic = "",
+                        senderPhone = message.sender,
+                        recipientPhone = message.recipient,
+                        textMessage = message.textMessage,
+                        typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_MESSAGE
+                    )
+                    viewModelScope.launch(Dispatchers.IO) {
+                        val response = chatSocketRepository.sendCommandToFirebase(firebaseCommand = firebaseCommand)
+                        response?.let { messageResponse ->
+                            //processTheResponse(response = messageResponse)
+                        }
+                    }
                 }
             }
         }
@@ -193,92 +235,4 @@ class MainScreensViewModel @Inject constructor(
             chatSocketRepository.closeSession()
         }
     }
-
-    // пока сделал копию
-//    private fun getOnlineUserStateList() {
-//        try {
-//            //Log.d("4444", " ChatsScreenViewModel выполнился getOnlineUserStateList")
-//            viewModelScope.launch(Dispatchers.IO) {
-//                chatSocketRepository.observeOnlineUserState()
-//                    .onEach { value ->
-//
-//                        Log.d("4444", " getOnlineUserStateList value=" + value)
-//                    }.launchIn(viewModelScope)
-//            }
-//        } catch (e: Exception) {
-//            Log.d("4444", " getOnlineUserStateList try catch e=" + e)
-//        }
-//    }
-
-//    private fun getOnlineUserStateList() {
-//        try {
-//            //Log.d("4444", " ChatsScreenViewModel выполнился getOnlineUserStateList")
-//            viewModelScope.launch(Dispatchers.IO) {
-//                chatSocketRepository.observeOnlineUserState()
-//                    .onEach { value ->
-//
-//                        Log.d("4444", " getOnlineUserStateList value=" + value)
-//
-//                        // getOnlineUserStateList value=MessageWrapper(type=userList, payloadJson=[{"userPhone":"9203333333","onlineOrDate":"online"},{"userPhone":"9303454564","onlineOrDate":"offline"}])
-//
-//                        if (value.type == "userList") {
-//                            val json = Json { ignoreUnknownKeys = true }
-//                            val parsedJson =
-//                                json.decodeFromString<List<OnlineUserState>>(value.payloadJson)
-//
-//                        }
-//
-//
-//                    }.launchIn(viewModelScope)
-//            }
-//        } catch (e: Exception) {
-//            Log.d("4444", " getOnlineUserStateList try catch e=" + e)
-//        }
-//    }
 }
-
-
-//        fun connectToChat() {
-//        // сюда передать объект message
-////        getAllMessageChat()
-//        //   getAllMessages()
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val result = chatSocketRepository.initSession(sender = phoneSender)
-//            Log.d("4444", " connectToChat result.message=" + result.message)
-//            when (result) {
-//                is Resource.Success -> {
-//
-//                    Log.d("4444", " connectToChat Resource.Success")
-//                    chatSocketRepository.observeMessages()
-//                        .onEach { message ->
-//                            Log.d("4444", " connectToChat Resource.Success message=" + message)
-//                            val newList = state.value.messages.toMutableList().apply {
-//                                add(_state.value.messages.size, message)
-//                            }
-//                            _state.value = state.value.copy(
-//                                messages = newList
-//                            )
-//
-//                            // тут вызвать как-то getChats
-//
-//                        }
-//
-//                }
-//                is Resource.Error -> {
-//                    Log.d("4444", " connectToChat Resource.Error")
-//                    _toastEvent.emit(result.message ?: "Unknown error")
-//                }
-//            }
-//        }
-//
-//        viewModelScope.launch(Dispatchers.IO) {
-//           // chatSocketService.getStateUsersConnection()
-//
-//            //chatSocketService.observePing().collect {
-//           //     Log.d("4444", " connectToChat Resource.Success ping pong=" + it)
-//         //   }
-//        }
-//
-//
-//        // }
-//    }

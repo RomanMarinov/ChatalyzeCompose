@@ -20,7 +20,7 @@ import com.dev_marinov.chatalyze.data.util.DataConvertersForList
         ReadyStreamEntity::class,
         HistoryCallsEntity::class
                ],
-    version = 1
+    version = 2
 )
 
 @TypeConverters(DataConvertersForList::class)

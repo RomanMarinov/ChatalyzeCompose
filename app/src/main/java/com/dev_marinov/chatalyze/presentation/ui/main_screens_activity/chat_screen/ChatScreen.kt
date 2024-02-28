@@ -1,5 +1,9 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_screen
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -23,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,12 +37,14 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -47,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -57,40 +65,77 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
+import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
+import com.dev_marinov.chatalyze.presentation.util.CustomDateTimeHelper
+import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
+import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 
-@OptIn(ExperimentalComposeUiApi::class, FlowPreview::class)
+
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen(
     viewModel: ChatScreenViewModel = hiltViewModel(),
     navHostController: NavHostController,
-    recipientName: String?,
-    recipientPhone: String?,
-    senderPhone: String?,
+    recipientName: String,
+    recipientPhone: String,
+    senderPhone: String,
 ) {
+    Log.d("4444", " ChatScreen loaded")
+
+    SystemUiControllerHelper.SetStatusBarColorNoGradient()
+    SystemUiControllerHelper.SetNavigationBars(isVisible = true)
+    GradientBackgroundHelper.SetMonochromeBackground()
+
+    val recipientNameState = remember {
+        mutableStateOf(
+            recipientName.replace(
+                Regex("[{}]", RegexOption.IGNORE_CASE),
+                ""
+            )
+        )
+    }
+    val recipientPhoneState = remember {
+        mutableStateOf(
+            recipientPhone.replace(
+                Regex("[{}]", RegexOption.IGNORE_CASE),
+                ""
+            )
+        )
+    }
+    val senderPhoneState =
+        remember { mutableStateOf(senderPhone.replace(Regex("[{}]", RegexOption.IGNORE_CASE), "")) }
+
+    val isMakeCallState = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(10L)
+        viewModel.saveHideNavigationBar(true)
+    }
 
     BackHandler {
         navHostController.navigate(ScreenRoute.ChatsScreen.route)
         viewModel.saveHideNavigationBar(false)
     }
 
-    GradientBackgroundHelper.SetMonochromeBackground()
-    SystemUiControllerHelper.SetStatusBarColorNoGradient()
-
-    val col = colorResource(id = R.color.main_violet_light)
+    val colorViolet = colorResource(id = R.color.main_violet_light)
+    val colorVioletChat = colorResource(id = R.color.color_companion_chat)
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
-    val chatName = "Маринов Роман"
+
+    val context = LocalContext.current
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
@@ -98,88 +143,235 @@ fun ChatScreen(
     val onlineUserStateList by viewModel.onlineUserStateList.collectAsStateWithLifecycle(emptyList())
     var onlineOrOffline by remember { mutableStateOf("") }
 
-    val name by viewModel.recipientName.collectAsStateWithLifecycle("")
-
-    val myPhone = "89303493563"
+    val isOpenScrollState = remember { mutableStateOf(true) }
     val chatPosition by viewModel.chatPosition.collectAsStateWithLifecycle()
+    val isSaveScroll = remember { mutableStateOf(false) }
+    val isScrollDown = remember { mutableStateOf(false) }
+
+    // не знаю пока зачем
     val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
 
-    var textMessage by remember { mutableStateOf("") }
-    var isInitOpenVisibleChatList by remember { mutableStateOf(false) }
-    var sendClickState by remember { mutableStateOf(false) }
+    val sendClickState = remember { mutableStateOf(false) }
+
+    // избавляет от 4 перекомановок
+    val state: ChatState = viewModel.state.value
 
 
-
-    viewModel.saveLocallyUserPairChat(senderPhone = senderPhone, recipientPhone = recipientPhone)
-    viewModel.saveToViewModel(recipient = recipientPhone, sender = senderPhone)
-    viewModel.getChatPosition(userName = chatName)
-
-    viewModel.getNameAndOnlineOrOffline(recipientPhone = recipientPhone)
-
-    LaunchedEffect(isSessionState) {
-        if (isSessionState == Constants.SESSION_SUCCESS) {
-            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
-            viewModel.getAllMessageChat()
-            // хуй пока закрыл ебаная ошибка
-            viewModel.observeMessages()
-        }
-    }
-
-    LaunchedEffect(onlineUserStateList) {
-        onlineUserStateList.forEach {
-            if (it.userPhone == recipientPhone) {
-                onlineOrOffline = it.onlineOrOffline
-                return@forEach
-            }
-        }
-    }
-
-    val lazyListState: LazyListState = if (chatPosition != 0) {
-        rememberLazyListState(
-            initialFirstVisibleItemIndex = chatPosition
-        )
-    } else {
-        rememberLazyListState()
-    }
-
-//    val localLifecycleOwner = LocalLifecycleOwner.current
-//    DisposableEffect(
-//        key1 = localLifecycleOwner,
-//        effect = {
-//            val observer = LifecycleEventObserver { _, event ->
-//                when (event) {
-//                    Lifecycle.Event.ON_START -> {
-//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
-//                    }
-//
-//                    Lifecycle.Event.ON_STOP -> { // когда свернул
-//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
-//                    }
-//
-//                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
-//                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
-//                    }
-//                    else -> {}
-//                }
-//            }
-//            localLifecycleOwner.lifecycle.addObserver(observer)
-//            onDispose {
-//                localLifecycleOwner.lifecycle.removeObserver(observer)
-//            }
-//        }
-//    )
-//    ////////////////////////////////////////////////////
-
-    // lackner
-    val context = LocalContext.current
     LaunchedEffect(key1 = true) {
         viewModel.toastEvent.collectLatest { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
-    // с помощью state я буду формировть список сообщений
-    val state = viewModel.state.value
+    LaunchedEffect(senderPhoneState.value, recipientPhoneState.value) {
+        viewModel.saveLocallyUserPairChat(
+            senderPhone = senderPhoneState.value,
+            recipientPhone = recipientPhoneState.value
+        )
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.saveToViewModel(
+            recipient = recipientPhoneState.value,
+            sender = senderPhoneState.value
+        )
+    }
+
+    // два LaunchedEffect закоментированными избавляют от 4 перекомпановки
+    LaunchedEffect(recipientNameState.value) {
+        Log.d("4444", " ChatScreen getChatPosition recipientNameState.value=" + recipientNameState.value)
+        viewModel.getChatPosition(keyUserName = recipientNameState.value)
+    }
+
+    LaunchedEffect(isSessionState) {
+        if (isSessionState == Constants.SESSION_SUCCESS) {
+            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
+            viewModel.getAllMessageChat()
+
+            viewModel.saveCompanionOnTheServer(
+                senderPhone = senderPhoneState.value,
+                recipientPhone = recipientPhoneState.value
+            )
+        }
+
+        if (isSessionState == Constants.SESSION_ERROR) {
+            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_ERROR")
+        }
+        if (isSessionState == Constants.SESSION_CLOSE) {
+            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_CLOSE")
+        }
+    }
+
+    LaunchedEffect(onlineUserStateList) {
+        Log.d("4444", " ChatScreen onlineUserStateList=" + onlineUserStateList)
+        onlineUserStateList.forEach {
+            if (it.userPhone == recipientPhoneState.value) {
+                onlineOrOffline = it.onlineOrOffline
+                return@forEach
+            }
+        }
+    }
+
+
+    // оставил на всякий
+//    snapshotFlow { // чтобы не часто срабатывало
+//        lazyListState.firstVisibleItemIndex
+//    }
+//        .debounce(500L)
+//        .collectLatest { firstIndex ->
+//            Log.d("4444", " lastVisibleIndex =" + firstIndex)
+//            viewModel.saveScrollChatPosition(
+//                keyUserName = recipientNameState.value,
+//                position = firstIndex
+//            )
+//        }
+
+    // не влияет
+    val lazyListState: LazyListState = rememberLazyListState()
+    val layoutInfo = remember {
+        derivedStateOf {
+            var lastVisibleItem = 0
+            val visibleItemsInfo: List<LazyListItemInfo> = lazyListState.layoutInfo.visibleItemsInfo
+            if (visibleItemsInfo.isNotEmpty()) {
+                lastVisibleItem = visibleItemsInfo.last().index
+            }
+            lastVisibleItem
+        }
+    }
+
+   // layoutInfo.value // значение скрола текущего
+    //isSaveScroll.value // флаг становиться true когда произойдет быстрый скролл к цели
+
+    // на 2 меньше перекомпановки
+    LaunchedEffect(layoutInfo.value, isSaveScroll.value) {
+        Log.d("4444", " ChatScreen recipientNameState.value=" + recipientNameState.value
+        + " isSaveScroll.value=" + isSaveScroll.value + " layoutInfo.value=" + layoutInfo.value)
+        if (recipientNameState.value.isNotEmpty() && isSaveScroll.value) {
+            Log.d("4444", " ChatScreen saveScrollPosition")
+            viewModel.saveScrollChatPosition(
+                keyUserName = recipientNameState.value,
+                position = layoutInfo.value
+            )
+        } else if(recipientNameState.value.isNotEmpty() && layoutInfo.value > 0) {
+            viewModel.saveScrollChatPosition(
+                keyUserName = recipientNameState.value,
+                position = layoutInfo.value
+            )
+        }
+    }
+
+    // не влияиет
+    LaunchedEffect(chatPosition, state.messages.size) {
+        if (state.messages.size == 1) {
+            viewModel.saveScrollChatPosition(
+                keyUserName = recipientNameState.value,
+                position = layoutInfo.value
+            )
+        }
+
+        Log.d("4444", " ChatScreen chatPosition=" + chatPosition)
+        if (chatPosition != 0 && isOpenScrollState.value) {
+            Log.d("4444", " 333 ChatScreen LaunchedEffect(chatPosition)= " + chatPosition)
+            lazyListState.scrollToItem(chatPosition)
+            isOpenScrollState.value = false
+            isSaveScroll.value = true
+        }
+    }
+
+    val isShowScrollDownButton by remember(state.messages) {
+        derivedStateOf {
+            var targetScroll = false
+            val visibleItemsInfo: List<LazyListItemInfo> = lazyListState.layoutInfo.visibleItemsInfo
+            if (visibleItemsInfo.isNotEmpty()) {
+                val lastVisibleItem = visibleItemsInfo.last().index
+                targetScroll = lastVisibleItem <= state.messages.size - 5
+            }
+            targetScroll
+        }
+    }
+
+    // не влияет (даже увеличивает кол-во перекомпановки)
+    val isReceiverRegistered = remember { mutableStateOf(false) }
+    val socketBroadcastReceiver = remember {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    "receiver_single_message" -> {
+                        Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
+
+                        val sender = intent.getStringExtra("sender")
+                        val recipient = intent.getStringExtra("recipient")
+                        val textMes = intent.getStringExtra("textMessage")
+                        val createdAt = intent.getStringExtra("createdAt")
+
+                        IfLetHelper.execute(sender, recipient, textMes, createdAt) {
+                            viewModel.observeMessages2(
+                                sender = it[0],
+                                recipient = it[1],
+                                textMessage = it[2],
+                                createdAt = it[3]
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = true) {
+        val intentFilter = IntentFilter("receiver_single_message")
+        context.registerReceiver(
+            socketBroadcastReceiver,
+            intentFilter,
+            Context.RECEIVER_NOT_EXPORTED
+        )
+        isReceiverRegistered.value = true
+    }
+
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_START")
+                    }
+
+                    Lifecycle.Event.ON_STOP -> { // когда свернул
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_STOP")
+                        viewModel.saveCompanionOnTheServer(
+                            senderPhone = senderPhoneState.value,
+                            recipientPhone = ""
+                        )
+
+                        if (isReceiverRegistered.value) {
+                            context.unregisterReceiver(socketBroadcastReceiver)
+                            isReceiverRegistered.value = false
+                        }
+                    }
+
+                    Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
+                        Log.d("4444", " ChatScreen Lifecycle.Event.ON_DESTROY")
+                        viewModel.saveCompanionOnTheServer(
+                            senderPhone = senderPhoneState.value,
+                            recipientPhone = ""
+                        )
+                        if (isReceiverRegistered.value) {
+                            context.unregisterReceiver(socketBroadcastReceiver)
+                            isReceiverRegistered.value = false
+                        }
+                    }
+
+                    else -> {}
+                }
+            }
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -197,6 +389,7 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorResource(id = R.color.main_violet_light))
+
         ) {
 
             val constraintsTop = ConstraintSet {
@@ -259,6 +452,7 @@ fun ChatScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp, bottom = 8.dp)
+
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_back_to_prev_screen),
@@ -286,18 +480,15 @@ fun ChatScreen(
 
                 Column(
                     modifier = Modifier
-                        // .background(Color.Red)
                         .padding(4.dp)
                         .layoutId("nameAndStatusNetworkUser")
                 ) {
-                   // (name.ifEmpty { recipientPhone })?.let {
-                        Text(
-                            text = "it",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                //    }
+                    Text(
+                        text = recipientNameState.value,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
                     Text(
                         text = onlineOrOffline,
                         color = Color.White,
@@ -307,37 +498,18 @@ fun ChatScreen(
 
                 IconButton(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(40.dp)
+                        .width(46.dp)
+                        .height(46.dp)
                         .layoutId("iconVideoCall")
-                        //  .background(Color.Blue)
                         .size(35.dp)
                         .padding(start = 8.dp, end = 8.dp),
                     onClick = {
-
+                        isMakeCallState.value = true
                     }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_video_call),
                         contentDescription = "",
                         tint = Color.White,
-                    )
-                }
-
-                IconButton(
-                    modifier = Modifier
-                        .width(35.dp)
-                        .height(35.dp)
-                        .layoutId("iconCall")
-                        // .background(Color.Gray)
-                        .size(35.dp)
-                        .padding(8.dp),
-                    onClick = {
-
-                    }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_call),
-                        contentDescription = "",
-                        tint = Color.White
                     )
                 }
             }
@@ -351,6 +523,7 @@ fun ChatScreen(
 
                 val contentChat = ConstraintSet {
                     val chatContent = createRefFor("chatContent")
+                    val floatingButton = createRefFor("floatingButton")
 
                     constrain(chatContent) {
                         top.linkTo(parent.top)
@@ -360,8 +533,18 @@ fun ChatScreen(
                         width = Dimension.wrapContent
                         height = Dimension.wrapContent
                     }
+
+                    constrain(floatingButton) {
+                      //  top.linkTo(chatContent.top)
+                       // start.linkTo(chatContent.start)
+                        end.linkTo(chatContent.end)
+                        bottom.linkTo(chatContent.bottom)
+                        width = Dimension.wrapContent
+                        height = Dimension.wrapContent
+                    }
                 }
 
+                // если закоментировать это будет на 3 меньше перекомпановки ChatScreen loaded
                 ConstraintLayout(
                     constraintSet = contentChat,
                     modifier = Modifier
@@ -371,28 +554,20 @@ fun ChatScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                        // .height(300.dp))
-                    )
-                    {
+                    ) {
                         BoxWithConstraints {
-//                            if (lazyListState == null) {
-//                                isInitOpenVisibleChatList = true
-//                            }
-//                            if (isInitOpenVisibleChatList) {
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(start = 8.dp, end = 8.dp),
+                                    .padding(start = 16.dp, end = 16.dp),
                                 state = lazyListState
                             ) {
+
+                                Log.d("4444", " ChatScreen state.messages=" + state.messages.size)
                                 items(state.messages) { item ->
-                                    // add object message
-                                    // Log.d("4444", " item=" + item.sender + "  senderPhone=" + senderPhone)
 
-
-                                    /////////////////////////////////
-                                    //  Log.d("4444", " chatMessage=" + chatMessage)
-                                    val isOwnMessage = item.sender == senderPhone
+                                    val isOwnMessage = item.sender == senderPhoneState.value
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     Box(
                                         contentAlignment = if (isOwnMessage) {
                                             Alignment.CenterEnd
@@ -404,8 +579,9 @@ fun ChatScreen(
                                                 .width(200.dp)
                                                 .drawBehind {
                                                     val cornerRadius = 10.dp.toPx()
-                                                    val triangleHeight = 20.dp.toPx()
-                                                    val triangleWidth = 25.dp.toPx()
+                                                    val triangleHeight = 5.dp.toPx()
+                                                    val triangleWidth = 30.dp.toPx()
+
                                                     val trianglePath = Path().apply {
                                                         if (isOwnMessage) {
                                                             moveTo(
@@ -431,56 +607,81 @@ fun ChatScreen(
                                                             close()
                                                         }
                                                     }
+
                                                     drawPath(
                                                         path = trianglePath,
-                                                        color = if (isOwnMessage) col else Color.DarkGray
+                                                        color = if (isOwnMessage) colorViolet else Color.LightGray
                                                     )
                                                 }
                                                 .background(
-                                                    color = if (isOwnMessage) col else Color.DarkGray,
+                                                    color = if (isOwnMessage) colorViolet else Color.LightGray,
                                                     shape = RoundedCornerShape(10.dp)
                                                 )
                                                 .padding(8.dp)
                                         ) {
+                                            val titleName = if (isOwnMessage) {
+                                                EditFormatPhoneHelper.edit(phone = senderPhoneState.value)
+                                            } else {
+                                                recipientNameState.value.ifEmpty {
+                                                    EditFormatPhoneHelper.edit(
+                                                        phone = recipientPhoneState.value
+                                                    )
+                                                }
+                                            }
+
                                             Text(
-                                                text = item.sender,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
+                                                text = titleName,
+                                                //fontWeight = FontWeight.Bold,
+                                                color = if (isOwnMessage) Color.White else colorVioletChat
                                             )
                                             Text(
                                                 text = item.textMessage,
-                                                color = Color.White
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isOwnMessage) Color.White else colorVioletChat
                                             )
                                             Text(
-                                                text = item.createdAt,
-                                                color = Color.White,
+                                                text = CustomDateTimeHelper.formatDateTime(
+                                                    dateTimeString = item.createdAt
+                                                ),
+                                                color = if (isOwnMessage) Color.White else colorVioletChat,
                                                 modifier = Modifier.align(Alignment.End)
                                             )
                                         }
+                                        // Spacer(modifier = Modifier.height(8.dp))
                                     }
-                                    Spacer(modifier = Modifier.height(32.dp))
-
-                                    //////////////////////////////////////
+                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
-                                // Добавьте другие элементы списка здесь
                             }
-                            // }
-                        }
+                            // Spacer(modifier = Modifier.height(8.dp))
 
-                        LaunchedEffect(lazyListState) {
-                            snapshotFlow {
-                                lazyListState?.firstVisibleItemIndex
-                            }
-                                .debounce(500L)
-                                .collectLatest { firstIndex ->
-                                    firstIndex?.let {
-                                        // Log.d("4444", " lastVisibleIndex =" + it)
-                                        viewModel.saveScrollChatPosition(
-                                            keyUserName = chatName,
-                                            position = it
+                            if(isShowScrollDownButton) {
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(end = 16.dp, bottom = 16.dp)
+                                            .size(50.dp)
+                                            .clip(RoundedCornerShape(100))
+                                            .background(colorResource(id = R.color.main_yellow_new_chat_screen))
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(100))
+                                                .clickable {
+                                                    isScrollDown.value = true
+                                                }
+                                                .layoutId("floatingButton"),
+                                            painter = painterResource(id = R.drawable.ic_scroll_down),
+                                            contentDescription = "",
+                                            tint = colorResource(id = R.color.main_violet)
                                         )
                                     }
                                 }
+                            }
                         }
                     }
                 }
@@ -515,7 +716,6 @@ fun ChatScreen(
                 ) {
                     Row(
                         modifier = Modifier
-                            // .width(200.dp)
                             .background(colorResource(id = R.color.main_violet_light))
                             .layoutId("writeMessage"),
                         verticalAlignment = Alignment.CenterVertically,
@@ -534,17 +734,6 @@ fun ChatScreen(
                             tint = Color.White,
                         )
 
-//                        TextFieldHintWriteMessage(
-//                            value = textMessage,
-//                            onValueChanged = { textMessage = it },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(IntrinsicSize.Min)
-//                                .clip(RoundedCornerShape(20))
-//                                .background(MaterialTheme.colors.surface),
-//                            viewModel = viewModel
-//                        )
-
                         TextFieldHintWriteMessage(
                             value = viewModel.messageText.value,
                             onValueChanged = viewModel::onMessageChange,
@@ -555,42 +744,53 @@ fun ChatScreen(
                                 .background(MaterialTheme.colors.surface),
                             viewModel = viewModel,
                             onSendClick = {
-                                sendClickState = true
-                                Log.d(
-                                    "4444",
-                                    " TextFieldHintWriteMessage sendClickState=" + sendClickState
-                                )
+                                sendClickState.value = true
                             }
                         )
                     }
                 }
             }
-
-            LaunchedEffect(state.messages) {
-                Log.d(
-                    "4444",
-                    " сработал LaunchedEffect(chatMessage) sendClickState=" + sendClickState
-                )
-                viewModel.clearMessageTextField()
-                if (sendClickState) { // это сработает у отправителя
-                    lazyListState.animateScrollToItem(state.messages.size)
-                    sendClickState = false
-                } else {
-                    // это сработает у получателя
-                    Log.d(
-                        "4444",
-                        " сработал LaunchedEffect(chatMessage) chatPosition=" + chatPosition
-                    )
-                    Log.d(
-                        "4444",
-                        " сработал LaunchedEffect(chatMessage) chatPosstate.messages.size=" + state.messages.size
-                    )
-
-                    if (chatPosition in state.messages.size - 7..state.messages.size) {
-                        lazyListState.animateScrollToItem(state.messages.size)
-                    }
-                }
-            }
         }
+    }
+
+    LaunchedEffect(state.messages) {
+        // у отправителя виво не стирается сообщение и не отобржаается у себя
+        if (sendClickState.value) { // это сработает если я отправитель
+            viewModel.clearMessageTextField()
+            lazyListState.animateScrollToItem(state.messages.size)
+            sendClickState.value = false
+        } else { // это сработает если я получатель
+            lazyListState.animateScrollToItem(state.messages.size)
+        }
+    }
+
+    LaunchedEffect(isScrollDown.value) {
+        if (isScrollDown.value) {
+            lazyListState.animateScrollToItem(state.messages.size)
+            isScrollDown.value = false
+        }
+    }
+
+    if (isMakeCallState.value) {
+        DialogShowMakeCall(
+            recipientName = recipientNameState.value,
+            recipientPhone = recipientPhoneState.value,
+            onDismiss = {
+                isMakeCallState.value = false
+            },
+            onConfirm = {
+                isMakeCallState.value = false
+                navHostController.navigate(
+                    route = ScreenRoute.CallScreen.withArgs2(
+                        recipientName = recipientNameState.value ?: recipientPhoneState.value,
+                        recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
+                            recipientPhoneState.value
+                        ),
+                        senderPhone = CorrectNumberFormatHelper.getCorrectNumber(senderPhoneState.value),
+                        typeEvent = Constants.OUTGOING_CALL_EVENT
+                    )
+                )
+            }
+        )
     }
 }
