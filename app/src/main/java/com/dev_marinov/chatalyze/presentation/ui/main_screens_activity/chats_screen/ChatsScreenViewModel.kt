@@ -7,19 +7,24 @@ import com.dev_marinov.chatalyze.domain.repository.ChatSocketRepository
 import com.dev_marinov.chatalyze.data.chatMessage.dto.OnlineUserState
 import com.dev_marinov.chatalyze.domain.model.chat.ChatCompanion
 import com.dev_marinov.chatalyze.domain.model.chats.Chat
+import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatRepository
 import com.dev_marinov.chatalyze.domain.repository.ChatsRepository
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
+import com.dev_marinov.chatalyze.presentation.util.ConnectivityObserver
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -28,16 +33,25 @@ import javax.inject.Inject
 class ChatsScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
     private val chatsRepository: ChatsRepository,
-    private val chatSocketRepository: ChatSocketRepository,
     private val roomRepository: RoomRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val authRepository: AuthRepository,
+
 ) : ViewModel() {
 
     val hideDialogPermissionNotificationFlow = preferencesDataStoreRepository.hideDialogPermissionNotificationFlow
 
+    val getStateNotFoundRefreshToken = preferencesDataStoreRepository.getStateNotFoundRefreshToken
+    val getFailureUpdatePairToken = preferencesDataStoreRepository.getFailureUpdatePairToken
+
+    val getInternalServerError = preferencesDataStoreRepository.getInternalServerError
+
     private val onlineUserStateList = roomRepository.onlineUserStateList
     val filteredContacts = roomRepository.filteredContacts
     val isSessionState = preferencesDataStoreRepository.isSessionState
+
+
+//    val refreshToken = authRepository.getRefreshTokensFromDataStore
 
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
     val isTheLifecycleEventNow = preferencesDataStoreRepository.isTheLifecycleEventNow
@@ -74,6 +88,7 @@ class ChatsScreenViewModel @Inject constructor(
     }
 
     fun createCombineFlow() {
+        Log.d("4444", " createCombineFlow ChatsScreenViewModel")
         val combineChatListFlow: Flow<List<CombineChat>> =
             combine(_chatList, onlineUserStateList, _contacts) { chats, stateList, cont ->
                 chats.map { chat ->
@@ -160,13 +175,13 @@ class ChatsScreenViewModel @Inject constructor(
     // поток нужен для получения списка последних сообщений
     fun createChatListFlow() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chatsRepository.getChats(sender = ownPhoneSender)
+            val refreshTokenJob: Deferred<String> = async {
+                authRepository.getRefreshTokensFromDataStore.first()
+            }
+            val response = chatsRepository.getChats(sender = ownPhoneSender, refreshToken = refreshTokenJob.await())
             _chatList.value = response
             // getOnlineUserStateList()
-            Log.d(
-                "4444",
-                " ChatsScreenViewModel список послед сообщ createChatListFlow _chatList=" + _chatList.value
-            )
+            Log.d("4444", " ChatsScreenViewModel список послед сообщ _chatList=" + _chatList.value)
         }
     }
 
@@ -209,6 +224,12 @@ class ChatsScreenViewModel @Inject constructor(
             )
             val response = chatRepository.saveCompanionOnTheServer(chatCompanion = chatCompanion)
             Log.d("4444", " ChatsScreenViewModel saveCompanionOnTheServer response=" + response?.message)
+        }
+    }
+
+    fun onExitFromApp(isExit: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.onExitFromApp(isExit = isExit)
         }
     }
 }

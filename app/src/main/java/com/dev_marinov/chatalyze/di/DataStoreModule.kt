@@ -2,10 +2,9 @@ package com.dev_marinov.chatalyze.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import com.dev_marinov.chatalyze.data.auth.dataStore
+import com.dev_marinov.chatalyze.data.auth.dataStorePairToken
 import com.dev_marinov.chatalyze.data.auth.dto.PairTokensDTO
 import com.dev_marinov.chatalyze.data.store.data_store.PreferencesDataStoreRepositoryImpl
-import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import dagger.Module
 import dagger.Provides
@@ -26,6 +25,6 @@ class DataStoreModule {
     @Singleton
     @Provides
     fun provideDataStore(@ApplicationContext context: Context) : DataStore<PairTokensDTO> {
-        return context.dataStore
+        return context.dataStorePairToken
     }
 }

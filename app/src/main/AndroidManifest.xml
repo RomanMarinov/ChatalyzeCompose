@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -27,6 +27,7 @@
         android:name="android.permission.WRITE_APN_SETTINGS"
         tools:ignore="ProtectedPermissions" /> <!-- решал проблему с включением экрана -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".ChatalyzeApp"
@@ -39,43 +40,39 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Chatalyze"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31" >
-
+        tools:targetApi="31">
+        <activity
+            android:name=".presentation.ui.deep_link_activity.DeepLinkActivity"
+            android:exported="false"
+            android:label="@string/title_activity_deep_link"
+            android:theme="@style/Theme.Chatalyze" />
         <activity
             android:name=".presentation.ui.main_screens_activity.MainScreensActivity"
+            android:launchMode="singleTop"
+            android:allowTaskReparenting="true"
             android:exported="false"
             android:label="@string/title_activity_main_screens"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Chatalyze"
-            tools:ignore="AppLinkUrlError"
-            android:documentLaunchMode="intoExisting"
-
-            >
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="AppLinkUrlError">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="scheme_chatalyze" />
                 <data android:host="chat_screen" />
-
                 <data android:host="call_screen" />
                 <data android:scheme="app" />
                 <data android:host="calls_screen" />
-
             </intent-filter>
 
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
-        </activity>
-
-
-
-
-
-        <!-- <activity -->
+        </activity> <!-- <activity -->
         <!-- android:name=".presentation.ui.main_screens_activity.ui.MainScreensActivity" -->
         <!-- android:exported="true" -->
         <!-- android:label="@string/title_activity_main_screens" -->
@@ -112,7 +109,7 @@
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Chatalyze"
-            android:windowSoftInputMode="adjustResize" >
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -165,7 +162,7 @@
         <service
             android:name=".data.firebase.notification.FirebaseService"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

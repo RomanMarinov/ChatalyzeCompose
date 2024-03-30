@@ -143,4 +143,76 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
             it[preferencesKey] = hide
         }
     }
+
+    override val getExitFromApp: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        val preferencesKey = booleanPreferencesKey(Constants.EXIT_FROM_APP)
+        preferences[preferencesKey] == true
+    }
+
+    override suspend fun onExitFromApp(isExit: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.EXIT_FROM_APP)
+        context.dataStore.edit {
+            it[preferencesKey] = isExit
+        }
+    }
+
+    override val getStateNotFoundRefreshToken: Flow<Boolean> = context.dataStore.data.map {
+        val preferencesKey = booleanPreferencesKey(Constants.STATE_NOT_FOUND_PAIR_TOKEN)
+        it[preferencesKey] == true
+    }
+
+    override suspend fun saveStateNotFoundRefreshToken(isNotFound: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.STATE_NOT_FOUND_PAIR_TOKEN)
+        context.dataStore.edit {
+            it[preferencesKey] = isNotFound
+        }
+    }
+
+    override val getFailureUpdatePairToken: Flow<Boolean> = context.dataStore.data.map {
+        val preferencesKey = booleanPreferencesKey(Constants.FAILURE_UPDATE_PAIR_TOKEN)
+        it[preferencesKey] == true
+    }
+
+    override suspend fun saveFailureUpdatePairToken(isFailure: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.FAILURE_UPDATE_PAIR_TOKEN)
+        context.dataStore.edit {
+            it[preferencesKey] = isFailure
+        }
+    }
+
+    override val getStateUnauthorized: Flow<Boolean> = context.dataStore.data.map {
+        val preferencesKey = booleanPreferencesKey(Constants.UNAUTHORIZED_ACCESS)
+        it[preferencesKey] == true
+    }
+
+    override suspend fun saveStateUnauthorized(isUnauthorized: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.UNAUTHORIZED_ACCESS)
+        context.dataStore.edit {
+            it[preferencesKey] = isUnauthorized
+        }
+    }
+
+    override val getInternalServerError: Flow<Boolean> = context.dataStore.data.map {
+        val preferencesKey = booleanPreferencesKey(Constants.INTERNAL_SERVER_ERROR)
+        it[preferencesKey] == true
+    }
+
+    override suspend fun saveInternalServerError(isError: Boolean) {
+        val preferencesKey = booleanPreferencesKey(Constants.INTERNAL_SERVER_ERROR)
+        context.dataStore.edit {
+            it[preferencesKey] = isError
+        }
+    }
+
+//    override val getNavigateToAuthScreen: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
+//        val preferencesKey = booleanPreferencesKey(Constants.NAVIGATE_TO_AUTH_SCREEN)
+//        value[preferencesKey] == true
+//    }
+//
+//    override suspend fun saveNavigateToAuthScreen(navigate: Boolean) {
+//        val preferencesKey = booleanPreferencesKey(Constants.NAVIGATE_TO_AUTH_SCREEN)
+//        context.dataStore.edit {
+//            it[preferencesKey] = navigate
+//        }
+//    }
 }

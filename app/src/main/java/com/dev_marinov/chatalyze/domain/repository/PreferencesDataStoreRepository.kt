@@ -32,4 +32,24 @@ interface PreferencesDataStoreRepository {
 
     val hideDialogPermissionNotificationFlow: Flow<Boolean>
     suspend fun saveHideDialogPermissionNotification(hide: Boolean)
+
+    // не нужно пока
+//    val getNavigateToAuthScreen: Flow<Boolean>
+//    suspend fun saveNavigateToAuthScreen(navigate: Boolean)
+
+    val getExitFromApp: Flow<Boolean>
+    suspend fun onExitFromApp(isExit: Boolean)
+
+    val getStateNotFoundRefreshToken: Flow<Boolean>
+    suspend fun saveStateNotFoundRefreshToken(isNotFound: Boolean)
+
+    val getFailureUpdatePairToken: Flow<Boolean>
+    suspend fun saveFailureUpdatePairToken(isFailure: Boolean)
+
+    val getStateUnauthorized: Flow<Boolean>
+    suspend fun saveStateUnauthorized(isUnauthorized: Boolean)
+
+    val getInternalServerError: Flow<Boolean>
+    suspend fun saveInternalServerError(isError: Boolean)
+
 }

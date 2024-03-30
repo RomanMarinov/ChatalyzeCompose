@@ -33,6 +33,15 @@
     <string name="permission_read_contact_false">"Этому приложению нужен доступ к вашему контакту, чтобы вы имели возможность написать друзьям"</string>
     <string name="permission_read_phone_numbers_true">"Похоже, вы навсегда отказались от разрешения на доступ к вашим контактам.\nВы можете перейти в настройки приложения, чтобы предоставить это"</string>
     <string name="permission_read_phone_numbers_false">"Этому приложению нужен доступ к вашим контактам, чтобы вы имели возможность написать друзьям"</string>
+
+    <string name="dialog_exit">"Do you wish to exit?"</string>
+
+    <string name="network_unAvailable">"Network unavailable"</string>
+    <string name="network_available">"Network available"</string>
+    <string name="network_losing">"Network losing"</string>
+    <string name="network_lost">"Network lost"</string>
+
+
     <!--    chat screen-->
     <string name="chat_screen_chats">Chats</string>
     <string name="make_call">Video call</string>
@@ -89,6 +98,13 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
 
+    <string name="forbidden_unauth_token">Access to the requested resource is denied or the user is not authenticated. \n\Authorization required</string>
+    <string name="not_found_refresh_token">Not found refresh token.\n\Need to login again</string>
+    <string name="failed_to_update_pair_token">Failed to update pair token.\n\Try again or login again</string>
+    <string name="unauthorized_access">Unauthorized access.\n\Try logging in again through the Profile section</string>
+    <string name="internal_server_error">Internal server error.\n\Try again later</string>
+    <string name="no_internet_connection">No internet connection.\n\Try again</string>
+
     <string name="execute_logout">Do you really want to get out of the profile?</string>
     <string name="execute_delete_profile">Do you really want to delete your profile completely?</string>
     <string name="execute_delete_history_calls">Do you really want to clear your call history?</string>
@@ -96,5 +112,6 @@
 
     <string name="user_token">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidjhybXQzZmFlcmNrIn0.48dmUEoA5zMV_dRwTh7M_sz5qCfOx78aMc1oEN0Hs3g</string>
     <string name="title_activity_main2">MainActivity2</string>
+    <string name="title_activity_deep_link">DeepLinkActivity</string>
 
 </resources>

@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.splash_screen
 
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import android.view.animation.OvershootInterpolator
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +34,12 @@ import java.util.Locale
 
 @Composable
 fun SplashScreen(
+    activity: Activity,
     navController: NavController,
     viewModel: SplashScreenViewModel = hiltViewModel(),
 ) {
     StartAnimationLogoAndCheckTokenSignIn(
+        activity = activity,
         navController = navController,
         viewModel = viewModel
     )
@@ -43,13 +47,14 @@ fun SplashScreen(
 
 @Composable
 fun StartAnimationLogoAndCheckTokenSignIn(
+    activity: Activity,
     navController: NavController,
     viewModel: SplashScreenViewModel,
 ) {
     val context = LocalContext.current
 
     val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
-
+  //  val refreshToken by viewModel.getRefreshToken().observeAsState("")
     val scale = remember {
         Animatable(0f)
     }
@@ -69,21 +74,25 @@ fun StartAnimationLogoAndCheckTokenSignIn(
         if (refreshToken.isNotEmpty()) {
           // тут перейти на MainScreensActivity через intent
            val intent = Intent(context, MainScreensActivity::class.java)
-           context.startActivity(intent)
-
-            val res: TokenPayload = DecodeToken.execute(token = refreshToken)
-            val simpleDateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm:ss", Locale.getDefault())
-
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            activity.finish()
 
 
-            res.expiresIn?.let { tokenTimestamp ->
-                //val min: Long = it.div(60000)
-                val minutes = DecodeToken.howManyMoreMinutes(tokenTimestamp = tokenTimestamp)
-
-               // val res1 = simpleDateFormat.format(it * 1000L)
-                Log.d("4444", " SplashScreen refreshToken=" + tokenTimestamp)
-                //Log.d("4444", " SplashScreen refreshToken res.userId=" + res.userId + " res1=" + res1)
-            }
+//            // потом перенести проверку до перехода
+//            val res: TokenPayload = DecodeToken.execute(token = refreshToken)
+//            val simpleDateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm:ss", Locale.getDefault())
+//
+//
+//
+//            res.expiresIn?.let { tokenTimestamp ->
+//                //val min: Long = it.div(60000)
+//                val minutes = DecodeToken.howManyMoreMinutes(tokenTimestamp = tokenTimestamp)
+//
+//               // val res1 = simpleDateFormat.format(it * 1000L)
+//                Log.d("4444", " SplashScreen refreshToken=" + tokenTimestamp)
+//                //Log.d("4444", " SplashScreen refreshToken res.userId=" + res.userId + " res1=" + res1)
+//            }
 
          //  navController.navigate(ScreenRoute.ChatalyzeScreen.route)
        } else {

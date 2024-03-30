@@ -396,17 +396,20 @@ fun CallsScreen(
             }
         }
     }
-    CustomBackStackOnlyBottomSheetInChatsScreen(
-        navController = navController,
-        isSheetOpen = isSheetOpen.value,
-        onSheetOpenChanged = { isOpen ->
-            isSheetOpen.value = isOpen
-            if (!isOpen) {
-                viewModel.onClickHideNavigationBar(isHide = false)
-            }
-        },
-        sheetState = sheetState
-    )
+
+
+    // ДЛЯ ЧЕГО НУЖЕН ДУБЛИРУЕТСЯ
+//    CustomBackStackOnlyBottomSheetInChatsScreen(
+//        navController = navController,
+//        isSheetOpen = isSheetOpen.value,
+//        onSheetOpenChanged = { isOpen ->
+//            isSheetOpen.value = isOpen
+//            if (!isOpen) {
+//                viewModel.onClickHideNavigationBar(isHide = false)
+//            }
+//        },
+//        sheetState = sheetState
+//    )
 
     CustomBackStackOnlyCallsScreen(navHostController = navController)
 }
@@ -431,7 +434,7 @@ fun CustomBackStackOnlyCallsScreen(
     val currentRoute = navHostController.currentBackStackEntryAsState().value?.destination?.route
     BackHandler(enabled = currentRoute != null) {
         if (currentRoute == ScreenRoute.CallsScreen.route) {
-            navHostController.navigate(ScreenRoute.ChatsScreen.route)
+            navHostController.popBackStack(ScreenRoute.ChatsScreen.route, false)
         }
     }
 }
@@ -462,6 +465,9 @@ fun CallContentItem(
         Column(
 //            modifier = Modifier.fillMaxWidth()
         ) {
+
+//            отталкиваясь от ic_call_outgoing и ic_call_incoming сэтить в диалог кому звонишь
+//                    ну и передавать на экран звонка тоже самое
             Icon(
                 modifier = Modifier
                     //.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
@@ -567,9 +573,22 @@ fun CallContentItem(
     }
 
     if (isMakeCallState.value) {
+
+        val recipientName = if (historyCallWithName.clientCallPhone != viewModel.ownPhoneSenderLocal) {
+            historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(historyCallWithName.clientCallPhone) }
+        } else {
+            historyCallWithName.recipientPhoneName.ifEmpty { EditFormatPhoneHelper.edit(historyCallWithName.recipientPhone) }
+        }
+
+        val recipientPhone = if (historyCallWithName.clientCallPhone != viewModel.ownPhoneSenderLocal) {
+            EditFormatPhoneHelper.edit(historyCallWithName.clientCallPhone)
+        } else {
+            EditFormatPhoneHelper.edit(historyCallWithName.recipientPhone)
+        }
+
         DialogShowMakeCallFromCallsScreen(
-            recipientName = historyCallWithName.recipientPhoneName,
-            recipientPhone = historyCallWithName.recipientPhone,
+            recipientName = recipientName,
+            recipientPhone = recipientPhone,
             onDismiss = {
                 isMakeCallState.value = false
             },
@@ -581,10 +600,8 @@ fun CallContentItem(
                     withContext(Dispatchers.Main) {
                         navController.navigate(
                             route = ScreenRoute.CallScreen.withArgs2(
-                                recipientName = historyCallWithName.recipientPhoneName ?: historyCallWithName.recipientPhone,
-                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
-                                    historyCallWithName.recipientPhone
-                                ),
+                                recipientName = recipientName ?: recipientPhone,
+                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(recipientPhone),
                                 senderPhone = CorrectNumberFormatHelper.getCorrectNumber(historyCallWithName.senderPhone),
                                 typeEvent = Constants.OUTGOING_CALL_EVENT
                             )
@@ -593,6 +610,33 @@ fun CallContentItem(
                 }
             }
         )
+
+//        DialogShowMakeCallFromCallsScreen(
+//            recipientName = recipientName,
+//            recipientPhone = recipientPhone,
+//            onDismiss = {
+//                isMakeCallState.value = false
+//            },
+//            onConfirm = {
+//                isMakeCallState.value = false
+//                viewModel.onClickHideNavigationBar(isHide = true)
+//                scope.launch {
+//                    delay(50L) // костыль потому что ui у перехода не красивый
+//                    withContext(Dispatchers.Main) {
+//                        navController.navigate(
+//                            route = ScreenRoute.CallScreen.withArgs2(
+//                                recipientName = historyCallWithName.recipientPhoneName ?: historyCallWithName.recipientPhone,
+//                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
+//                                    historyCallWithName.recipientPhone
+//                                ),
+//                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(historyCallWithName.senderPhone),
+//                                typeEvent = Constants.OUTGOING_CALL_EVENT
+//                            )
+//                        )
+//                    }
+//                }
+//            }
+//        )
     }
 }
 

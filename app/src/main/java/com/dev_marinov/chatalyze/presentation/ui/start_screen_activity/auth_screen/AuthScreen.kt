@@ -2,6 +2,7 @@
 
 package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.auth_screen
 
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
@@ -49,6 +50,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AuthScreen(
+    activity: Activity,
     navController: NavHostController,
     viewModel: AuthScreenViewModel = hiltViewModel()
 ) {
@@ -60,6 +62,7 @@ fun AuthScreen(
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
+   // val refreshToken by viewModel.getRefreshToken().observeAsState("")
     val notice by viewModel.notice.collectAsStateWithLifecycle()
 
     var textEmailState by remember { mutableStateOf("") }
@@ -80,9 +83,12 @@ fun AuthScreen(
     LaunchedEffect(refreshToken) {
         Log.d("4444", " LaunchedEffect refreshToken=" + refreshToken)
         if (refreshToken.isNotEmpty()) {
+            viewModel.savePreferencesState()
+
             val intent = Intent(context, MainScreensActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(intent)
-//            navController.navigate(ScreenRoute.ChatalyzeScreen.route)
+            activity.finish()
         }
     }
 
@@ -238,8 +244,6 @@ fun AuthScreen(
             ) {
                 OutlinedButton(
                     onClick = {
-
-                        //navController.navigate(ScreenRoute.ChatalyzeScreen.route)
                         val emailPasswordIsValid = CheckEmailPasswordTextFieldHelper.check(
                             textEmailState = textEmailState,
                             textPasswordState = textPasswordState,

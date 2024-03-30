@@ -337,8 +337,8 @@ fun OutgoingCallContent(
                     .shadow(elevation = 8.dp, CircleShape, clip = false)
                     .background(Color.Red, CircleShape)
                     .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(bounded = false, color = Color.Gray)
+                        //interactionSource = remember { MutableInteractionSource() },
+                       // indication = rememberRipple(bounded = false, color = Color.Gray)
                     ) {
                         onDeclineCall()
 

@@ -40,7 +40,7 @@ class ChatScreenViewModel @Inject constructor(
 
     val isSessionState = preferencesDataStoreRepository.isSessionState
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
-
+    val getStateUnauthorized = preferencesDataStoreRepository.getStateUnauthorized
     val refreshToken = authRepository.getRefreshTokensFromDataStore
 
     private var _userPairChat = mutableStateOf(UserPairChat())

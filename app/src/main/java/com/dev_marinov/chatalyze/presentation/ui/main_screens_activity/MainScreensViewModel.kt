@@ -16,6 +16,7 @@ import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chat_scre
 import com.dev_marinov.chatalyze.domain.model.firebase.UserFirebase
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.call_screen.model.FirebaseCommand
+import com.dev_marinov.chatalyze.presentation.util.ConnectivityObserver
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +36,7 @@ class MainScreensViewModel @Inject constructor(
     private val chatSocketRepository: ChatSocketRepository,
     private val firebaseRegisterRepository: FirebaseRegisterRepository,
     private val roomRepository: RoomRepository,
-
+    connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
@@ -43,10 +44,14 @@ class MainScreensViewModel @Inject constructor(
 
     private val firebaseToken = preferencesDataStoreRepository.firebaseToken
 
+    val connectivity = connectivityObserver.observe()
+
     private val ownPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
     private var phoneSenderLocal = ""
 
     val isHideBottomBar = preferencesDataStoreRepository.getHideBottomBar
+
+    val isExitFromApp = preferencesDataStoreRepository.getExitFromApp
 
     private var _canStartService: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val canStartService: StateFlow<Boolean> = _canStartService
@@ -67,6 +72,7 @@ class MainScreensViewModel @Inject constructor(
     init {
         savePhoneInViewModel()
         saveLocalFirebaseToken()
+        onExitFromApp(isExit = false)
     }
 
     private fun saveLocalFirebaseToken() {
@@ -233,6 +239,22 @@ class MainScreensViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             chatSocketRepository.closeSession()
+        }
+    }
+
+    private fun onExitFromApp(isExit: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.onExitFromApp(isExit = isExit)
+        }
+    }
+
+    fun savePreferencesState() {
+        Log.d("4444", " MainScreensViewModel saveStartStateForTokens")
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.saveStateNotFoundRefreshToken(isNotFound = false)
+            preferencesDataStoreRepository.saveFailureUpdatePairToken(isFailure = false)
+            preferencesDataStoreRepository.saveStateUnauthorized(isUnauthorized = false)
+            preferencesDataStoreRepository.saveInternalServerError(isError = false)
         }
     }
 }

@@ -36,6 +36,21 @@ class RoomRepositoryImpl @Inject constructor(
         )
     }
 
+//    Process: com.dev_marinov.chatalyze, PID: 10815
+//    java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.String com.dev_marinov.chatalyze.data.store.room.local.contacts.ContactsEntity.getName()' on a null object reference
+//    at com.dev_marinov.chatalyze.data.store.room.RoomRepositoryImpl.contactBySenderPhone(RoomRepositoryImpl.kt:33)
+//    at com.dev_marinov.chatalyze.data.store.room.RoomRepositoryImpl$contactBySenderPhone$1.invokeSuspend(Unknown Source:15)
+//    at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+//    at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+//    at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:115)
+//    at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:103)
+//    at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:584)
+//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:793)
+//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:697)
+//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:684)
+//    Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@37b4435, Dispatchers.IO]
+//
+
     override suspend fun saveContacts(contacts: List<Contact>) {
        // contactsDao.deleteAll()
         Log.d("4444", " saveContacts contacts=" + contacts)

@@ -22,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -41,23 +42,25 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.dev_marinov.chatalyze.BuildConfig
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.calls_screen.getCurrentDateTimeString
+import com.dev_marinov.chatalyze.data.auth.dto.UserTokensDetails
+import com.dev_marinov.chatalyze.domain.model.auth.PairOfTokens
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
 import com.dev_marinov.chatalyze.presentation.util.*
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.coroutines.*
-import kotlinx.datetime.Clock
-import java.sql.Date
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import kotlin.system.exitProcess
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.internal.http.HTTP_FORBIDDEN
+import okhttp3.internal.http.HTTP_OK
+import okhttp3.internal.http.HTTP_UNAUTHORIZED
+import org.json.JSONObject
 
 
 private fun openSystemSettingNotification(context: Context) {
@@ -119,6 +122,20 @@ fun ChatsScreen(
 ) {
     Log.d("4444", " ChatsScreen loaded")
 
+//    object : OnBackPressedCallback(true) {
+//        override fun handleOnBackPressed() {
+//            Log.d("4444", "OnBackPressed")
+//        }
+//    }
+//    BackHandler (true)    {
+//        Log.d("4444", " ChatsScreen нажал блять")
+//    }
+
+
+
+
+
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     SystemUiControllerHelper.SetSystemBars(true)
@@ -142,9 +159,14 @@ fun ChatsScreen(
         true
     )
 
+    val getStateNotFoundRefreshToken by viewModel.getStateNotFoundRefreshToken.collectAsStateWithLifecycle(false)
+    val getFailureUpdatePairToken by viewModel.getFailureUpdatePairToken.collectAsStateWithLifecycle(false)
+    val getInternalServerError by viewModel.getInternalServerError.collectAsStateWithLifecycle(false)
+
     var stateHideDialogNotification by remember { mutableStateOf(false) }
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
+
 
     // может из за false не работать но скорей всего работает
     val getChatListFlag by viewModel.getChatListFlag.collectAsStateWithLifecycle(false)
@@ -201,6 +223,8 @@ fun ChatsScreen(
     }
 
     // openSystemSettingNotification(context = context)
+
+
 
     val localLifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(
@@ -315,6 +339,102 @@ fun ChatsScreen(
                     .height(50.dp)
                     // .background(Color.Green)
                     .layoutId("header_chat_text")
+                    .clickable {
+
+
+                        scope.launch(Dispatchers.IO) {
+                            // runBlocking {
+                            try {
+                                val userTokensDetails = UserTokensDetails(
+                                    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsImV4cCI6MTcxMDE1MzQyMCwidXNlcklkIjoxOH0.Hz64un2QQl3tBBtcATtCXLVSylZ8GjrG_zVB14hd004",
+                                    refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsImV4cCI6NDMwMjA2NzAyMCwidXNlcklkIjoxOH0.Cmd22NbbXvO2eqGKFP7QfySREEiQieR8uTnZDKOT9do",
+                                    userId = 18
+                                )
+
+                                val gson = Gson()
+                                val okHttpClient = OkHttpClient()
+                                val json = gson.toJson(userTokensDetails)
+                                val body =
+                                    json.toRequestBody("application/json; charset=utf-8".toMediaType())
+                                val url =
+                                    BuildConfig.API_URL_HTTP + Constants.PART_URL_UPDATE_TOKENS
+                                val request = Request
+                                    .Builder()
+                                    //.addHeader("Authorization", "Bearer $token") // тут не требуется
+                                    .url(url)
+                                    .post(body)
+                                    .build()
+                                val response: Response = okHttpClient
+                                    .newCall(request)
+                                    .execute()
+
+//                                    Log.d("4444", " response.code=" + response.code)
+//                                    Log.d("4444", " response.body.string=" + response.body.string())
+//                                    Log.d("4444", " response.message=" + response.message)
+
+                                response.body
+                                    .string()
+                                    .let {
+                                        when (response.code) {
+                                            HTTP_OK -> {
+                                                Log.d("4444", " говно 1")
+                                                // тут выполняется все код который выполнился удачно на сервере даже если
+                                                // вернул ошибку с токеном или что-то подобное
+                                                // чтобы не заркылся респонс
+                                                if (it.contains("\"httpStatusCode\"") && it.contains(
+                                                        "\"message\""
+                                                    )
+                                                ) {
+                                                    val jsonResponse2 = JSONObject(it)
+                                                    val httpStatusCode =
+                                                        jsonResponse2.optString("httpStatusCode")
+                                                    val message = jsonResponse2.optString("message")
+
+                                                    Log.d(
+                                                        "4444",
+                                                        " httpStatusCode=" + httpStatusCode
+                                                    )
+                                                    Log.d("4444", " message=" + message)
+
+                                                    when (httpStatusCode.toInt()) {
+                                                        HTTP_OK -> {
+                                                            // вернуть полученый четкий респонс или обект наверно
+
+                                                        }
+
+                                                        HTTP_FORBIDDEN, HTTP_UNAUTHORIZED -> {
+                                                            // отправить пользователя на экран аутх
+                                                        }
+                                                    }
+
+                                                    val jsonResponse = JsonParser.parseString(it)
+                                                    val pairOfTokens = gson.fromJson(
+                                                        jsonResponse,
+                                                        PairOfTokens::class.java
+                                                    )
+                                                    Log.d(
+                                                        "4444",
+                                                        " pairOfTokens хуй=" + pairOfTokens
+                                                    )
+                                                } else {
+                                                    Log.d("4444", " хуй а не респонсе")
+                                                }
+                                            }
+
+                                            else -> {
+                                                Log.d("4444", " говно 2")
+                                                // тут выполняется что не позволило выполнить сетевой запрос
+                                                // ТУТ НАДО ТОСТ ПОЛЬЗОВАТЕЛЮ ПОКАЗАТЬ
+
+                                            }
+                                        }
+                                    }
+                            } catch (e: Exception) {
+                                Log.d("4444", " try catch response e=" + e)
+                            }
+                            //   }
+                        }
+                    }
             )
             IconButton(
                 modifier = Modifier
@@ -459,16 +579,25 @@ fun ChatsScreen(
                 viewModel.onClickHideNavigationBar(isHide = false)
             }
         },
-        sheetState = sheetState
+        sheetState = sheetState,
+        viewModel = viewModel
     )
 
-
-}
-
-fun getCurrentDateTimeString2(): String {
-    val currentDateTime = LocalDateTime.now()
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    return currentDateTime.format(formatter)
+    if (getStateNotFoundRefreshToken) {
+        SnackBarHostHelper.Show(message = stringResource(id = R.string.not_found_refresh_token))
+        // тут перейти на экран входа
+    }
+    // перенес в chatScreen там должен быть
+//    if (getStateUnauthorized) {
+//        SnackBarHostHelper.Show(message = stringResource(id = R.string.unauthorized_access))
+//        // тут перейти на экран входа
+//    }
+    if (getFailureUpdatePairToken) {
+        SnackBarHostHelper.Show(message = stringResource(id = R.string.failed_to_update_pair_token))
+    }
+    if (getInternalServerError) {
+        SnackBarHostHelper.Show(message = stringResource(id = R.string.internal_server_error))
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -478,10 +607,17 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
     isSheetOpen: Boolean,
     onSheetOpenChanged: (Boolean) -> Unit,
     sheetState: ModalBottomSheetState,
+    viewModel: ChatsScreenViewModel
 ) {
+
+    val context = LocalContext.current
+
+    var isOpenDialogExit = remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     BackHandler(enabled = currentRoute != null) {
+        Log.d("4444", " ChatsScreen currentRoute=" + currentRoute)
         if (currentRoute == ScreenRoute.ChatsScreen.route) {
             if (isSheetOpen) {
                 onSheetOpenChanged(false)
@@ -491,11 +627,61 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
                     }
                 }
             } else {
-                exitProcess(0)
+                Log.d("4444", " ChatsScreen exitProcess")
+                isOpenDialogExit.value = true
+                //exitProcess(0) // надо крашить прилу
+               // navController.popBackStack()
+                //navController.navigateUp()
+                //navController.popBackStack(navController.graph.startDestinationId, false)
+
             }
         }
+
+
     }
+    if (isOpenDialogExit.value) {
+        DialogExit(
+            onDismiss = {
+                isOpenDialogExit.value = false
+            },
+            onConfirm = {
+                viewModel.onExitFromApp(isExit = true)
+            }
+        )
+    }
+
 }
+
+// это было для callscreen
+//@OptIn(ExperimentalMaterialApi::class)
+//@Composable
+//fun CustomBackStackOnlyBottomSheetInChatsScreen(
+//    navController: NavHostController,
+//    isSheetOpen: Boolean,
+//    onSheetOpenChanged: (Boolean) -> Unit,
+//    sheetState: ModalBottomSheetState,
+//) {
+//
+//    val scope = rememberCoroutineScope()
+//    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+//    BackHandler(enabled = currentRoute != null) {
+//        Log.d("4444", " ChatsScreen currentRoute=" + currentRoute)
+//        if (currentRoute == ScreenRoute.ChatsScreen.route) {
+//            if (isSheetOpen) {
+//                onSheetOpenChanged(false)
+//                scope.launch {
+//                    withContext(Dispatchers.Main) {
+//                        sheetState.hide()
+//                    }
+//                }
+//            } else {
+//                Log.d("4444", " ChatsScreen exitProcess")
+//                //exitProcess(0) // надо крашить прилу
+//
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun BottomSheetContentTop(

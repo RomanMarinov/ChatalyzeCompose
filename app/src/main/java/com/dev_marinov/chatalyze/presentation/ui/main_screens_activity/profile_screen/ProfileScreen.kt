@@ -94,10 +94,12 @@ fun ProfileScreen(
                 showDialog = false
                 when (executeTypeClicked) {
                     Constants.TYPE_LOGOUT -> {
+                        Log.d("4444", " ProfileScreen TYPE_LOGOUT")
                         viewModel.executeLogout()
                     }
 
                     Constants.TYPE_DELETE_PROFILE -> {
+                        Log.d("4444", " ProfileScreen TYPE_DELETE_PROFILE")
                         viewModel.executeDeleteProfile()
                     }
 
@@ -122,7 +124,7 @@ fun ProfileScreen(
 //
 //    }
 
-    if (statusCode == 200) {
+    if (statusCode == 200 || statusCode == 404) {
         //navHostController.navigate(ScreenRoute.ChatsScreen.route)
         scope.launch {
             delay(100L)
@@ -131,7 +133,7 @@ fun ProfileScreen(
 //        navHostController.navigate(ScreenRoute.ChatsScreen.route)
 //        delay()
 //        TransitionToAuthScreen()
-    } else if (statusCode != 0) {
+    } else if (statusCode == 409 || statusCode == 500) {
         ShowToastHelper.createToast(message = tryAgainLater, context = context)
     }
 
@@ -297,7 +299,7 @@ fun ProfileScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TransitionToAuthScreen() {
-    //////////////////
+   Log.d("4444", " ProfileScreen TransitionToAuthScreen ")
     val context = LocalContext.current
     val deepLinkIntent = Intent(
         Intent.ACTION_VIEW,
@@ -306,11 +308,15 @@ fun TransitionToAuthScreen() {
         MainActivity::class.java
     )
 
-
-    val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
-        addNextIntent(deepLinkIntent)
-        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    val taskStackBuilder = TaskStackBuilder.create(context).apply {
+        addNextIntentWithParentStack(deepLinkIntent)
     }
+
+    val deepLinkPendingIntent = taskStackBuilder.editIntentAt(0)?.run {
+        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+        PendingIntent.getActivity(context, 0, this, PendingIntent.FLAG_IMMUTABLE)
+    }
+
     deepLinkPendingIntent?.send()
 //    val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
 //        addNextIntentWithParentStack(deepLinkIntent)

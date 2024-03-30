@@ -31,7 +31,16 @@ class Constants {
 
         const val PUSH_TYPE_DISPLAY = "PUSH_TYPE_DISPLAY"
 
+        const val EXIT_FROM_APP = "EXIT_FROM_APP"
+
+        const val STATE_NOT_FOUND_PAIR_TOKEN = "STATE_NOT_FOUND_PAIR_TOKEN"
+        const val FAILURE_UPDATE_PAIR_TOKEN = "FAILURE_UPDATE_PAIR_TOKEN"
+        const val UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"
+        const val INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
+
         const val HIDE_DIALOG_PERMISSION_NOTIFICATION = "HIDE_DIALOG_PERMISSION_NOTIFICATION"
+
+//        const val NAVIGATE_TO_AUTH_SCREEN = "NAVIGATE_TO_AUTH_SCREEN"
 
         const val TYPE_FIREBASE_MESSAGE_MESSAGE = "TYPE_FIREBASE_MESSAGE_MESSAGE"
         const val TYPE_FIREBASE_MESSAGE_CALL = "TYPE_FIREBASE_MESSAGE_CALL"
@@ -40,6 +49,30 @@ class Constants {
         const val TYPE_LOGOUT = "TYPE_LOGOUT"
         const val TYPE_DELETE_PROFILE = "TYPE_DELETE_PROFILE"
         const val TYPE_DELETE_HISTORY_CALLS = "TYPE_DELETE_HISTORY_CALLS"
+
+        const val PART_URL_REGISTER = "register"
+        const val PART_URL_SIGNIN = "signin"
+        const val PART_URL_LOGOUT = "logout"
+        const val PART_URL_FORGOT_PASSWORD_EMAIL = "forgot_password/email"
+        const val PART_URL_FORGOT_PASSWORD_CODE = "forgot_password/code"
+        const val PART_URL_FORGOT_PASSWORD_PASSWORD = "forgot_password/password"
+        const val PART_URL_DELETE_PROFILE = "delete_profile"
+
+        const val PART_URL_UPDATE_TOKENS = "/update_two_token"
+
+        //////////////////////
+        const val PART_FIREBASE_COMMAND = "firebase_command"
+       // const val PART_SEND_MESSAGE = "sendMessage"
+        const val PART_CHAT_COMPANION = "chat_companion"
+        const val PART_URL_CHATS = "chats"
+        const val PART_URL_MESSAGES = "messages"
+
+
+
+
+
+
+
 
     }
 }

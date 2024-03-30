@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_CONFLICT
 import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
+import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
 import javax.inject.Inject
 
@@ -50,6 +51,7 @@ class ProfileViewModel @Inject constructor(
 
     fun executeLogout() {
         viewModelScope.launch(Dispatchers.IO) {
+            Log.d("44444", " ")
             val response = authRepository.logout(token = refreshTokenTemp, senderPhone = ownPhoneSenderTemp)
             response?.let {
                 processTheResponse(response = response)
@@ -74,13 +76,15 @@ class ProfileViewModel @Inject constructor(
 
     private fun writeRefreshTokenTemp() {
         viewModelScope.launch {
-            refreshToken.collectLatest {
+            refreshToken.collect {
                 refreshTokenTemp = it
             }
         }
     }
 // дублирование
     private suspend fun processTheResponse(response: MessageResponse) {
+
+        Log.d("4444", " ProfileViewModel processTheResponse response.httpStatusCode=" + response.httpStatusCode)
         when (response.httpStatusCode) {
             HTTP_OK -> {
                 authRepository.deletePairTokensToDataStore()
@@ -94,6 +98,12 @@ class ProfileViewModel @Inject constructor(
                 _statusCode.value = 0
             }
             HTTP_INTERNAL_SERVER_ERROR -> {
+                _statusCode.value = response.httpStatusCode
+                delay(1000L)
+                _statusCode.value = 0
+            }
+            HTTP_NOT_FOUND -> {
+                authRepository.deletePairTokensToDataStore()
                 _statusCode.value = response.httpStatusCode
                 delay(1000L)
                 _statusCode.value = 0

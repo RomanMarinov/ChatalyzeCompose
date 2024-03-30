@@ -1,9 +1,4 @@
-какие гланые тригеры перезапуска
-
-
-сейчас надо попробовать на сервере запаковать в объект с поем списка и также
-на клиенте
-
+допилить networkmodule в том числе добавить ссылки
 
 for update gradle compose compiler and kotlin versions
 https://developer.android.com/jetpack/androidx/releases/compose-kotlin

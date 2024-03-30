@@ -1,15 +1,27 @@
 package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.view.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,11 +32,13 @@ import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.forgot_pa
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.signup_screen.SignUpScreen
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.splash_screen.SplashScreen
 import com.dev_marinov.chatalyze.presentation.ui.theme.ChatalyzeTheme
+import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 
 //@Composable
@@ -101,10 +115,42 @@ class MainActivity : ComponentActivity() {
                 SystemUiControllerHelper.SetSystemBars(false)
                 SystemUiControllerHelper.SetStatusBarColor()
 
-                StartScreensNavigationGraph()
+                StartScreensNavigationGraph(activity = this@MainActivity)
+                LifecycleEventObserver()
+
+//                как убрать зацикленность на сплаш
+//                и добавил синг в два экрн
             }
         }
     }
+}
+
+@Composable
+fun LifecycleEventObserver() {
+    val localLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(
+        key1 = localLifecycleOwner,
+        effect = {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        Log.d("4444", " MainActivity Lifecycle.Event.ON_START")
+                    }
+                    Lifecycle.Event.ON_STOP -> {
+                        Log.d("4444", " MainActivity Lifecycle.Event.ON_STOP")
+                    }
+                    Lifecycle.Event.ON_DESTROY -> {
+                        Log.d("4444", " MainActivity Lifecycle.Event.ON_DESTROY")
+                    }
+                    else -> {}
+                }
+            }
+            localLifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                localLifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+    )
 }
 
 

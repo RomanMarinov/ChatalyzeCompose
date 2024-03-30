@@ -7,8 +7,10 @@ import android.content.IntentFilter
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -36,6 +39,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -50,15 +54,19 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -78,6 +86,7 @@ import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
 import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
 import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.SnackBarHostHelper
 import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
 import com.dev_marinov.chatalyze.presentation.util.TextFieldHintWriteMessage
 import kotlinx.coroutines.delay
@@ -94,6 +103,12 @@ fun ChatScreen(
     senderPhone: String,
 ) {
     Log.d("4444", " ChatScreen loaded")
+
+    Log.d("4444", " ChatScreen пришло при открытии recipientPhone=" + recipientPhone
+            + " senderPhone=" + senderPhone)
+
+    // вывод такой что при открытии из пуша на vivo
+    // то recipient не vivo, а sender - номер vivo
 
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
@@ -139,7 +154,7 @@ fun ChatScreen(
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
-
+    val getStateUnauthorized by viewModel.getStateUnauthorized.collectAsStateWithLifecycle(false)
     val onlineUserStateList by viewModel.onlineUserStateList.collectAsStateWithLifecycle(emptyList())
     var onlineOrOffline by remember { mutableStateOf("") }
 
@@ -156,7 +171,6 @@ fun ChatScreen(
     // избавляет от 4 перекомановок
     val state: ChatState = viewModel.state.value
 
-
     LaunchedEffect(key1 = true) {
         viewModel.toastEvent.collectLatest { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -171,6 +185,8 @@ fun ChatScreen(
     }
 
     LaunchedEffect(key1 = true) {
+        Log.d("4444", " ChatScreen save recipientPhoneState.value=" + recipientPhoneState.value
+        + " senderPhoneState.value=" + senderPhoneState.value)
         viewModel.saveToViewModel(
             recipient = recipientPhoneState.value,
             sender = senderPhoneState.value
@@ -792,5 +808,11 @@ fun ChatScreen(
                 )
             }
         )
+    }
+
+    if (getStateUnauthorized) {
+        SnackBarHostHelper.Show(message = stringResource(id = R.string.unauthorized_access))
+        Log.d("4444", " getStateUnauthorized показать тост")
+        // тут перейти на экран входа
     }
 }

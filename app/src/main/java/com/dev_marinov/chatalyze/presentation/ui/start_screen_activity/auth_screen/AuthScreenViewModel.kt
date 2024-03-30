@@ -2,15 +2,15 @@ package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.auth_scr
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
+import com.dev_marinov.chatalyze.domain.model.auth.PairOfTokens
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.domain.repository.PreferencesDataStoreRepository
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,14 +23,27 @@ class AuthScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository
 ) : ViewModel() {
 
-    val pairTokens = authRepository.getPairTokensFromDataStore.asLiveData()
-    val refreshToken = authRepository.getRefreshTokensFromDataStore
+//    val pairTokens = authRepository.getPairOfTokensFromDataStore.asLiveData()
+    val refreshToken: Flow<String> = authRepository.getRefreshTokensFromDataStore
+
+    //private val refreshTokenSingleLiveEvent = SingleLiveEvent<String>()
+
     private var _notice: MutableStateFlow<String> = MutableStateFlow("")
     val notice: StateFlow<String> = _notice
 
     init {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            authRepository.getRefreshTokensFromDataStore.collect { token ->
+//                refreshTokenSingleLiveEvent.postValue(token)
+//            }
+//        }
+
         saveEmail(email = "")
     }
+
+//    fun getRefreshToken() : SingleLiveEvent<String> {
+//        return refreshTokenSingleLiveEvent
+//    }
 
     fun signInAndSaveTokenSignIn(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -45,7 +58,7 @@ class AuthScreenViewModel @Inject constructor(
                 accessToken = jsonResponse.optString("accessToken")
                 refreshToken = jsonResponse.optString("refreshToken")
                 Log.d("4444", " registerUser заходит")
-                savePairTokens(PairTokens(accessToken = accessToken, refreshToken = refreshToken))
+                savePairOfTokens(PairOfTokens(accessToken = accessToken, refreshToken = refreshToken))
             } else {
                 _notice.value = response.toString()
                 delay(1000L)
@@ -54,15 +67,25 @@ class AuthScreenViewModel @Inject constructor(
         }
     }
 
-    private fun savePairTokens(pairTokens: PairTokens) {
+    private fun savePairOfTokens(pairOfTokens: PairOfTokens) {
         viewModelScope.launch(Dispatchers.IO) {
-            authRepository.savePairTokens(pairTokens = pairTokens)
+            authRepository.savePairTokens(pairOfTokens = pairOfTokens)
         }
     }
 
     private fun saveEmail(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             preferencesDataStoreRepository.saveEmail(key = Constants.KEY_EMAIL, email = email)
+        }
+    }
+
+    fun savePreferencesState() {
+        Log.d("4444", " AuthScreenViewModel saveStartStateForTokens")
+        viewModelScope.launch(Dispatchers.IO) {
+            preferencesDataStoreRepository.saveStateNotFoundRefreshToken(isNotFound = false)
+            preferencesDataStoreRepository.saveFailureUpdatePairToken(isFailure = false)
+            preferencesDataStoreRepository.saveStateUnauthorized(isUnauthorized = false)
+            preferencesDataStoreRepository.saveInternalServerError(isError = false)
         }
     }
 }

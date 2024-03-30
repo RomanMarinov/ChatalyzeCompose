@@ -44,7 +44,7 @@ class ChatSocketRepositoryImpl @Inject constructor(
     private var socket: WebSocketSession? = null
 
     override suspend fun initSession(sender: String): Resource<Unit> {
-        Log.d("4444", " ChatSocketRepository initSession ")
+        Log.d("4444", " ChatSocketRepository SOCKET initSession ")
         return try {
             socket = client.webSocketSession {
                 url("${ChatSocketRepository.Endpoints.SocketChat.url}?sender=$sender")
@@ -108,8 +108,8 @@ class ChatSocketRepositoryImpl @Inject constructor(
         }
     }
 
-
     override suspend fun closeSession() {
+        Log.d("4444", " SOCKET CLOSED FUCK")
         socket?.close()
     }
 
@@ -119,6 +119,7 @@ class ChatSocketRepositoryImpl @Inject constructor(
                 contentType(ContentType.Application.Json)
                 setBody(userPairChat)
             }
+            Log.d("4444", " getAllMessages response=" + response.status)
             val res = response.body<List<MessageDto>>().map {
                 it.mapToDomain()
             }

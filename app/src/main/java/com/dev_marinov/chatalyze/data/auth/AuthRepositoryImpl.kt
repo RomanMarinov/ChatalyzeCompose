@@ -7,7 +7,7 @@ import androidx.datastore.dataStore
 import com.dev_marinov.chatalyze.data.auth.dto.*
 import com.dev_marinov.chatalyze.data.util.PairTokensDTOSerializer
 import com.dev_marinov.chatalyze.domain.model.auth.MessageResponse
-import com.dev_marinov.chatalyze.domain.model.auth.PairTokens
+import com.dev_marinov.chatalyze.domain.model.auth.PairOfTokens
 import com.dev_marinov.chatalyze.domain.repository.AuthRepository
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.code_screen.model.UserCode
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.create_password_screen.model.ForgotPasswordPassword
@@ -20,16 +20,17 @@ import okhttp3.internal.http.HTTP_OK
 import javax.inject.Inject
 import javax.inject.Singleton
 
-val Context.dataStore by dataStore("data_store_pair_tokens", PairTokensDTOSerializer)
-
+val Context.dataStorePairToken by dataStore("data_store_pair_tokens", PairTokensDTOSerializer)
+//val Context.dataStoreRefre by dataStore("data_store_pair_tokens", PairTokensDTOSerializer)
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApiService: AuthApiService,
-    private val dataStore: DataStore<PairTokensDTO>,
+    private val dataStorePairToken: DataStore<PairTokensDTO>,
 ) : AuthRepository {
 
-    override val getPairTokensFromDataStore: Flow<PairTokens> = pairTokensMapping()
+    override val getPairOfTokensFromDataStore: Flow<PairOfTokens> = pairTokensMapping()
     override val getRefreshTokensFromDataStore: Flow<String> = getRefreshToken()
+    override val getAccessTokensFromDataStore: Flow<String> = getAccessToken()
 
     override suspend fun registerUser(email: String, password: String): MessageResponse {
         var statusCode = 0
@@ -82,16 +83,19 @@ class AuthRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun savePairTokens(pairTokens: PairTokens) {
-        dataStore.updateData {
+    override suspend fun savePairTokens(pairOfTokens: PairOfTokens) {
+        Log.d("4444", " savePairTokens сохранена новая пара токенов pairOfTokens=" + pairOfTokens)
+        dataStorePairToken.updateData {
             it.copy(
-                accessToken = pairTokens.accessToken,
-                refreshToken = pairTokens.refreshToken
+                accessToken = pairOfTokens.accessToken,
+                refreshToken = pairOfTokens.refreshToken
             )
         }
     }
 
     override suspend fun logout(token: String, senderPhone: String) : MessageResponse? {
+
+        Log.d("4444", " AuthRepositoryImpl logout token=" + token + " senderPhone=" + senderPhone)
         val response = authApiService.logoutUser(LogoutRequestDTO(refreshToken = token, senderPhone = senderPhone))
         return response.body()?.mapToDomain()
     }
@@ -101,8 +105,12 @@ class AuthRepositoryImpl @Inject constructor(
         return response.body()?.mapToDomain()
     }
 
+//    override suspend fun navigateToAuthScreen(navigate: Boolean) {
+//        edwe
+//    }
+
     override suspend fun deletePairTokensToDataStore() {
-        dataStore.updateData {
+        dataStorePairToken.updateData {
             it.copy(
                 accessToken = "",
                 refreshToken = ""
@@ -127,15 +135,21 @@ class AuthRepositoryImpl @Inject constructor(
         return response.body()?.mapToDomain()
     }
 
-    private fun pairTokensMapping() : Flow<PairTokens> {
-        return dataStore.data.map {
+    private fun pairTokensMapping() : Flow<PairOfTokens> {
+        return dataStorePairToken.data.map {
             it.mapToDomain()
         }
     }
 
     private fun getRefreshToken() : Flow<String> {
-        return dataStore.data.map {
+        return dataStorePairToken.data.map {
             it.refreshToken
+        }
+    }
+
+    private fun getAccessToken() : Flow<String> {
+        return dataStorePairToken.data.map {
+            it.accessToken
         }
     }
 }

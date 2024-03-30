@@ -13,20 +13,20 @@ import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.forgot_pa
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.signup_screen.SignUpScreen
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.splash_screen.SplashScreen
 import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
+@OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun StartScreensNavigationGraph() {
+fun StartScreensNavigationGraph(activity: MainActivity) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route) {
         composable(ScreenRoute.SplashScreen.route) {
-            SplashScreen(navController = navController)
+            SplashScreen(activity = activity, navController = navController)
         }
         composable(route = ScreenRoute.AuthScreen.route) {
-
-
-            AuthScreen(navController = navController)
+            AuthScreen(activity = activity, navController = navController)
         }
         composable(ScreenRoute.SignUpScreen.route) {
             SignUpScreen(navController = navController)

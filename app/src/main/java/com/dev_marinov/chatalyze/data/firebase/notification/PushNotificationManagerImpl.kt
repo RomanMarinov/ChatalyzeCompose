@@ -58,9 +58,6 @@ class PushNotificationManagerImpl @Inject constructor(
     val CHANNEL_ID = "0"
     val CHANNEL_NAME = "channel_name"
     val NOTIF_ID = 1
-    val FIRST_ACTION = "first_action"
-    lateinit var broadcastReceiver: BroadcastReceiverNotification
-    val REQUEST_CODE_NEW = 333
 
     override fun showNotificationMessage(
         senderPhone: String,
@@ -86,15 +83,9 @@ class PushNotificationManagerImpl @Inject constructor(
                     try {
                         unlockScreen()
 
-//                                val intent = Intent(context, MainScreensActivity::class.java)
-////                                startActivityForResult( MainScreensActivity, 0)
-////                                startActivityForResult()
-                        Log.d("4444", " showNotificationMessage contact=" + contact)
-
                         createNotificationChannel()
 
-                        val deleteIntent =
-                            Intent(context, BroadcastReceiverNotification::class.java)
+                        val deleteIntent = Intent(context, BroadcastReceiverNotification::class.java)
                         deleteIntent.action = "message_notification_swipe"
                         val pendingIntent = PendingIntent.getBroadcast(
                             context, 0, deleteIntent,
@@ -460,7 +451,7 @@ class PushNotificationManagerImpl @Inject constructor(
 
             val intent = Intent(context, MainScreensActivity::class.java)
 //            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            //intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             intent.action = "notification_action"
             intent.putExtra("name", name)
             intent.putExtra("sender", sender)
@@ -469,8 +460,6 @@ class PushNotificationManagerImpl @Inject constructor(
             PendingIntent.getActivity(context, 0, intent,
                     PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         } else {
-
-
             val componentName = ComponentName(context, MainScreensActivity::class.java)
             val activityInfo = context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
             activityInfo.documentLaunchMode = ActivityInfo.DOCUMENT_LAUNCH_NONE
@@ -498,7 +487,8 @@ class PushNotificationManagerImpl @Inject constructor(
             Log.d("4444", " зашло во вторую")
 
 
-            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$recipient}/{$sender}")
+//            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$recipient}/{$sender}")
+            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
 
             val deepLinkIntent = Intent(
                 Intent.ACTION_VIEW,
