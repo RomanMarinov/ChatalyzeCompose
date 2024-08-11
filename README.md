@@ -22,6 +22,10 @@
 ## Фреймворки, компоненты, библиотеки, архитектура и прочие технологии 
 Kotlin, Jectpack Compose
 
+
+https://github.com/user-attachments/assets/53aae93d-f338-4d15-89d0-87ff17194300
+
+
 - clean architecture, <br/>
 - mvvm, <br/>
 - dagger hilt, <br/>
