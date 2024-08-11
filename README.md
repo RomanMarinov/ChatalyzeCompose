@@ -23,7 +23,6 @@
 Kotlin, Jectpack Compose
 
 
-https://github.com/user-attachments/assets/53aae93d-f338-4d15-89d0-87ff17194300
 
 
 - clean architecture, <br/>
@@ -48,19 +47,22 @@ https://github.com/user-attachments/assets/53aae93d-f338-4d15-89d0-87ff17194300
 
 ## Демонстрация  
 
-если забыл пароль
-https://youtu.be/byoPuSWMZwk
+регистрация
+https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
+
 
 отправка сообщения
-https://youtube.com/shorts/gLVnovcaPK8?si=oqW3yOXMc5jBrxfH
+https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe
 
-//////////
 
-https://github.com/user-attachments/assets/c1323707-c974-4aca-ba6f-1e4110440199
-https://github.com/user-attachments/assets/50b5d7fa-df93-430d-891a-72a60c1b2f38
-https://github.com/user-attachments/assets/01eeb625-826a-4210-bc56-44f23456d959
-https://github.com/user-attachments/assets/6dd998bc-b6e5-4e3a-adda-25a1f8713826
 
+если забыл пароль
+
+
+
+
+видео звонок
+https://github.com/user-attachments/assets/dfef83b0-fdb3-4cb0-afa4-6578a065a35c
 
 
 
