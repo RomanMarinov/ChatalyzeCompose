@@ -46,20 +46,12 @@ Kotlin, Jectpack Compose
 
 ### регистрация
 
-
-
-<video width="300" controls>
-  <source src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" type="video/mp4">
-  Ваш браузер не поддерживает видео.
-</video>
-<video width="300" controls>
-  <source src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" type="video/mp4">
-  Ваш браузер не поддерживает видео.
-</video>
-<video width="300" controls>
-  <source src="ссылка_на_ваше_видео_3" type="video/mp4">
-  Ваш браузер не поддерживает видео.
-</video>
+<p align="center">
+<img src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%"/>
+<img src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%"/>
+<img src="https://github.com/user-attachments/assets/5b6cacae-9ba2-4f49-8aad-34a1ca0fc850" width="32%"/>
+ <img src="https://github.com/user-attachments/assets/dfef83b0-fdb3-4cb0-afa4-6578a065a35c" width="32%"/>
+</p>
 
 [Регистрация](https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6) 
 [Отправка сообщения](https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe) 
