@@ -23,7 +23,8 @@
 Kotlin, Jectpack Compose
 
 
-регистрация
+## регистрация
+
 https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
 
 
