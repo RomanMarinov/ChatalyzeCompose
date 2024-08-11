@@ -27,19 +27,6 @@ Kotlin, Jectpack Compose
 https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
 
 
-отправка сообщения
-https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe
-
-
-
-если забыл пароль
-
-
-
-
-видео звонок
-https://github.com/user-attachments/assets/dfef83b0-fdb3-4cb0-afa4-6578a065a35c
-
 
 
 - clean architecture, <br/>
