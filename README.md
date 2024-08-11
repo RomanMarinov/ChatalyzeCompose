@@ -22,14 +22,6 @@
 ## Фреймворки, компоненты, библиотеки, архитектура и прочие технологии 
 Kotlin, Jectpack Compose
 
-
-## регистрация
-
-https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
-
-
-
-
 - clean architecture, <br/>
 - mvvm, <br/>
 - dagger hilt, <br/>
@@ -53,18 +45,25 @@ https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
 ## Демонстрация  
 
 ### регистрация
+
+<div>
+  <a href="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6">Регистрация</a> &nbsp; | &nbsp; 
+  <a href="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe">Отправка сообщения</a> &nbsp; | &nbsp;
+  <a href="https://github.com/user-attachments/assets/5b6cacae-9ba2-4f49-8aad-34a1ca0fc850">Если забыл пароль</a> &nbsp; | &nbsp;
+  <a href="https://github.com/user-attachments/assets/dfef83b0-fdb3-4cb0-afa4-6578a065a35c">Видео звонок</a>
+</div>
+
+
+
+
 https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6
 
 
 отправка сообщения
 https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe
 
-
-
 если забыл пароль
-
-
-
+https://github.com/user-attachments/assets/5b6cacae-9ba2-4f49-8aad-34a1ca0fc850
 
 видео звонок
 https://github.com/user-attachments/assets/dfef83b0-fdb3-4cb0-afa4-6578a065a35c
