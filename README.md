@@ -44,6 +44,14 @@ Kotlin, Jectpack Compose
 
 ## Демонстрация  
 
+если забыл пароль
+https://youtu.be/byoPuSWMZwk
+
+отправка сообщения
+https://youtube.com/shorts/gLVnovcaPK8?si=oqW3yOXMc5jBrxfH
+
+//////////
+
 https://github.com/user-attachments/assets/c1323707-c974-4aca-ba6f-1e4110440199
 https://github.com/user-attachments/assets/50b5d7fa-df93-430d-891a-72a60c1b2f38
 https://github.com/user-attachments/assets/01eeb625-826a-4210-bc56-44f23456d959
