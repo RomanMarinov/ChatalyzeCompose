@@ -51,7 +51,6 @@ fun CodeScreen(
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
-    val emailFromPreferences by viewModel.getEmail.collectAsStateWithLifecycle("")
     val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
 
@@ -64,15 +63,9 @@ fun CodeScreen(
             ShowToastHelper.createToast(message = notice, context = context)
             navController.navigate(ScreenRoute.CreatePasswordScreen.route)
         }  else if (statusCode == 404) {
-            Log.d("4444", " notice=" + notice)
             ShowToastHelper.createToast(message = notice, context = context)
-            // navController.popBackStack(ScreenRoute.ForgotPasswordScreen.route, false)
-            // потом убрать
-          //  navController.navigate(ScreenRoute.CreatePasswordScreen.route)
         } else if (statusCode == 410) {
             ShowToastHelper.createToast(message = notice, context = context)
-            // navController.popBackStack(ScreenRoute.ForgotPasswordScreen.route, false)
-            // потом убрать
             navController.navigate(ScreenRoute.CreatePasswordScreen.route)
         }
     }
@@ -81,16 +74,13 @@ fun CodeScreen(
         modifier = Modifier
             .imePadding()
             .fillMaxSize()
-            //  .padding(top = 200.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
                     softwareKeyboardController?.hide()
                 }
-            ),
-        //   verticalArrangement = Arrangement.Center,
-        //  horizontalAlignment = Alignment.CenterHorizontally
+            )
     ) {
 
         val constraintsTop = ConstraintSet {
@@ -110,18 +100,12 @@ fun CodeScreen(
                 top.linkTo(img_back.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-                // bottom.linkTo(code.top)
-
-//                height = Dimension.wrapContent
             }
 
             constrain(header) {
-                //top.linkTo(email.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
                 bottom.linkTo(code.top)
-//                width = Dimension.value(40.dp)
-//                height = Dimension.wrapContent
             }
 
             constrain(code) {
@@ -135,7 +119,6 @@ fun CodeScreen(
                 top.linkTo(code.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-//                bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -174,7 +157,6 @@ fun CodeScreen(
 
                 AnimatedCounter(
                     count = count,
-                    //style = MaterialTheme.typography.h1
                 )
 
                 LaunchedEffect(Unit) {

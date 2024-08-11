@@ -3,8 +3,6 @@ package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
-import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -39,9 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,7 +82,6 @@ class MainScreensActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Log.d("4444", " MainScreensActivity loaded")
             WindowCompat.setDecorFitsSystemWindows(window, false)
             ChatalyzeTheme {
                 SetPermissionsAndNavigation(context = this)
@@ -111,45 +105,6 @@ class MainScreensActivity : ComponentActivity() {
             }
         }
     }
-
-//    @Deprecated("Deprecated in Java")
-//    override fun onBackPressed() {
-//        Log.d("4444", " MainScreensActivity нажал блять 2")
-//        super.onBackPressed()
-//
-//    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        when (intent?.action) {
-            "notification_action" -> {
-                Log.d("4444", " MainScreensActivity notification_action")
-
-                val name = intent.getStringExtra("name")
-                val sender = intent.getStringExtra("sender")
-                val recipient = intent.getStringExtra("recipient")
-               // Log.d("4444", " notification_action sender=" + sender + " recopient=" + recipient)
-                val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
-//                val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$recipient}/{$sender}")
-                //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
-
-                val taskDetailIntent = Intent(
-                    Intent.ACTION_VIEW,
-                    deepLink,
-//                    this,
-//                    MainScreensActivity::class.java
-                    //MainActivity::class.java
-                )
-
-                val pendingIntent: PendingIntent = TaskStackBuilder.create(applicationContext).run {
-                    addNextIntentWithParentStack(taskDetailIntent)
-                    // addParentStack(MainScreensActivity::class.java)
-                    getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-                }
-                pendingIntent.send()
-            }
-        }
-    }
 }
 
 @SuppressLint("RememberReturnType")
@@ -158,16 +113,11 @@ class MainScreensActivity : ComponentActivity() {
 @Composable
 fun SetPermissionsAndNavigation(
     viewModel: MainScreensViewModel = hiltViewModel(),
-    context: MainScreensActivity,
-
+    context: MainScreensActivity
     ) {
-    Log.d("4444", " MainScreensActivity SetPermissionsAndNavigation выполнился")
 
     ExecuteGrantedPermissions(viewModel = viewModel)
     val navController = rememberNavController()
-
-    NavigationListener(navController = navController)
-    //val backStackEntry = navController.currentBackStackEntryAsState()
 
     val isHideBottomBar by viewModel.isHideBottomBar.collectAsStateWithLifecycle(false)
     val isExitFromApp by viewModel.isExitFromApp.collectAsStateWithLifecycle(false)
@@ -183,8 +133,6 @@ fun SetPermissionsAndNavigation(
                 it.setExcludeFromRecents(true)
             }
             context.finishAffinity()
-
-           // context.finish()
         }
 
     }
@@ -197,8 +145,6 @@ fun SetPermissionsAndNavigation(
             BottomNavigationBarItem(
                 modifier = Modifier
                     .background(colorResource(id = R.color.main_violet_light))
-                    //  .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    //.animateContentSize(animationSpec = tween(durationMillis = 1500))
                     .height(height = if (isHideBottomBar == true) 0.dp else 70.dp),
 
                 items = listOf(
@@ -225,23 +171,14 @@ fun SetPermissionsAndNavigation(
                 onItemClick = {
                     navController.navigate(it.route)
                 }
-//                navController = authNavController,
-//                onItemClick = {
-//                    authNavController.navigate(it.route)
-//                }
             )
         },
     ) { paddingValues ->
-        // передаем падинг чтобы список BottomNavigationBar не накладывался по поверх списка
         Box(
             modifier = Modifier
                 .background(colorResource(id = R.color.main_violet_light))
                 .padding(paddingValues = paddingValues)
         ) {
-            // было
-            Log.d("4444", " MainScreensActivity SetPermissionsAndNavigation box ")
-            //вызывается 3 раза
-
             MainScreensNavigationGraph(navHostController = navController)
         }
     }
@@ -262,17 +199,11 @@ fun ExecuteGrantedPermissions(
     val canStartWebSocket by viewModel.canStartService.collectAsStateWithLifecycle(false)
 
     LaunchedEffect(isGrantedPermissions, canStartWebSocket, isTheLifecycleEventNow) {
-        Log.d(
-            "4444",
-            " MainScreensActivity ExecuteGrantedPermissions isGrantedPermissions=" + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow + " canStartService=" + canStartWebSocket
-        )
-
         if (isGrantedPermissions
             && isTheLifecycleEventNow == Constants.EVENT_ON_START
             && canStartWebSocket
         ) {
             val ownPhoneSender = getOwnPhoneSender(context = context)
-            Log.d("4444", " MainScreensActivity выполнился метод запроса телефона getOwnPhoneSender=" + ownPhoneSender)
             if (ownPhoneSender.isNotEmpty()) {
                 viewModel.saveOwnPhoneSender(ownPhoneSender = ownPhoneSender)
 
@@ -306,16 +237,11 @@ fun ExecuteGrantedPermissions(
                         permissionsState.launchMultiplePermissionRequest()
                         viewModel.canStartWebSocket(can = true)
                         viewModel.savePreferencesState()
-                        //tryCallService(scope = scope, viewModel = viewModel)
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
                         Log.d("4444", " MainScreensActivity Lifecycle.Event.ON_STOP")
                         viewModel.saveLifecycleEvent(eventType = Constants.EVENT_ON_STOP)
-                        //viewModel.closeWebSocketConnection()
-                        // изначально я закрываю сокет для сворачивания прилы
-                        // но проблема в том что при нажатии на пуш происходит пересоздание
-                        // и вызывается стоп и ну и закрытие сокета
                     }
 
                     Lifecycle.Event.ON_DESTROY -> { // когда удалил из стека
@@ -474,10 +400,6 @@ fun ExecuteGrantedPermissions(
             }
         }
     }
-
-//    if (getStateNetworkRequest) {
-//        SnackBarHostHelper.Show(message = stringResource(id = R.string.no_internet_connection))
-//    }
 }
 
 fun savePermissionReadPhoneNumbers(viewModel: MainScreensViewModel, isGranted: Boolean) {
@@ -587,7 +509,6 @@ fun getOwnPhoneSender(context: Context): String {
         val telephonyManager =
             context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         val ownPhoneSender = telephonyManager?.line1Number.toString()
-        Log.d("4444", " MainScreensActivity getOwnPhoneSender ownPhoneSender=" + ownPhoneSender)
         return CorrectNumberFormatHelper.getCorrectNumber(number = ownPhoneSender)
     } else {
         ""
@@ -605,92 +526,4 @@ fun openAppSettings(context: Context) {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         .setData(Uri.fromParts("package", context.packageName, null))
     context.startActivity(intent)
-}
-
-@Composable
-fun NavigationListener(navController: NavHostController) {
-//
-//    var exit by remember { mutableStateOf(false) }
-//    val context = LocalContext.current
-//
-//    LaunchedEffect(key1 = exit) {
-//        if (exit) {
-//            delay(2000)
-//            exit = false
-//        }
-//    }
-//
-//    BackHandler(enabled = true) {
-//        if (exit) {
-//            context.startActivity(Intent(Intent.ACTION_MAIN).apply {
-//                addCategory(Intent.CATEGORY_HOME)
-//                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//            })
-//        } else {
-//            exit = true
-//            Toast.makeText(context, "Press again to exit", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-
-
-
-//
-//    var showDialog by remember { mutableStateOf(false) }
-//
-//    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-//    BackHandler(enabled = currentRoute != null) {
-//        if (currentRoute == ScreenRoute.ChatsScreen.route) {
-//          showDialog = true
-//
-//        }
-//    }
-//
-//
-//
-////    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-////    Log.d("4444" , " MainScreensActivity 1 currentRoute=" + currentRoute)
-////    BackHandler(enabled = currentRoute != null) {
-////        Log.d("4444" , " MainScreensActivity 2 currentRoute=" + currentRoute)
-////        if (currentRoute == ScreenRoute.ChatsScreen.route) {
-////            showDialog = true
-////        }
-////
-////        navController.addOnDestinationChangedListener { controller, destination, arguments ->
-////            Log.d("4444", " MainScreensActivity listener controller.currentDestination.route=" + controller.currentDestination?.route)
-////        }
-////    }
-//
-//    BackHandler {
-//        navController.addOnDestinationChangedListener { controller, destination, arguments ->
-//            Log.d("4444", " MainScreensActivity listener controller.currentDestination.route=" + controller.currentDestination?.route)
-//        }
-//    }
-//
-//
-//
-//    if (showDialog) {
-//        DialogExit(
-//            onDismiss = { showDialog = false },
-//            onConfirm = {
-//                showDialog = false
-//                // ТУТ ГРОХНУТЬ ПРИЛУ
-//            }
-//        )
-//    }
-
-
-
-//    navController.addOnDestinationChangedListener { controller, destination, arguments ->
-//        Log.d("4444", " MainScreensActivity listener controller.currentDestination=" + controller.currentDestination)
-//        Log.d("4444", " MainScreensActivity listener controller.currentDestination.route=" + controller.currentDestination?.route)
-//        Log.d("4444", " MainScreensActivity listener controller.currentDestination.parent=" + controller.currentDestination?.parent)
-//
-//        Log.d("4444", " MainScreensActivity listener destination.route=" + destination.route)
-//        Log.d("4444", " MainScreensActivity listener destination.parent=" + destination.parent)
-//        Log.d("4444", " MainScreensActivity listener destination.id=" + destination.id)
-//
-//
-//        destination.
-//
-//    }
 }

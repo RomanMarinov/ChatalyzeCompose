@@ -69,7 +69,6 @@ fun StreamScreen(
     typeEvent: String?,
     viewModel: StreamScreenViewModel = hiltViewModel(),
 ) {
-    Log.d("4444", " StreamScreen loaded")
 
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
 
@@ -79,17 +78,13 @@ fun StreamScreen(
     val recipientNameState = remember { mutableStateOf(recipientName) }
     val recipientPhoneState = remember { mutableStateOf(recipientPhone) }
     val senderPhoneState = remember { mutableStateOf(senderPhone) }
-    val typeEventState = remember { mutableStateOf(typeEvent) }
 
     val userToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidjhybXQzZmFlcmNrIn0.48dmUEoA5zMV_dRwTh7M_sz5qCfOx78aMc1oEN0Hs3g"
 
-    //val callTimeDuration by viewModel.callTimeDuration.collectAsStateWithLifecycle()
-
     val user = User(id = "RomanMarinov", name = "Tutorial")
 
     StreamVideo.removeClient()
-    // val client = ClientStreamVideo.getClient(context = context, user = user, userToken = userToken)
 
     val client = StreamVideoBuilder(
         context = context,
@@ -99,7 +94,6 @@ fun StreamScreen(
         token = userToken
     ).build()
 
-    Log.d("4444", " senderPhone=" + senderPhoneState.value)
     val call = client.call("default", senderPhoneState.value ?: "") // это все раскоментить потом
 
     scope.launch {
@@ -109,7 +103,7 @@ fun StreamScreen(
         }
     }
 
-    // ПРОВЕРИТЬ СКОЛЬКО РАЗ ВЫЗЫВАЕТСЯ ГОТОВ ПОСТРИМИТЬСЯ
+//    // ПРОВЕРИТЬ СКОЛЬКО РАЗ ВЫЗЫВАЕТСЯ ГОТОВ ПОСТРИМИТЬСЯ
 //    LaunchedEffect(senderPhone, recipientPhone) {
 //        IfLetHelper.execute(senderPhone, recipientPhone) { phoneList ->
 //            viewModel.sendStateReadyToStream(
@@ -134,22 +128,10 @@ fun StreamScreen(
         val connection by call.state.connection.collectAsState()
         val connectionState = remember { mutableStateOf(connection) }
 
-        val participants by call.state.participants.collectAsState() // юзеры
         var parentSize: IntSize by remember { mutableStateOf(IntSize(0, 0)) }
-
-        Log.d("4444", " me=" + me)
-        Log.d("4444", " remoteParticipant=" + remoteParticipant)
-        Log.d("4444", " connection=" + connection)
-        Log.d("4444", " connectionState.value=" + connectionState.value)
-        Log.d("4444", " participants=" + participants)
-        Log.d("4444", " parentSize=" + parentSize)
-
 
         LaunchedEffect(connection) {
             if (connection == RealtimeConnection.Connected) {
-                Log.d("4444", " connection Connected=" + connection)
-                // тут надо записывась в бд иторию звонка
-                // просто от кого и кому
                 viewModel.saveHistoryCalls(
                     recipientPhone = recipientPhoneState.value ?: "",
                     senderPhone = senderPhoneState.value ?: "",
@@ -158,11 +140,8 @@ fun StreamScreen(
             }
         }
 
-        // это этот юзер принимает и не он сбрасывает то этот переход назад не работает на этом юзере
         LaunchedEffect(connection) {
             if (connection == RealtimeConnection.Disconnected) {
-                Log.d("4444", " Disconnected check")
-                // условие для того кто является принимающим
                 if (viewModel.ownPhoneSender != senderPhoneState.value) {
                     val uri = "scheme_chatalyze://calls_screen".toUri()
                     val deepLink = Intent(Intent.ACTION_VIEW, uri)
@@ -183,8 +162,6 @@ fun StreamScreen(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-                // .background(colorResource(id = R.color.main_violet_light))
-                //.background(VideoTheme.colors.appBackground)
                 .onSizeChanged { parentSize = it }
         ) {
             if (remoteParticipant != null) {
@@ -198,30 +175,13 @@ fun StreamScreen(
                     )
                 }
             } else {
-//                PreJoin
-//                InProgress
-//                Joined
-//                RealtimeConnection.Connected
-
-
-
                 LaunchedEffect(connection) {
-
-                    Log.d("4444", " 1 connectionState.value=" + connectionState.value)
-
                     if(connectionState.value == RealtimeConnection.Disconnected) {
                         Log.d("4444", " 2 connectionState.value=" + connectionState.value)
                     }
                 }
 
-
                 if (connection != RealtimeConnection.Connected) {
-
-
-
-                    // убрать джоины или прогресс бар или анимацию или ничего
-
-                  //  еще если виво звонил а мак принял и если виво отключил то мак не уходит с экрана звонка
                     if (recipientNameState.value != null) {
                         Text(
                             text = "${connectionState.value}\n${recipientNameState.value}...",
@@ -238,35 +198,7 @@ fun StreamScreen(
                 } else {
 
                 }
-
-//                if (connection != RealtimeConnection.Connected) {
-//                    if (recipientName != null) {
-//                        Text(
-//                            text = "$connection\n$recipientName...",
-//                            fontSize = 30.sp,
-//                            color = VideoTheme.colors.textHighEmphasis
-//                        )
-//                    } else {
-//                        Text(
-//                            text = "$connection\n$recipientPhone...",
-//                            fontSize = 30.sp,
-//                            color = VideoTheme.colors.textHighEmphasis
-//                        )
-//                    }
-//                } else {
-//
-//                }
             }
-
-
-//                        Text(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            text = callTimeDuration,
-//                            fontSize = 30.sp,
-//                            color = Color.Black,
-//                            textAlign = TextAlign.Center,
-//                        )
-
 
             me?.let { localVideo ->
                 FloatingParticipantVideo(
@@ -322,35 +254,12 @@ fun StreamScreen(
                             DeclineCallAction(
                                 modifier = Modifier.size(52.dp),
                                 onCallAction = {
-//не работает закрытие экрана
-                                    //
                                     scope.launch {
-                                        Log.d("4444", " StreamScreen сброс")
-                                        // StreamVideo.removeClient()
-                                        //  navController.popBackStack(ScreenRoute.CallsScreen.route, false)
-//                                        isDeclineCallAction.value = true
-                                        // StreamVideo.removeClient() // перед созданием клиента удаляем
                                         call.leave()
                                         call.end()
                                         call.screenShare.mediaManager.call.end()
                                         navController.popBackStack(ScreenRoute.CallsScreen.route, false)
-                                        //navController.popBackStack(ScreenRoute.CallsScreen.route, false)
-//                                    viewModel.saveCallTimeDuration(
-//                                        CombineCall(
-//                                            name = recipientName,
-//                                            sender = senderPhone,
-//                                            recipient = recipientPhone,
-//                                            conversationTime = callTimeDuration,
-//                                            typeCall = typeEvent
-//                                        )
-//                                    )
-                                        // viewModel.cancelCallingLoop()
-                                        // delay(1500L)
-                                        // navController.popBackStack(ScreenRoute.CallsScreen.route, false)
                                     }
-
-
-//
                                 }
                             )
                         }

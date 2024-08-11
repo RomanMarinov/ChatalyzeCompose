@@ -44,17 +44,9 @@
         <activity
             android:name=".presentation.ui.deep_link_activity.DeepLinkActivity"
             android:exported="false"
-            android:label="@string/title_activity_deep_link"
-            android:theme="@style/Theme.Chatalyze" />
-        <activity
-            android:name=".presentation.ui.main_screens_activity.MainScreensActivity"
             android:launchMode="singleTop"
-            android:allowTaskReparenting="true"
-            android:exported="false"
-            android:label="@string/title_activity_main_screens"
-            android:screenOrientation="portrait"
+            android:label="@string/title_activity_deep_link"
             android:theme="@style/Theme.Chatalyze"
-            android:windowSoftInputMode="adjustResize"
             tools:ignore="AppLinkUrlError">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -68,41 +60,25 @@
                 <data android:scheme="app" />
                 <data android:host="calls_screen" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
+        <activity
+            android:name=".presentation.ui.main_screens_activity.MainScreensActivity"
+            android:launchMode="singleTask"
+            android:exported="false"
+            android:label="@string/title_activity_main_screens"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Chatalyze"
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="AppLinkUrlError">
 
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
-        </activity> <!-- <activity -->
-        <!-- android:name=".presentation.ui.main_screens_activity.ui.MainScreensActivity" -->
-        <!-- android:exported="true" -->
-        <!-- android:label="@string/title_activity_main_screens" -->
-        <!-- android:launchMode="singleTop" -->
-        <!-- android:screenOrientation="portrait" -->
-        <!-- android:theme="@style/Theme.Chatalyze" -->
-        <!-- android:windowSoftInputMode="adjustResize"> -->
-        <!-- &lt;!&ndash; работает &ndash;&gt; -->
-        <!-- &lt;!&ndash; <intent-filter> &ndash;&gt; -->
-        <!-- &lt;!&ndash; <action android:name="android.intent.action.VIEW" /> &ndash;&gt; -->
-        <!-- &lt;!&ndash; <category android:name="android.intent.category.DEFAULT" /> &ndash;&gt; -->
-        <!-- &lt;!&ndash; <category android:name="android.intent.category.BROWSABLE" /> &ndash;&gt; -->
-        <!-- &lt;!&ndash; <data android:scheme="scheme_chatalyze" /> &ndash;&gt; -->
-        <!-- &lt;!&ndash; <data android:host="call_screen" /> &ndash;&gt; -->
-        <!-- &lt;!&ndash; </intent-filter> &ndash;&gt; -->
-        <!-- <intent-filter> -->
-        <!-- <action android:name="android.intent.action.VIEW" /> -->
-        <!-- <category android:name="android.intent.category.DEFAULT" /> -->
-        <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
-        <!-- <data android:scheme="scheme_chatalyze" /> -->
-        <!-- <data android:host="call_screen" /> -->
-        <!-- <data android:scheme="app" /> -->
-        <!-- <data android:host="calls_screen" /> -->
-        <!-- <data android:host="chat_screen" /> -->
-        <!-- <data android:host="chat_screen2" /> -->
-        <!-- </intent-filter> -->
-        <!-- <meta-data -->
-        <!-- android:name="android.app.lib_name" -->
-        <!-- android:value="" /> -->
-        <!-- </activity> -->
+        </activity>
         <activity
             android:name=".presentation.ui.start_screen_activity.MainActivity"
             android:exported="true"
@@ -115,50 +91,10 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.VIEW" /> -->
-
-
-            <!-- <category android:name="android.intent.category.DEFAULT" /> -->
-            <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
-
-
-            <!-- <data android:scheme="scheme_chatalyze" /> -->
-            <!-- <data android:host="profile_screen" /> -->
-            <!-- </intent-filter> -->
-
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.VIEW" /> -->
-
-
-            <!-- <category android:name="android.intent.category.DEFAULT" /> -->
-            <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
-
-
-            <!-- &lt;!&ndash;                <data android:scheme="https" android:host="www.schemechatalyze.com"/>&ndash;&gt; -->
-            <!-- <data -->
-            <!-- android:host="profile_screen" -->
-            <!-- android:scheme="https" /> -->
-            <!-- &lt;!&ndash;                <data android:pathPattern="/profile_screen" />&ndash;&gt; -->
-            <!-- </intent-filter> -->
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.VIEW" /> -->
-
-
-            <!-- <category android:name="android.intent.category.DEFAULT" /> -->
-            <!-- <category android:name="android.intent.category.BROWSABLE" /> -->
-
-
-            <!-- &lt;!&ndash;                <data android:scheme="https" android:host="www.schemechatalyze.com"/>&ndash;&gt; -->
-            <!-- <data -->
-            <!-- android:host="auth_screen" -->
-            <!-- android:scheme="https" /> -->
-            <!-- &lt;!&ndash;                <data android:pathPattern="/profile_screen" />&ndash;&gt; -->
-            <!-- </intent-filter> -->
-        </activity> <!-- export ANDROID_HOME=/Users/romanmarinov/Library/Android/sdk -->
+        </activity>
         <service
             android:name=".data.firebase.notification.FirebaseService"
             android:enabled="true"

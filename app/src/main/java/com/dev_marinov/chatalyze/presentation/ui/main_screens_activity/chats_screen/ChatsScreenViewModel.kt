@@ -50,9 +50,6 @@ class ChatsScreenViewModel @Inject constructor(
     val filteredContacts = roomRepository.filteredContacts
     val isSessionState = preferencesDataStoreRepository.isSessionState
 
-
-//    val refreshToken = authRepository.getRefreshTokensFromDataStore
-
     val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
     val isTheLifecycleEventNow = preferencesDataStoreRepository.isTheLifecycleEventNow
     val getOwnPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
@@ -79,20 +76,12 @@ class ChatsScreenViewModel @Inject constructor(
 
     init {
         saveLocalOwnPhoneSender()
-
-//        viewModelScope.launch(Dispatchers.IO) {
-//            onlineUserStateList.collect {
-//                Log.d("4444", " ChatsScreenViewModel onlineUserStateList=" + it)
-//            }
-//        }
     }
 
     fun createCombineFlow() {
-        Log.d("4444", " createCombineFlow ChatsScreenViewModel")
         val combineChatListFlow: Flow<List<CombineChat>> =
             combine(_chatList, onlineUserStateList, _contacts) { chats, stateList, cont ->
                 chats.map { chat ->
-
                     val onlineUserStateSender = getOnlineUserStateSender(
                         stateList = stateList,
                         chat = chat
@@ -122,10 +111,6 @@ class ChatsScreenViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             combineChatListFlow.collect {
                 _combineChatList.value = it
-//                Log.d(
-//                    "4444",
-//                    " ChatsScreenViewModel createCombineFlow _combineChatList=" + _combineChatList.value
-//                )
             }
         }
     }
@@ -146,20 +131,13 @@ class ChatsScreenViewModel @Inject constructor(
         return stateList.firstOrNull { it.userPhone == chat.recipient }?.onlineOrOffline
     }
 
-    // поток нужен для сопоставления имен
     fun createContactsFlow(contacts: List<Contact>) {
-//        Log.d(
-//            "4444",
-//            " ChatsScreenViewModel сопоставление имен createContactsFlow contacts=" + contacts
-//        )
         _contacts.value = contacts
         saveContactsToDb(contacts = contacts)
     }
 
     private fun saveContactsToDb(contacts: List<Contact>) {
-        // удалить из списка номера кроме
         val filteredContacts: MutableList<Contact> = mutableListOf()
-
         viewModelScope.launch(Dispatchers.Default) {
             contacts.forEach {
                 if (it.phoneNumber.length == 10 && (it.phoneNumber.startsWith("9") || it.phoneNumber.startsWith("5"))) {
@@ -172,7 +150,6 @@ class ChatsScreenViewModel @Inject constructor(
         }
     }
 
-    // поток нужен для получения списка последних сообщений
     fun createChatListFlow() {
         viewModelScope.launch(Dispatchers.IO) {
             val refreshTokenJob: Deferred<String> = async {
@@ -180,8 +157,6 @@ class ChatsScreenViewModel @Inject constructor(
             }
             val response = chatsRepository.getChats(sender = ownPhoneSender, refreshToken = refreshTokenJob.await())
             _chatList.value = response
-            // getOnlineUserStateList()
-            Log.d("4444", " ChatsScreenViewModel список послед сообщ _chatList=" + _chatList.value)
         }
     }
 
@@ -223,7 +198,6 @@ class ChatsScreenViewModel @Inject constructor(
                 companionPhone = recipientPhone
             )
             val response = chatRepository.saveCompanionOnTheServer(chatCompanion = chatCompanion)
-            Log.d("4444", " ChatsScreenViewModel saveCompanionOnTheServer response=" + response?.message)
         }
     }
 

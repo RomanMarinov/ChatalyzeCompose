@@ -14,18 +14,8 @@ import javax.inject.Singleton
 class ChatRepositoryImpl @Inject constructor(
     private val chatApiService: ChatApiService,
 ) : ChatRepository {
-    override suspend fun getChatMessage(): List<Contact> {
-        return withContext(Dispatchers.IO) {
-            val jobChat: Deferred<List<Contact>> = async {
-                getMessages()
-            }
-            jobChat.await()
-        }
-    }
 
     override suspend fun saveCompanionOnTheServer(chatCompanion: ChatCompanion): MessageResponse? {
-
-       Log.d("4444", " ChatRepositoryImpl saveCompanionOnTheServer chatCompanion=" + chatCompanion)
         val body = ChatCompanionDTO(
             senderPhone = chatCompanion.senderPhone,
             companionPhone = chatCompanion.companionPhone
@@ -47,15 +37,5 @@ class ChatRepositoryImpl @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun getMessages(): List<Contact> {
-        val listItems = mutableListOf<Contact>()
-        for (i in 0..150) {
-
-            listItems.add(i, Contact("roman $i", "89303493563", photo = ""))
-
-        }
-        return listItems
     }
 }

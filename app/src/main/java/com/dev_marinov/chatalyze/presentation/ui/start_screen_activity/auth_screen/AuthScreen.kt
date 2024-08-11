@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalPermissionsApi::class)
-
 package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.auth_screen
 
 import android.app.Activity
@@ -54,15 +52,12 @@ fun AuthScreen(
     navController: NavHostController,
     viewModel: AuthScreenViewModel = hiltViewModel()
 ) {
-    Log.d("4444", " AuthScreen loaded")
-
     SystemUiControllerHelper.SetSystemBars(false)
     SystemUiControllerHelper.SetStatusBarColor()
     GradientBackgroundHelper.SetGradientBackground()
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
-   // val refreshToken by viewModel.getRefreshToken().observeAsState("")
     val notice by viewModel.notice.collectAsStateWithLifecycle()
 
     var textEmailState by remember { mutableStateOf("") }
@@ -72,16 +67,9 @@ fun AuthScreen(
     val messagePassword = stringResource(id = R.string.password_warning)
     val messageEmailPassword = stringResource(id = R.string.email_password_warning)
     val context = LocalContext.current
-    var isFocusTextFiled by remember { mutableStateOf(false) }
-
     var isClicked by remember { mutableStateOf(false) }
-    Log.d("4444", " refreshToken=" + refreshToken)
-
-//    ExecuteGrantedPermissions()
-
 
     LaunchedEffect(refreshToken) {
-        Log.d("4444", " LaunchedEffect refreshToken=" + refreshToken)
         if (refreshToken.isNotEmpty()) {
             viewModel.savePreferencesState()
 
@@ -257,15 +245,6 @@ fun AuthScreen(
                                 email = textEmailState,
                                 password = textPasswordState
                             )
-
-//                                viewModel.registerUser(
-//                                    email = textEmailState,
-//                                    password = textPasswordState
-//                                )
-//                                viewModel.registerUser(
-//                                    email = "m@yandex.ru",
-//                                    password = "12345"
-//                                )
                         } else {
                             ShowToastHelper.createToast(
                                 message = emailOrPasswordInvalid,

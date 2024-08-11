@@ -7,10 +7,8 @@ import android.content.IntentFilter
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -39,11 +36,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,19 +49,16 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -78,7 +70,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.domain.model.chat.Message
 import com.dev_marinov.chatalyze.presentation.util.Constants
 import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
 import com.dev_marinov.chatalyze.presentation.util.CustomDateTimeHelper
@@ -102,14 +93,6 @@ fun ChatScreen(
     recipientPhone: String,
     senderPhone: String,
 ) {
-    Log.d("4444", " ChatScreen loaded")
-
-    Log.d("4444", " ChatScreen пришло при открытии recipientPhone=" + recipientPhone
-            + " senderPhone=" + senderPhone)
-
-    // вывод такой что при открытии из пуша на vivo
-    // то recipient не vivo, а sender - номер vivo
-
     SystemUiControllerHelper.SetStatusBarColorNoGradient()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
     GradientBackgroundHelper.SetMonochromeBackground()
@@ -153,7 +136,6 @@ fun ChatScreen(
     val context = LocalContext.current
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
-    val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
     val getStateUnauthorized by viewModel.getStateUnauthorized.collectAsStateWithLifecycle(false)
     val onlineUserStateList by viewModel.onlineUserStateList.collectAsStateWithLifecycle(emptyList())
     var onlineOrOffline by remember { mutableStateOf("") }
@@ -163,12 +145,8 @@ fun ChatScreen(
     val isSaveScroll = remember { mutableStateOf(false) }
     val isScrollDown = remember { mutableStateOf(false) }
 
-    // не знаю пока зачем
-    val chatMessage by viewModel.chatMessage.collectAsStateWithLifecycle()
-
     val sendClickState = remember { mutableStateOf(false) }
 
-    // избавляет от 4 перекомановок
     val state: ChatState = viewModel.state.value
 
     LaunchedEffect(key1 = true) {
@@ -185,23 +163,18 @@ fun ChatScreen(
     }
 
     LaunchedEffect(key1 = true) {
-        Log.d("4444", " ChatScreen save recipientPhoneState.value=" + recipientPhoneState.value
-        + " senderPhoneState.value=" + senderPhoneState.value)
         viewModel.saveToViewModel(
             recipient = recipientPhoneState.value,
             sender = senderPhoneState.value
         )
     }
 
-    // два LaunchedEffect закоментированными избавляют от 4 перекомпановки
     LaunchedEffect(recipientNameState.value) {
-        Log.d("4444", " ChatScreen getChatPosition recipientNameState.value=" + recipientNameState.value)
         viewModel.getChatPosition(keyUserName = recipientNameState.value)
     }
 
     LaunchedEffect(isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
-            Log.d("4444", " ChatScreen isSessionState == Constants.SESSION_SUCCESS")
             viewModel.getAllMessageChat()
 
             viewModel.saveCompanionOnTheServer(
@@ -219,7 +192,6 @@ fun ChatScreen(
     }
 
     LaunchedEffect(onlineUserStateList) {
-        Log.d("4444", " ChatScreen onlineUserStateList=" + onlineUserStateList)
         onlineUserStateList.forEach {
             if (it.userPhone == recipientPhoneState.value) {
                 onlineOrOffline = it.onlineOrOffline
@@ -228,21 +200,6 @@ fun ChatScreen(
         }
     }
 
-
-    // оставил на всякий
-//    snapshotFlow { // чтобы не часто срабатывало
-//        lazyListState.firstVisibleItemIndex
-//    }
-//        .debounce(500L)
-//        .collectLatest { firstIndex ->
-//            Log.d("4444", " lastVisibleIndex =" + firstIndex)
-//            viewModel.saveScrollChatPosition(
-//                keyUserName = recipientNameState.value,
-//                position = firstIndex
-//            )
-//        }
-
-    // не влияет
     val lazyListState: LazyListState = rememberLazyListState()
     val layoutInfo = remember {
         derivedStateOf {
@@ -255,15 +212,8 @@ fun ChatScreen(
         }
     }
 
-   // layoutInfo.value // значение скрола текущего
-    //isSaveScroll.value // флаг становиться true когда произойдет быстрый скролл к цели
-
-    // на 2 меньше перекомпановки
     LaunchedEffect(layoutInfo.value, isSaveScroll.value) {
-        Log.d("4444", " ChatScreen recipientNameState.value=" + recipientNameState.value
-        + " isSaveScroll.value=" + isSaveScroll.value + " layoutInfo.value=" + layoutInfo.value)
         if (recipientNameState.value.isNotEmpty() && isSaveScroll.value) {
-            Log.d("4444", " ChatScreen saveScrollPosition")
             viewModel.saveScrollChatPosition(
                 keyUserName = recipientNameState.value,
                 position = layoutInfo.value
@@ -276,7 +226,6 @@ fun ChatScreen(
         }
     }
 
-    // не влияиет
     LaunchedEffect(chatPosition, state.messages.size) {
         if (state.messages.size == 1) {
             viewModel.saveScrollChatPosition(
@@ -285,9 +234,7 @@ fun ChatScreen(
             )
         }
 
-        Log.d("4444", " ChatScreen chatPosition=" + chatPosition)
         if (chatPosition != 0 && isOpenScrollState.value) {
-            Log.d("4444", " 333 ChatScreen LaunchedEffect(chatPosition)= " + chatPosition)
             lazyListState.scrollToItem(chatPosition)
             isOpenScrollState.value = false
             isSaveScroll.value = true
@@ -306,14 +253,12 @@ fun ChatScreen(
         }
     }
 
-    // не влияет (даже увеличивает кол-во перекомпановки)
     val isReceiverRegistered = remember { mutableStateOf(false) }
     val socketBroadcastReceiver = remember {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 when (intent.action) {
                     "receiver_single_message" -> {
-                        Log.d("4444", " socketBroadcastReceiver SESSION_ACTION_SUCCESS")
 
                         val sender = intent.getStringExtra("sender")
                         val recipient = intent.getStringExtra("recipient")
@@ -415,12 +360,10 @@ fun ChatScreen(
                 val nameAndStatusNetworkUser = createRefFor("nameAndStatusNetworkUser")
                 val iconVideoCall = createRefFor("iconVideoCall")
                 val iconCall = createRefFor("iconCall")
-                val contentChat = createRefFor("contentChat")
 
                 constrain(back) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
-                    // end.linkTo(iconVideoCall.start)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.value(40.dp)
                     height = Dimension.wrapContent
@@ -428,7 +371,6 @@ fun ChatScreen(
 
                 constrain(iconUser) {
                     top.linkTo(parent.top)
-                    // start.linkTo(parent.start)
                     end.linkTo(nameAndStatusNetworkUser.start)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.wrapContent
@@ -446,7 +388,6 @@ fun ChatScreen(
 
                 constrain(iconVideoCall) {
                     top.linkTo(parent.top)
-                    //start.linkTo(back.end)
                     end.linkTo(iconCall.start)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.wrapContent
@@ -455,7 +396,6 @@ fun ChatScreen(
 
                 constrain(iconCall) {
                     top.linkTo(parent.top)
-                    // start.linkTo(iconVideoCall.end, margin = 8.dp)
                     end.linkTo(parent.end, margin = 4.dp)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.wrapContent
@@ -551,8 +491,6 @@ fun ChatScreen(
                     }
 
                     constrain(floatingButton) {
-                      //  top.linkTo(chatContent.top)
-                       // start.linkTo(chatContent.start)
                         end.linkTo(chatContent.end)
                         bottom.linkTo(chatContent.bottom)
                         width = Dimension.wrapContent
@@ -560,7 +498,6 @@ fun ChatScreen(
                     }
                 }
 
-                // если закоментировать это будет на 3 меньше перекомпановки ChatScreen loaded
                 ConstraintLayout(
                     constraintSet = contentChat,
                     modifier = Modifier
@@ -579,7 +516,6 @@ fun ChatScreen(
                                 state = lazyListState
                             ) {
 
-                                Log.d("4444", " ChatScreen state.messages=" + state.messages.size)
                                 items(state.messages) { item ->
 
                                     val isOwnMessage = item.sender == senderPhoneState.value
@@ -647,7 +583,6 @@ fun ChatScreen(
 
                                             Text(
                                                 text = titleName,
-                                                //fontWeight = FontWeight.Bold,
                                                 color = if (isOwnMessage) Color.White else colorVioletChat
                                             )
                                             Text(
@@ -663,12 +598,10 @@ fun ChatScreen(
                                                 modifier = Modifier.align(Alignment.End)
                                             )
                                         }
-                                        // Spacer(modifier = Modifier.height(8.dp))
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
                             }
-                            // Spacer(modifier = Modifier.height(8.dp))
 
                             if(isShowScrollDownButton) {
                                 Row(
@@ -770,7 +703,6 @@ fun ChatScreen(
     }
 
     LaunchedEffect(state.messages) {
-        // у отправителя виво не стирается сообщение и не отобржаается у себя
         if (sendClickState.value) { // это сработает если я отправитель
             viewModel.clearMessageTextField()
             lazyListState.animateScrollToItem(state.messages.size)
@@ -812,7 +744,5 @@ fun ChatScreen(
 
     if (getStateUnauthorized) {
         SnackBarHostHelper.Show(message = stringResource(id = R.string.unauthorized_access))
-        Log.d("4444", " getStateUnauthorized показать тост")
-        // тут перейти на экран входа
     }
 }

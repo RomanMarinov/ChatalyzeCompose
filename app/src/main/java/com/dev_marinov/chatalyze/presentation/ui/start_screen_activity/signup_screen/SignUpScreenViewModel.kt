@@ -40,13 +40,8 @@ class SignUpScreenViewModel @Inject constructor(
     }
 
     private suspend fun processTheResponse(response: MessageResponse) {
-        Log.d("4444", " response.httpStatusCode="
-                + response.httpStatusCode
-                + " response.message=" + response.message)
 
         when (response.httpStatusCode) {
-
-
             HTTP_OK -> {
                 _statusCode.value = response.httpStatusCode
                 _notice.value = response.message
@@ -77,13 +72,4 @@ class SignUpScreenViewModel @Inject constructor(
             }
         }
     }
-
-//    private fun saveTokenRegister(tokenRegister: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            dataStoreRepository.saveTokenRegister(
-//                keyTokenRegister = Constants.KEY_TOKEN_REGISTER,
-//                tokenRegister = tokenRegister
-//            )
-//        }
-//    }
 }

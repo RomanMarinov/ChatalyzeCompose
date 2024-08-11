@@ -21,7 +21,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 val Context.dataStorePairToken by dataStore("data_store_pair_tokens", PairTokensDTOSerializer)
-//val Context.dataStoreRefre by dataStore("data_store_pair_tokens", PairTokensDTOSerializer)
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApiService: AuthApiService,

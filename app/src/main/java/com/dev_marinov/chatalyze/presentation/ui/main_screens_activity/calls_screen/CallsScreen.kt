@@ -88,16 +88,13 @@ fun CallsScreen(
     viewModel: CallsScreenViewModel = hiltViewModel(),
 ) {
 
-    Log.d("4444", " CallsScreen загрузился")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     SystemUiControllerHelper.SetSystemBars(true)
     SystemUiControllerHelper.SetStatusBarColor()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
     GradientBackgroundHelper.SetMonochromeBackground()
-    // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
-//    val contacts = viewModel.contacts.collectAsStateWithLifecycle(initialValue = listOf())
     val contacts = viewModel.filteredContacts.collectAsStateWithLifecycle(initialValue = emptyList())
     val contactsState = remember { mutableStateOf(contacts) }
 
@@ -107,12 +104,9 @@ fun CallsScreen(
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
     val getOwnPhoneSender by viewModel.getOwnPhoneSender.collectAsStateWithLifecycle("")
 
-    // может из за false не работать но скорей всего работает
     val getChatListFlag by viewModel.getChatListFlag.collectAsStateWithLifecycle(false)
 
     val pushTypeDisplay by viewModel.pushTypeDisplay.collectAsStateWithLifecycle(0)
-
-    val makeCallStatusCode by viewModel.makeCallStatusCode.collectAsStateWithLifecycle()
 
     val isSheetOpen = rememberSaveable { mutableStateOf(false) }
     val openBottomSheet = rememberSaveable { mutableStateOf(false) }
@@ -128,10 +122,7 @@ fun CallsScreen(
                 when (event) {
                     Lifecycle.Event.ON_START -> {
                         Log.d("4444", " CallsScreen Lifecycle.Event.ON_START")
-                        // есть ли у приложения разрешение на отображение наложений поверх других приложений
                         hasOverlayPermissionState.value = Settings.canDrawOverlays(context)
-                        //LaunchedEffect(hasOverlayPermission) {
-
                     }
 
                     Lifecycle.Event.ON_STOP -> { // когда свернул
@@ -152,31 +143,18 @@ fun CallsScreen(
         }
     )
 
-
-
-
-//    Log.d("4444", " combineChatList=" + historyCallsCombine.value)
-    // сюда добавить статус соедения удачу сокета
     LaunchedEffect(getOwnPhoneSender, isSessionState) {
         if (isSessionState == Constants.SESSION_SUCCESS) {
             viewModel.canGetChatList(can = true)
-            // viewModel.ebnutCombine()
         }
     }
 
     if (getChatListFlag) {
-        //viewModel.createOnlineUserStateList()
-
         val contactsFlow = RememberContacts(context = context)
         LaunchedEffect(Unit) {
             scope.launch {
                 contactsFlow.collect {
                     viewModel.createContactsFlow(it)
-
-                    //viewModel.createOnlineUserStateList()
-                    //viewModel.createCombineFlow()
-//                    viewModel.createChatListFlow()
-//                    viewModel.createCombineFlow()
                 }
             }
         }
@@ -200,8 +178,6 @@ fun CallsScreen(
         skipHalfExpanded = true
     )
 
-
-
     val isOpenModalBottomSheet by viewModel.isOpenModalBottomSheet.collectAsStateWithLifecycle()
     if (isOpenModalBottomSheet) {
         viewModel.onClickHideNavigationBar(isHide = true)
@@ -214,8 +190,6 @@ fun CallsScreen(
             }
         }
     }
-
-    // закрытие не через крестик
     LaunchedEffect(Unit) {
         snapshotFlow { sheetState.currentValue }
             .collect {
@@ -233,8 +207,6 @@ fun CallsScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-        //  .background(colorResource(id = R.color.main_violet_light))
-        //  .systemBarsPadding()
     ) {
 
         val constraints = ConstraintSet {
@@ -244,7 +216,6 @@ fun CallsScreen(
             constrain(headerChatText) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
@@ -252,7 +223,6 @@ fun CallsScreen(
 
             constrain(createChatIcon) {
                 top.linkTo(parent.top)
-                //start.linkTo(headerChatText.end)
                 end.linkTo(parent.end)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
@@ -264,7 +234,6 @@ fun CallsScreen(
             constraintSet = constraints,
             modifier = Modifier
                 .fillMaxWidth()
-                //.background(Color.Red)
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
         ) {
             Text(
@@ -279,10 +248,8 @@ fun CallsScreen(
             IconButton(
                 modifier = Modifier
                     .height(50.dp)
-                    // .background(Color.Cyan)
                     .layoutId("create_call_icon"),
                 onClick = {
-                    // Log.d("4444", " contacts.value=" + contacts.value)
                     scope.launch {
                         viewModel.openModalBottomSheet(isOpen = true)
                         delay(500L)
@@ -388,7 +355,6 @@ fun CallsScreen(
                                     ownPhoneSender = viewModel.ownPhoneSenderLocal
                                 )
                             }
-                            // Добавьте другие элементы списка здесь
                         }
                     }
                 }) {
@@ -396,20 +362,6 @@ fun CallsScreen(
             }
         }
     }
-
-
-    // ДЛЯ ЧЕГО НУЖЕН ДУБЛИРУЕТСЯ
-//    CustomBackStackOnlyBottomSheetInChatsScreen(
-//        navController = navController,
-//        isSheetOpen = isSheetOpen.value,
-//        onSheetOpenChanged = { isOpen ->
-//            isSheetOpen.value = isOpen
-//            if (!isOpen) {
-//                viewModel.onClickHideNavigationBar(isHide = false)
-//            }
-//        },
-//        sheetState = sheetState
-//    )
 
     CustomBackStackOnlyCallsScreen(navHostController = navController)
 }
@@ -455,22 +407,14 @@ fun CallContentItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // .clip(RoundedCornerShape(50.dp))
             .clickable {
                 isMakeCallState.value = true
             },
-        // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-//            modifier = Modifier.fillMaxWidth()
-        ) {
-
-//            отталкиваясь от ic_call_outgoing и ic_call_incoming сэтить в диалог кому звонишь
-//                    ну и передавать на экран звонка тоже самое
+        Column{
             Icon(
                 modifier = Modifier
-                    //.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
                     .size(30.dp),
                 painter = if (viewModel.ownPhoneSenderLocal == historyCallWithName.clientCallPhone) {
                     painterResource(id = R.drawable.ic_call_outgoing)
@@ -503,9 +447,6 @@ fun CallContentItem(
                 )
             }
 
-            Log.d("4444", " historyCallWithName=" + historyCallWithName)
-
-
             val phone = if (historyCallWithName.clientCallPhone != viewModel.ownPhoneSenderLocal) {
                 historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(historyCallWithName.clientCallPhone) }
             } else {
@@ -513,57 +454,11 @@ fun CallContentItem(
             }
 
             Text(
-                // modifier = Modifier.weight(1f),
                 text =  phone,
                 color = colorResource(id = R.color.main_yellow_new_chat_screen),
                 fontWeight = FontWeight.Bold
             )
 
-            // исправная рабочая компановка
-//////////////////////////////////////////////////////////////////////////
-//                Text(
-//                    modifier = Modifier.weight(1f),
-//                    text = if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) "outgoing" else "incoming",
-//                    color = colorResource(id = R.color.main_yellow_splash_screen),
-//                )
-//
-//                Text(
-//                    text = historyCallWithName.createdAt,
-//                    color = colorResource(id = R.color.main_yellow_new_chat_screen),
-//                    fontWeight = FontWeight.Bold,
-//                    modifier = Modifier.wrapContentWidth()
-//                )
-//            }
-//
-//            val from = "from"
-//            Text( // phone title // перепроверить
-//                // modifier = Modifier.weight(1f),
-//                text =  "$from " + if (historyCallWithName.clientCallPhone == viewModel.ownPhoneSenderLocal) {
-//                    historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.senderPhone) }
-//                } else {
-//                    historyCallWithName.clientCallPhone.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.recipientPhone) }
-//                },
-//                color = colorResource(id = R.color.main_yellow_new_chat_screen),
-//                fontWeight = FontWeight.Bold
-//            )
-//
-//            val to = "to"
-//            Text( // phone title // перепроверить
-//                // modifier = Modifier.weight(1f),
-//                text =  "$to " + if (historyCallWithName.clientCallPhone == historyCallWithName.senderPhone) {
-//                    historyCallWithName.recipientPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.recipientPhone) }
-//                } else {
-//                    historyCallWithName.senderPhoneName.ifEmpty { EditFormatPhoneHelper.edit(phone = historyCallWithName.senderPhone) }
-//                },
-//                color = colorResource(id = R.color.main_yellow_new_chat_screen),
-//                fontWeight = FontWeight.Bold
-//            )
-////////////////////////////////
-
-//            Text(
-//                text = historyCallWithName.conversationTime,
-//                color = colorResource(id = R.color.main_yellow_splash_screen),
-//            )
             Divider(
                 modifier = Modifier.padding(top = 8.dp),
                 color = colorResource(id = R.color.main_yellow_new_chat_screen),
@@ -610,33 +505,6 @@ fun CallContentItem(
                 }
             }
         )
-
-//        DialogShowMakeCallFromCallsScreen(
-//            recipientName = recipientName,
-//            recipientPhone = recipientPhone,
-//            onDismiss = {
-//                isMakeCallState.value = false
-//            },
-//            onConfirm = {
-//                isMakeCallState.value = false
-//                viewModel.onClickHideNavigationBar(isHide = true)
-//                scope.launch {
-//                    delay(50L) // костыль потому что ui у перехода не красивый
-//                    withContext(Dispatchers.Main) {
-//                        navController.navigate(
-//                            route = ScreenRoute.CallScreen.withArgs2(
-//                                recipientName = historyCallWithName.recipientPhoneName ?: historyCallWithName.recipientPhone,
-//                                recipientPhone = CorrectNumberFormatHelper.getCorrectNumber(
-//                                    historyCallWithName.recipientPhone
-//                                ),
-//                                senderPhone = CorrectNumberFormatHelper.getCorrectNumber(historyCallWithName.senderPhone),
-//                                typeEvent = Constants.OUTGOING_CALL_EVENT
-//                            )
-//                        )
-//                    }
-//                }
-//            }
-//        )
     }
 }
 
@@ -657,7 +525,6 @@ fun BottomSheetCallContentTop(
             constrain(headerText) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.matchParent
                 height = Dimension.wrapContent
@@ -665,9 +532,7 @@ fun BottomSheetCallContentTop(
 
             constrain(closeIcon) {
                 top.linkTo(parent.top)
-                //start.linkTo(headerChatText.end)
                 end.linkTo(parent.end)
-                // bottom.linkTo(parent.bottom)
                 width = Dimension.value(30.dp) // Заполнить доступное пространство
                 height = Dimension.value(30.dp)
             }
@@ -724,7 +589,6 @@ fun BottomSheetCallContentItem(
                     )
                 )
             },
-        // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

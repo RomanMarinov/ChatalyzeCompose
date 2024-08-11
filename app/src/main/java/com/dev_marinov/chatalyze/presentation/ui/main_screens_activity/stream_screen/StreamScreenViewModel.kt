@@ -11,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,16 +20,12 @@ class StreamScreenViewModel @Inject constructor(
     private val preferencesDataStoreRepository: PreferencesDataStoreRepository,
 ) : ViewModel() {
 
-    private var _callTimeDuration: MutableStateFlow<String> = MutableStateFlow("")
-    val callTimeDuration: StateFlow<String> = _callTimeDuration
-
     private val getOwnPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
     var ownPhoneSender = ""
 
     private var jobCallingLoop: Job? = null
 
     private var currentTimeUnix: Long = 0L
-    private var currentTimeUnixCount: Long = 0L
 
     init {
         saveLocalOwnPhoneSender()
@@ -41,50 +36,6 @@ class StreamScreenViewModel @Inject constructor(
             getOwnPhoneSender.collect {
                 ownPhoneSender = it
             }
-        }
-    }
-
-    fun currentTimeUnix(epochSeconds: Long) {
-        currentTimeUnix = epochSeconds
-    }
-
-//    private fun currentTimeUnixCount(epochSeconds: Long) {
-//        currentTimeUnixCount = epochSeconds
-//    }
-//
-//    private fun calculateTimeDifference() {
-//        val callTimeDuration = calculateTimeDifference(
-//            currentTimeUnix,
-//            currentTimeUnixCount
-//        )
-//        _callTimeDuration.value = callTimeDuration
-//    }
-//
-//    private fun calculateTimeDifference(start: Long, end: Long): String {
-//        val duration = Duration.ofSeconds(end - start)
-//        val hours = duration.toHours()
-//        val minutes = duration.toMinutes() % 60
-//        val seconds = duration.seconds % 60
-//        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
-//    }
-
-//    fun startCallingLoop() {
-//        //Log.d("4444", " _callTimeDuratin вызов startCallingLoop=")
-//        viewModelScope.launch(Dispatchers.Default) {
-//            jobCallingLoop = launch {
-//                while (isActive) {
-//                    currentTimeUnixCount(Clock.System.now().epochSeconds)
-//                    calculateTimeDifference()
-//                    delay(1000L)
-//                    //Log.d("4444", " _callTimeDuratin=" + _callTimeDuration.value)
-//                }
-//            }
-//        }
-//    }
-
-    fun cancelCallingLoop() {
-        viewModelScope.launch(Dispatchers.Default) {
-            jobCallingLoop?.cancel()
         }
     }
 

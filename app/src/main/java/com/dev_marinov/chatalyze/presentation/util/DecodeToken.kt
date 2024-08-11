@@ -37,12 +37,4 @@ object DecodeToken {
     fun howManyMoreMinutes(tokenTimestamp: Long): String {
         return (timestampCurSeconds - ((tokenTimestamp / 1000)) / 60).toString()
     }
-//
-//    fun howManyMoreHours() : String {
-//
-//    }
-//
-//    fun howManyMoreDays() : String {
-//
-//    }
 }

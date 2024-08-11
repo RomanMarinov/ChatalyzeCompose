@@ -33,63 +33,12 @@ class CallScreenViewModel @Inject constructor(
 
     val getReadyStream = roomRepository.getReadyStream
 
-//    private var _callTimeDuration: MutableStateFlow<String> = MutableStateFlow("")
-//    val callTimeDuration: StateFlow<String> = _callTimeDuration
-
-//    private var currentTimeUnix: Long = 0L
-//    private var currentTimeUnixCount: Long = 0L
-
-    private var jobCallingLoop: Job? = null
 
     private var _statusCode: MutableStateFlow<Int> = MutableStateFlow(0)
     val statusCode: StateFlow<Int> = _statusCode
 
     private var _isFinishCallScreen = SingleLiveEvent<Boolean>()
     val isFinishCallScreen: SingleLiveEvent<Boolean> = _isFinishCallScreen
-
-//    fun currentTimeUnix(epochSeconds: Long) {
-//        currentTimeUnix = epochSeconds
-//    }
-
-//    private fun currentTimeUnixCount(epochSeconds: Long) {
-//        currentTimeUnixCount = epochSeconds
-//    }
-
-//    private fun calculateTimeDifference() {
-//        val callTimeDuration = calculateTimeDifference(
-//            currentTimeUnix,
-//            currentTimeUnixCount
-//        )
-//        _callTimeDuration.value = callTimeDuration
-//    }
-
-//    private fun calculateTimeDifference(start: Long, end: Long): String {
-//        val duration = Duration.ofSeconds(end - start)
-//        val hours = duration.toHours()
-//        val minutes = duration.toMinutes() % 60
-//        val seconds = duration.seconds % 60
-//        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
-//    }
-
-//    fun startCallingLoop() {
-//        //Log.d("4444", " _callTimeDuratin вызов startCallingLoop=")
-//         viewModelScope.launch(Dispatchers.Default) {
-//             jobCallingLoop = launch {
-//                 while (isActive) {
-//                     currentTimeUnixCount(Clock.System.now().epochSeconds)
-//                     calculateTimeDifference()
-//                     delay(1000L)
-//                     //Log.d("4444", " _callTimeDuratin=" + _callTimeDuration.value)
-//                 }
-//             }
-//        }
-//    }
-
-//    fun cancelCallingLoop() {
-//        viewModelScope.launch(Dispatchers.Default) {
-//            jobCallingLoop?.cancel()
-//        }
-//    }
 
     fun sendCommandToFirebase(firebaseCommand: FirebaseCommand) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -100,13 +49,6 @@ class CallScreenViewModel @Inject constructor(
         }
     }
 
-//    private inline fun <T: Any, R: Any> ifLet(vararg elements: T?, closure: (List<T>) -> R): R? {
-//        return if (elements.all { it != null }) {
-//            closure(elements.filterNotNull())
-//        } else null
-//    }
-
-    // дублирование
     private suspend fun processTheResponse(response: MessageResponse) {
         Log.d("4444", " firebase processTheResponse response=" + response)
         when (response.httpStatusCode) {
@@ -144,7 +86,6 @@ class CallScreenViewModel @Inject constructor(
     }
 
     fun sendStateReadyToStream(firebaseCommand: FirebaseCommand) {
-        Log.d("4444", " StreamScreenViewModel sendStateReadyToStream")
         viewModelScope.launch(Dispatchers.IO) {
             callRepository.sendCommandToFirebase(firebaseCommand = firebaseCommand)
         }

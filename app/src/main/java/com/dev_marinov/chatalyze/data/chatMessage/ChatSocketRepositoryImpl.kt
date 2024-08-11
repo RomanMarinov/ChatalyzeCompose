@@ -32,10 +32,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
-import kotlin.coroutines.coroutineContext
 
 class ChatSocketRepositoryImpl @Inject constructor(
     private val client: HttpClient,
@@ -44,7 +42,6 @@ class ChatSocketRepositoryImpl @Inject constructor(
     private var socket: WebSocketSession? = null
 
     override suspend fun initSession(sender: String): Resource<Unit> {
-        Log.d("4444", " ChatSocketRepository SOCKET initSession ")
         return try {
             socket = client.webSocketSession {
                 url("${ChatSocketRepository.Endpoints.SocketChat.url}?sender=$sender")
@@ -61,8 +58,6 @@ class ChatSocketRepositoryImpl @Inject constructor(
 
     override suspend fun sendMessage(messageToSend: MessageToSend) {
         try {
-            Log.d("4444", " ChatSocketServiceImpl sendMessage messageToSend=" + messageToSend)
-
             val gson = Gson()
             val messageToSendJson = gson.toJson(messageToSend)
 
@@ -93,7 +88,6 @@ class ChatSocketRepositoryImpl @Inject constructor(
     private val myJson = Json { ignoreUnknownKeys = true }
     override fun observeMessages(): Flow<MessageWrapper> {
         return try {
-            Log.d("4444", " observeMessages")
             socket?.incoming
                 ?.receiveAsFlow()
                 ?.filter { it is Frame.Text }
@@ -109,7 +103,6 @@ class ChatSocketRepositoryImpl @Inject constructor(
     }
 
     override suspend fun closeSession() {
-        Log.d("4444", " SOCKET CLOSED FUCK")
         socket?.close()
     }
 
@@ -119,7 +112,6 @@ class ChatSocketRepositoryImpl @Inject constructor(
                 contentType(ContentType.Application.Json)
                 setBody(userPairChat)
             }
-            Log.d("4444", " getAllMessages response=" + response.status)
             val res = response.body<List<MessageDto>>().map {
                 it.mapToDomain()
             }

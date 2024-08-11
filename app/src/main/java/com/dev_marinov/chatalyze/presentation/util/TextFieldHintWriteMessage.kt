@@ -38,10 +38,7 @@ fun TextFieldHintWriteMessage(
     onSendClick: () -> Unit
 ) {
     var messageText by remember { mutableStateOf("") }
-    var isFocusedMessage by remember { mutableStateOf(false) }
     var isNotNullMessageText by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
 
     val constraints = ConstraintSet {
         val viewIcon = createRefFor("viewIcon")
@@ -120,19 +117,9 @@ fun TextFieldHintWriteMessage(
                     scope.launch {
                         onSendClick()
                         viewModel.sendMessage()
-                        //delay(1000L)
-                       // viewModel.getAllMessages()
-                        //delay(500L)
                     }
                 }
                 .layoutId("viewIcon")
         )
     }
-}
-
-
-fun getCurrentDateTime(): String {
-    val currentDateTime = Date()
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    return dateFormat.format(currentDateTime)
 }

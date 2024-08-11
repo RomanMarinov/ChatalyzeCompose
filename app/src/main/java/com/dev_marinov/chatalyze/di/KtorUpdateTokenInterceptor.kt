@@ -45,11 +45,9 @@ class KtorUpdateTokenInterceptor(
         scope.requestPipeline.intercept(HttpRequestPipeline.Render) { response ->
 
             var res = context.url.build()
-            Log.d("4444", " qwe NewUpdateTokenInterceptor res=" + res)
             if (context.url.toString().contains(Constants.PART_URL_MESSAGES)) {
 
                 runBlocking {
-                    Log.d("4444", " проверушка 3")
                     val refreshToken: String = authRepositoryProvider.get().getRefreshTokensFromDataStore.first()
                     val accessToken: String = authRepositoryProvider.get().getAccessTokensFromDataStore.first()
                     val refreshTokenPayload: TokenPayload = DecodeToken.execute(token = refreshToken)
@@ -60,11 +58,9 @@ class KtorUpdateTokenInterceptor(
                         userId = refreshTokenPayload.userId
                     )
                     val httpResponse: HttpResponse = updateTokensRequest(userTokensDetails = userTokensDetails)
-                    Log.d("4444", " проверушка 4")
                     httpResponse.body<String>().let {
                         when (httpResponse.status.value) {
                             HTTP_OK -> {
-                                Log.d("4444", " qwe NewUpdateTokenInterceptor первый уровень HTTP_OK")
                                 if (it.contains("\"httpStatusCode\"") && it.contains("\"message\"")) {
                                     val jsonResponse = JSONObject(it)
                                     val httpStatusCode = jsonResponse.optString("httpStatusCode")
@@ -72,7 +68,6 @@ class KtorUpdateTokenInterceptor(
                                     Log.d("4444", " проверушка 5")
                                     when (httpStatusCode.toInt()) {
                                         HTTP_OK -> {
-                                            Log.d("4444", " qwe NewUpdateTokenInterceptor второй уровень HTTP_OK")
                                             val jsonParser = JsonParser.parseString(message)
                                             val pairOfTokensNew = Gson().fromJson(jsonParser, PairOfTokens::class.java)
 
@@ -86,37 +81,28 @@ class KtorUpdateTokenInterceptor(
                                         }
 
                                         HTTP_NOT_FOUND -> {
-                                            Log.d("4444", " qwe NewUpdateTokenInterceptor второй уровень HTTP_NOT_FOUND")
-                                            Log.d("4444", " проверушка 7")
                                             preferencesDataStoreRepositoryProvider.get()
                                                 .saveStateNotFoundRefreshToken(isNotFound = true)
                                             finish()
                                         }
 
                                         HTTP_UNAUTHORIZED -> {
-                                            Log.d("4444", " qwe NewUpdateTokenInterceptor второй уровень HTTP_UNAUTHORIZED")
-                                            Log.d("4444", " проверушка 8")
                                             preferencesDataStoreRepositoryProvider.get()
                                                 .saveStateUnauthorized(isUnauthorized = true)
                                             finish()
                                         }
 
                                         else -> {
-                                            Log.d("4444", " проверушка 9")
-                                            Log.d("4444", " qwe NewUpdateTokenInterceptor второй уровень ELSE")
                                             preferencesDataStoreRepositoryProvider.get()
                                                 .saveFailureUpdatePairToken(isFailure = true)
                                             finish()
                                         }
                                     }
                                 } else {
-                                    Log.d("4444", " проверушка 10")
-                                    Log.d("4444", " qwe NewUpdateTokenInterceptor первый уровень contains NULL")
                                 }
                             }
 
                             else -> {
-                                Log.d("4444", " проверушка 11")
                                 preferencesDataStoreRepositoryProvider.get().saveInternalServerError(isError = true)
                                 finish()
                             }
@@ -128,12 +114,9 @@ class KtorUpdateTokenInterceptor(
 
         scope.responsePipeline.intercept(HttpResponsePipeline.After) { response ->
             if (context.response.status.value == HttpStatusCode.Unauthorized.value) {
-                Log.d("4444", " qwe NewUpdateTokenInterceptor Unauthorized response=" + context.request.url + " code=" + context.response.status.value)
                 preferencesDataStoreRepositoryProvider.get().saveStateUnauthorized(isUnauthorized = true)
             } else {
-                Log.d("4444", " qwe NewUpdateTokenInterceptor some 1 response=" + context.request.url + " code=" + context.response.status.value)
             }
-            Log.d("4444", " qwe NewUpdateTokenInterceptor some 2 response=" + context.request.url + " code=" + context.response.status.value)
             proceed()
         }
     }
@@ -141,8 +124,6 @@ class KtorUpdateTokenInterceptor(
     override fun prepare(block: ResponseObserver.Config.() -> Unit): KtorUpdateTokenInterceptor {
         return this
     }
-
-
 
     private suspend fun updateTokensRequest(userTokensDetails: UserTokensDetails): HttpResponse {
         val gson = Gson()

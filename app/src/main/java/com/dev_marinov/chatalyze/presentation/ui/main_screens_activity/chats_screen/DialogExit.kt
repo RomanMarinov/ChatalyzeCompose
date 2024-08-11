@@ -39,7 +39,6 @@ fun DialogExit(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // .height(200.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.White),
             verticalArrangement = Arrangement.Center,
@@ -48,7 +47,6 @@ fun DialogExit(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // .height(200.dp)
                     .padding(1.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(colorResource(id = R.color.main_violet_light)),
@@ -68,7 +66,6 @@ fun DialogExit(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 16.dp)
-                    // .height(200.dp)
                 ) {
                     TextButton(
                         onClick = onDismiss,

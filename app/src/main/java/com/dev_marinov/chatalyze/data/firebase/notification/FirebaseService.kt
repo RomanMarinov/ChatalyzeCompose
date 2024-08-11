@@ -8,12 +8,12 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+
 @AndroidEntryPoint
 class FirebaseService : FirebaseMessagingService() {
 
     @Inject
     lateinit var pushNotificationManager: PushNotificationManager
-
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -23,9 +23,6 @@ class FirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        Log.d("4444", " onMessageReceived message=" + message.data)
-        //onMessageReceived message={sender=9303454564, topic=, recipient=5551234567, firebaseToken=cf2jBrO0TbmWNhVkaQX7vc:APA91bE2AbQBOzpQJpFW2TIastWXyjmTWjS6zMMrADNhy5hIXHt2bXlT62V_LCb-mraeLI_LFTBomJ7rvzdrQcY4rnz1aJKZ3--FVTnFR5Dkj0Jz3ut38aJ_0kinzlMxS8bO-1V7AfK7}
-
         if (message.data.isNotEmpty()) {
             val title = message.data["title"]
             val senderPhone = message.data["senderPhone"]
@@ -33,14 +30,8 @@ class FirebaseService : FirebaseMessagingService() {
             val textMessage = message.data["textMessage"]
             val typeFirebaseCommand = message.data["typeFirebaseCommand"]
 
-
-            Log.d("4444", " onMessageReceived senderPhone=" + senderPhone
-                    + " recipientPhone=" + recipientPhone
-                    + " typeFirebaseCommand=" + typeFirebaseCommand)
-
             when(typeFirebaseCommand) {
                 Constants.TYPE_FIREBASE_MESSAGE_MESSAGE -> {
-                    Log.d("4444", " TYPE_FIREBASE_MESSAGE_MESSAGE")
                     try {
                         IfLetHelper.execute(senderPhone, recipientPhone, textMessage) { remoteMessageDataList ->
                             pushNotificationManager.showNotificationMessage(
@@ -55,7 +46,6 @@ class FirebaseService : FirebaseMessagingService() {
                 }
                 Constants.TYPE_FIREBASE_MESSAGE_CALL -> {
                     IfLetHelper.execute(senderPhone, recipientPhone) { remoteMessageDataList ->
-                        Log.d("4444", " TYPE_FIREBASE_MESSAGE_CALL")
                         pushNotificationManager.showNotificationCall(
                             senderPhone = remoteMessageDataList[0],
                             recipientPhone = remoteMessageDataList[1]
@@ -64,7 +54,6 @@ class FirebaseService : FirebaseMessagingService() {
                 }
                 Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM -> {
                     IfLetHelper.execute(senderPhone, recipientPhone, typeFirebaseCommand) { remoteMessageDataList ->
-                        Log.d("4444", " TYPE_FIREBASE_MESSAGE_READY_STREAM")
                         pushNotificationManager.giveStateReadyStream(
                             senderPhone = remoteMessageDataList[0],
                             recipientPhone = remoteMessageDataList[1],

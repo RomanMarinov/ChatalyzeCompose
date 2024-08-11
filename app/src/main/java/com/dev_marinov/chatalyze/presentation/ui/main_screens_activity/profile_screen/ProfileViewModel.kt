@@ -32,8 +32,8 @@ class ProfileViewModel @Inject constructor(
     private var _statusCode: MutableStateFlow<Int> = MutableStateFlow(0)
     val statusCode: StateFlow<Int> = _statusCode
 
-    var refreshTokenTemp = ""
-    var ownPhoneSenderTemp = ""
+    private var refreshTokenTemp = ""
+    private var ownPhoneSenderTemp = ""
 
     init {
         writeRefreshTokenTemp()
@@ -43,7 +43,6 @@ class ProfileViewModel @Inject constructor(
     private fun saveOwnPhoneInViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             ownPhoneSender.collect{
-                Log.d("4444", " ProfileViewModel ownPhoneSender=" + it)
                 ownPhoneSenderTemp = it
             }
         }
@@ -51,7 +50,6 @@ class ProfileViewModel @Inject constructor(
 
     fun executeLogout() {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("44444", " ")
             val response = authRepository.logout(token = refreshTokenTemp, senderPhone = ownPhoneSenderTemp)
             response?.let {
                 processTheResponse(response = response)
@@ -81,10 +79,7 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
-// дублирование
     private suspend fun processTheResponse(response: MessageResponse) {
-
-        Log.d("4444", " ProfileViewModel processTheResponse response.httpStatusCode=" + response.httpStatusCode)
         when (response.httpStatusCode) {
             HTTP_OK -> {
                 authRepository.deletePairTokensToDataStore()

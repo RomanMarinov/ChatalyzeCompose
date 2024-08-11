@@ -203,16 +203,4 @@ class PreferencesDataStoreRepositoryImpl @Inject constructor(val context: Contex
             it[preferencesKey] = isError
         }
     }
-
-//    override val getNavigateToAuthScreen: Flow<Boolean> = context.dataStore.data.map { value: Preferences ->
-//        val preferencesKey = booleanPreferencesKey(Constants.NAVIGATE_TO_AUTH_SCREEN)
-//        value[preferencesKey] == true
-//    }
-//
-//    override suspend fun saveNavigateToAuthScreen(navigate: Boolean) {
-//        val preferencesKey = booleanPreferencesKey(Constants.NAVIGATE_TO_AUTH_SCREEN)
-//        context.dataStore.edit {
-//            it[preferencesKey] = navigate
-//        }
-//    }
 }

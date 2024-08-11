@@ -29,7 +29,6 @@ class KtorNetworkInterceptor(
         scope.requestPipeline.intercept(HttpRequestPipeline.Before) {
             try {
                 if (plugin.hasInternetConnection()) {
-                    Log.d("4444", " ЕСТЬ ИНТЕРНЕТ")
                     proceed()
                 } else {
                     finish()

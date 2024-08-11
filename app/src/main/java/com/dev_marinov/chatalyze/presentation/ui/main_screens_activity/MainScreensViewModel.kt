@@ -56,18 +56,9 @@ class MainScreensViewModel @Inject constructor(
     private var _canStartService: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val canStartService: StateFlow<Boolean> = _canStartService
 
-    private val _messageText = mutableStateOf("")
-    val messageText: State<String> = _messageText
-
-    private val _state = mutableStateOf(ChatState())
-    val state: State<ChatState> = _state
-
     private val _toastEvent = MutableSharedFlow<String>()
-    val toastEvent = _toastEvent.asSharedFlow()
 
     private var firebaseTokenLocal = ""
-
-    var closeSocket = true
 
     init {
         savePhoneInViewModel()
@@ -108,22 +99,12 @@ class MainScreensViewModel @Inject constructor(
                     firebaseToken = firebaseTokenLocal
                 )
             )
-            Log.d(
-                "4444",
-                " ChatalyzeScreenViewModel registerUserFirebase firebaseTokenLocal=" + firebaseTokenLocal
-            )
-            Log.d(
-                "4444",
-                " ChatalyzeScreenViewModel registerUserFirebase response=" + response?.message
-            )
         }
     }
-// cf2jBrO0TbmWNhVkaQX7vc:APA91bE2AbQBOzpQJpFW2TIastWXyjmTWjS6zMMrADNhy5hIXHt2bXlT62V_LCb-mraeLI_LFTBomJ7rvzdrQcY4rnz1aJKZ3--FVTnFR5Dkj0Jz3ut38aJ_0kinzlMxS8bO-1V7AfK7
 
 
     fun saveOwnPhoneSender(ownPhoneSender: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            //  Log.d("4444", " saveOwnPhoneSender ownPhoneSender=" + ownPhoneSender)
             preferencesDataStoreRepository.saveOwnPhoneSender(
                 key = Constants.OWN_PHONE_SENDER,
                 ownPhoneSender = ownPhoneSender
@@ -141,7 +122,6 @@ class MainScreensViewModel @Inject constructor(
     }
 
     fun saveLifecycleEvent(eventType: String) {
-        Log.d("4444", " ChatalyzeScreenViewModel saveLifecycleEvent eventType=" + eventType)
         viewModelScope.launch(Dispatchers.IO) {
             preferencesDataStoreRepository.saveLifecycleEvent(eventType = eventType)
         }
@@ -152,19 +132,16 @@ class MainScreensViewModel @Inject constructor(
     }
 
     fun openServerWebSocketConnection(ownPhoneSender: String, context: Context) {
-        Log.d("4444", " выполнился openServerConnection")
         viewModelScope.launch(Dispatchers.IO) {
             val result = chatSocketRepository.initSession(sender = ownPhoneSender)
             when (result) {
                 is Resource.Success -> {
-                    Log.d("4444", " openServerConnection Success")
                     saveSessionState(sessionState = Constants.SESSION_SUCCESS)
                     createOnlineUserStateListAndSave(context = context)
                     registerUserFirebase()
                 }
 
                 is Resource.Error -> {
-                    Log.d("4444", " openServerConnection Error")
                     _toastEvent.emit(result.message ?: "Unknown error")
 
                     saveSessionState(sessionState = Constants.SESSION_ERROR)
@@ -175,19 +152,16 @@ class MainScreensViewModel @Inject constructor(
         }
     }
 
-    // переписать название метода
     private fun createOnlineUserStateListAndSave(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             chatSocketRepository.observeMessages().collect { value ->
                 if (value.type == "userList") {
                     val json = Json { ignoreUnknownKeys = true }
                     val parsedJson = json.decodeFromString<List<OnlineUserState>>(value.payloadJson)
-                    //Log.d("4444", " parsedJson=" + parsedJson)
                     saveOnlineUserStateListToDb(onlineUserStateList = parsedJson)
                 }
 
                 if (value.type == "singleMessage") {
-                    Log.d("4444", " получил с сервера событие singleMessage")
                     val json = Json { ignoreUnknownKeys = true }
                     val message = json.decodeFromString<Message>(value.payloadJson)
 
@@ -203,7 +177,6 @@ class MainScreensViewModel @Inject constructor(
                     val json = Json { ignoreUnknownKeys = true }
                     val message = json.decodeFromString<Message>(value.payloadJson)
 
-                    Log.d("4444", " companionOffline")
                     val firebaseCommand = FirebaseCommand(
                         topic = "",
                         senderPhone = message.sender,
@@ -214,7 +187,6 @@ class MainScreensViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         val response = chatSocketRepository.sendCommandToFirebase(firebaseCommand = firebaseCommand)
                         response?.let { messageResponse ->
-                            //processTheResponse(response = messageResponse)
                         }
                     }
                 }
@@ -249,7 +221,6 @@ class MainScreensViewModel @Inject constructor(
     }
 
     fun savePreferencesState() {
-        Log.d("4444", " MainScreensViewModel saveStartStateForTokens")
         viewModelScope.launch(Dispatchers.IO) {
             preferencesDataStoreRepository.saveStateNotFoundRefreshToken(isNotFound = false)
             preferencesDataStoreRepository.saveFailureUpdatePairToken(isFailure = false)

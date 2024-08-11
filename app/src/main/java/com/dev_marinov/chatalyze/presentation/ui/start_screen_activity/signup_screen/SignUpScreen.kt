@@ -50,7 +50,6 @@ fun SignUpScreen(
     SystemUiControllerHelper.SetStatusBarColor()
     GradientBackgroundHelper.SetGradientBackground()
 
-//    var textUserNameState by remember { mutableStateOf("") }
     var textEmailState by remember { mutableStateOf("") }
     var textPasswordState by remember { mutableStateOf("") }
     val messagePassword = stringResource(id = R.string.password_warning)
@@ -58,13 +57,10 @@ fun SignUpScreen(
     val emailPasswordInvalid = stringResource(id = R.string.email_password_invalid)
 
     val messageEmailPassword = stringResource(id = R.string.email_password_warning)
-    val successfulRegistration = stringResource(id = R.string.successful_registration)
     val context = LocalContext.current
-    var isFocusTextField by remember { mutableStateOf(false) }
+    val isFocusTextField by remember { mutableStateOf(false) }
 
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
-
-    val scope = rememberCoroutineScope()
 
     val notice by viewModel.notice.collectAsStateWithLifecycle()
     val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
@@ -92,11 +88,7 @@ fun SignUpScreen(
                     softwareKeyboardController?.hide()
                 }
             ),
-        //.padding(top = 200.dp)
-        //.imePadding()
-        //verticalArrangement = Arrangement.Center
     ) {
-
 
         val constraintsTop = ConstraintSet {
 
@@ -115,15 +107,12 @@ fun SignUpScreen(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
                 bottom.linkTo(parent.bottom)
-//                width = Dimension.value(40.dp)
-//                height = Dimension.wrapContent
             }
 
             constrain(password) {
                 top.linkTo(email.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-//                bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -132,7 +121,6 @@ fun SignUpScreen(
                 top.linkTo(password.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-                // bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }

@@ -12,9 +12,6 @@ object NavigateToAuthScreenHelper {
         val taskDetailIntent = Intent(
             Intent.ACTION_VIEW,
             deepLink,
-//                    this,
-//                    MainScreensActivity::class.java
-            //MainActivity::class.java
         )
 
         val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {

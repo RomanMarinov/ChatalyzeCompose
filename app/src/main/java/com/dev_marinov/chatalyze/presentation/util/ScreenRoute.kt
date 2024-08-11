@@ -24,8 +24,6 @@ sealed class ScreenRoute(val route: String) {
         }
     }
 
-//    object StreamScreen : ScreenRoute("stream_screen")
-
     object StreamScreen : ScreenRoute("stream_screen/{$RECIPIENT_NAME}/{$RECIPIENT_PHONE}/{$SENDER_PHONE}/{$TYPE_EVENT}") {
         fun withArgs(recipientName: String?, recipientPhone: String?, senderPhone: String?, typeEvent: String) : String {
             return "stream_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
@@ -37,16 +35,5 @@ sealed class ScreenRoute(val route: String) {
             return "call_screen/$recipientName/$recipientPhone/$senderPhone/$typeEvent"
         }
     }
-
-
-
-//    fun withArgs(args: String): String {
-//        return "$route/$args"
-//    }
-
-//    fun withArgs(vararg args: String): String {
-//        return "$route/${args.joinToString("/")}"
-//    }
-
 }
 

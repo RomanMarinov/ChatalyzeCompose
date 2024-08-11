@@ -25,12 +25,10 @@ class KtorAuthInterceptor(
     override fun install(plugin: KtorAuthInterceptor, scope: HttpClient) {
         scope.requestPipeline.intercept(HttpRequestPipeline.Render) { response ->
 
-            Log.d("4444", " qwe NewAuthInterceptor res=" + context.url.build())
             if (context.url.toString().contains(Constants.PART_URL_MESSAGES)) {
                 val refreshToken = authRepositoryProvider.get().getRefreshTokensFromDataStore.first()
                 val accessToken = authRepositoryProvider.get().getAccessTokensFromDataStore.first()
                 if (accessToken.isNotEmpty()) {
-                    // val accessToken = "wefwefwefwef"
                     context.headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
                 }
             }
@@ -38,14 +36,11 @@ class KtorAuthInterceptor(
 
         scope.responsePipeline.intercept(HttpResponsePipeline.After) { response ->
             if (context.response.status.value == HttpStatusCode.Unauthorized.value) {
-                Log.d("4444", " qwe NewAuthInterceptor Unauthorized response=" + context.request.url + " code=" + context.response.status.value)
                 preferencesDataStoreRepositoryProvider.get().saveStateUnauthorized(isUnauthorized = true)
                 finish()
             } else {
-                Log.d("4444", " qwe NewAuthInterceptor some 1 response=" + context.request.url + " code=" + context.response.status.value)
                 proceed()
             }
-            Log.d("4444", " qwe NewAuthInterceptor some 2 response=" + context.request.url + " code=" + context.response.status.value)
         }
     }
 

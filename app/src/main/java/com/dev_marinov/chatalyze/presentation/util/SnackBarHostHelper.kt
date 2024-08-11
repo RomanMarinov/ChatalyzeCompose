@@ -82,14 +82,6 @@ object SnackBarHostHelper {
                     modifier = Modifier.padding(16.dp),
                     actionOnNewLine = true,
                     action = {
-//                        TextButton(onClick = {
-//                            isSnackBarVisible = false
-//                        }) {
-//                            Text(
-//                                text = "Ok",
-//                                color = colorResource(id = R.color.main_yellow_new_chat_screen),
-//                            )
-//                        }
                     }
                 ) {
                     Text(

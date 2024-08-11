@@ -29,7 +29,6 @@ import com.dev_marinov.chatalyze.R
 
 @Composable
 fun DialogShowSettingNotification(
-   // viewModel: ChatsScreenViewModel,
     onDismiss: (Boolean) -> Unit,
     onConfirm: () -> Unit,
     onClickClose: () -> Unit
@@ -76,7 +75,6 @@ fun DialogShowSettingNotification(
                         modifier = Modifier,
                         onClick = {
                             onClickClose()
-//                            viewModel.saveHideDialogPermissionNotification(hide = true)
                         }
                     ) {
                         Icon(

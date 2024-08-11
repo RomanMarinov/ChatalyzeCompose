@@ -26,15 +26,11 @@ class CallsScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     val pushTypeDisplay = preferencesDataStoreRepository.pushTypeDisplayFlow
-    var pushTypeDisplayLocal = 0
 
     private val historyCallList = callRepository.getHistoryCalls
     val filteredContacts = roomRepository.filteredContacts
     private var _historyCallsCombine: MutableStateFlow<List<HistoryCallWithName>> = MutableStateFlow(emptyList())
     val historyCallsCombine: StateFlow<List<HistoryCallWithName>> = _historyCallsCombine
-
-//    private var _HistoryCallList: MutableStateFlow<List<HistoryCall>> = MutableStateFlow(listOf())
-//    val historyCallList: StateFlow<List<HistoryCall>> = _HistoryCallList
 
     val isSessionState = preferencesDataStoreRepository.isSessionState
 
@@ -48,23 +44,12 @@ class CallsScreenViewModel @Inject constructor(
     val getChatListFlag: StateFlow<Boolean> = _getChatListFlag
 
     private var _makeCallStatusCode: MutableStateFlow<Int> = MutableStateFlow(0)
-    val makeCallStatusCode: StateFlow<Int> = _makeCallStatusCode
 
     val getOwnPhoneSender = preferencesDataStoreRepository.getOwnPhoneSender
     var ownPhoneSenderLocal = ""
 
-//    fun getFakeCalls() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val result = chatRepository.getChatMessage()
-//           // _fakeCalls.value = result
-//        }
-//    }
-
     init {
-        Log.d("4444", " ChatsScreenViewModel сработал init")
         saveLocalOwnPhoneSender()
-        saveLocalPushTypeDisplay()
-
         createCombineHistoryCallsList()
     }
 
@@ -113,14 +98,11 @@ class CallsScreenViewModel @Inject constructor(
         _isOpenModalBottomSheet.value = isOpen
     }
 
-    // походу из бд надо брать
     fun canGetChatList(can: Boolean) {
         _getChatListFlag.value = can
     }
 
-    // походу из бд надо брать ИЛИ ЭТО
     fun createContactsFlow(contacts: List<Contact>) {
-        Log.d("4444", " ChatsScreenViewModel createContactsFlow contacts=" + contacts)
         _contacts.value = contacts
     }
 
@@ -129,14 +111,6 @@ class CallsScreenViewModel @Inject constructor(
             getOwnPhoneSender.collect {
                 ownPhoneSenderLocal = it
             }
-        }
-    }
-
-    private fun saveLocalPushTypeDisplay() {
-        viewModelScope.launch(Dispatchers.IO) {
-//            pushTypeDisplay.collect {
-//             //   pushTypeDisplayLocal = it
-//            }
         }
     }
 

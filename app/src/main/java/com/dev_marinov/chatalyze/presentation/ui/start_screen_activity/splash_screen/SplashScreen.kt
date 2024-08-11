@@ -54,7 +54,6 @@ fun StartAnimationLogoAndCheckTokenSignIn(
     val context = LocalContext.current
 
     val refreshToken by viewModel.refreshToken.collectAsStateWithLifecycle("")
-  //  val refreshToken by viewModel.getRefreshToken().observeAsState("")
     val scale = remember {
         Animatable(0f)
     }
@@ -70,31 +69,11 @@ fun StartAnimationLogoAndCheckTokenSignIn(
         )
         delay(1000L)
 
-        Log.d("4444", " SplashScreen refreshToken refreshToken=" + refreshToken)
         if (refreshToken.isNotEmpty()) {
-          // тут перейти на MainScreensActivity через intent
            val intent = Intent(context, MainScreensActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(intent)
             activity.finish()
-
-
-//            // потом перенести проверку до перехода
-//            val res: TokenPayload = DecodeToken.execute(token = refreshToken)
-//            val simpleDateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm:ss", Locale.getDefault())
-//
-//
-//
-//            res.expiresIn?.let { tokenTimestamp ->
-//                //val min: Long = it.div(60000)
-//                val minutes = DecodeToken.howManyMoreMinutes(tokenTimestamp = tokenTimestamp)
-//
-//               // val res1 = simpleDateFormat.format(it * 1000L)
-//                Log.d("4444", " SplashScreen refreshToken=" + tokenTimestamp)
-//                //Log.d("4444", " SplashScreen refreshToken res.userId=" + res.userId + " res1=" + res1)
-//            }
-
-         //  navController.navigate(ScreenRoute.ChatalyzeScreen.route)
        } else {
            navController.navigate(ScreenRoute.AuthScreen.route)
        }

@@ -27,16 +27,16 @@ android {
     }
 
     buildTypes {
-        debug {
-            buildConfigField "String", "API_URL_HTTP", "\"http://192.168.0.100:8080\""
-            buildConfigField "String", "API_URL_WS", "\"ws://192.168.0.100:8080\""
+        debug {// 192.168.0.101
+            buildConfigField "String", "API_URL_HTTP", "\"http://192.168.0.101:8080\""
+            buildConfigField "String", "API_URL_WS", "\"ws://192.168.0.101:8080\""
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            buildConfigField "String", "API_URL_HTTP", "\"http://192.168.0.100:8080\""
-            buildConfigField "String", "API_URL_WS", "\"ws://192.168.0.100:8080\""
+            buildConfigField "String", "API_URL_HTTP", "\"http://192.168.0.101:8080\""
+            buildConfigField "String", "API_URL_WS", "\"ws://192.168.0.101:8080\""
         }
     }
     compileOptions {
@@ -60,10 +60,6 @@ android {
 }
 
 dependencies {
-
-    //implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.0'  //?
-//        implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0' // ?
- //   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version" // ?
 
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.5.31'
 
@@ -160,9 +156,6 @@ dependencies {
     // serialization
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
 
-//    implementation 'com.google.android.exoplayer:exoplayer:2.18.5' // ExoPlayer dependency
-//    implementation 'com.google.android.exoplayer:extension-mediasession:2.18.5' // MediaSession Extension dependency
-
     // Ktor client
     //def ktor_version = "2.3.7"
     def ktor_version = "2.3.5"
@@ -187,25 +180,9 @@ dependencies {
 
     // animated-navigation
     implementation("com.exyte:animated-navigation-bar:1.0.0")
-    //apply plugin: 'announce'
-
-
-
 
     // Stream Video Compose SDK
     implementation("io.getstream:stream-video-android-compose:0.4.2")
-    // новая штоли
-    // implementation "io.getstream:stream-video-android-ui-compose:0.4.3"
-
-    // Optionally add Jetpack Compose if Android studio didn't automatically include them
-    //implementation(platform("androidx.compose:compose-bom:2023.08.00"))
-    //  implementation("androidx.compose.ui:ui")
-   // implementation("androidx.compose.ui:ui-tooling")
-    //implementation("androidx.compose.runtime:runtime")
-    //implementation("androidx.compose.foundation:foundation")
-    //implementation("androidx.compose.material:material")
-
-    //implementation 'androidx.compose.compiler:compiler:1.5.4'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
 
@@ -221,4 +198,6 @@ dependencies {
     kapt "androidx.room:room-compiler:2.6.1"
     // Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:2.6.1"
+
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
 }

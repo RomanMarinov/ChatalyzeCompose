@@ -1,5 +1,6 @@
 package com.dev_marinov.chatalyze.presentation.util
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -14,6 +15,7 @@ import com.dev_marinov.chatalyze.R
 
 
 object GradientBackgroundHelper {
+    @SuppressLint("UnrememberedMutableState")
     @Composable
     fun SetGradientBackground() {
         val colorAnimation = rememberInfiniteTransition()
@@ -23,7 +25,7 @@ object GradientBackgroundHelper {
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 5000),
                 repeatMode = RepeatMode.Reverse
-            )
+            ), label = ""
         )
         val color2 by colorAnimation.animateColor(
             initialValue = colorResource(id = R.color.main_violet),
@@ -31,7 +33,7 @@ object GradientBackgroundHelper {
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 3000),
                 repeatMode = RepeatMode.Reverse
-            )
+            ), label = ""
         )
         val color3 by colorAnimation.animateColor(
             initialValue = colorResource(id = R.color.main_violet),
@@ -39,7 +41,7 @@ object GradientBackgroundHelper {
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 2000),
                 repeatMode = RepeatMode.Reverse
-            )
+            ), label = ""
         )
 
         Box(
@@ -53,7 +55,6 @@ object GradientBackgroundHelper {
                     )
                 )
         ) {
-            // содержимое, как текст, изображения и т. д.
         }
     }
 
@@ -67,7 +68,7 @@ object GradientBackgroundHelper {
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 5000),
                 repeatMode = RepeatMode.Reverse
-            )
+            ), label = ""
         )
 
         val colorStops = listOf(

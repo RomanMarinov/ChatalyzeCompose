@@ -9,10 +9,3 @@ data class Message(
     val textMessage: String,
     val createdAt: String
 )
-
-
-//data class Message(
-//    val text: String,
-//    val formattedTime: String,
-//    val username: String
-//)

@@ -33,16 +33,10 @@ class AuthInterceptorNew(
     private val preferencesDataStoreRepositoryProvider: Provider<PreferencesDataStoreRepository>,
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        Log.d("4444", " NetworkModule AuthInterceptor intercept выполнился")
         var responseMain: Response? = null
-
         val currentUrl = chain.request().url.toString()
-        Log.d("4444", " NetworkModule AuthInterceptor currentUrl=" + currentUrl)
         if (
-        //currentUrl.contains(Constants.PART_URL_LOGOUT, true) ||
-        //currentUrl.contains(Constants.PART_CHAT_COMPANION, true) ||
             currentUrl.contains(Constants.PART_URL_CHATS, true)
-//            currentUrl.contains(Constants.PART_URL_DELETE_PROFILE, true)
         ) {
             runBlocking {
                 val refreshToken: String = authRepositoryProvider.get().getRefreshTokensFromDataStore.first()
@@ -55,13 +49,11 @@ class AuthInterceptorNew(
                     userId = refreshTokenPayload.userId
                 )
 
-                Log.d("4444", " NetworkModule AuthInterceptor userTokensDetails=" + userTokensDetails)
                 val response: Response = updateTokensRequest(userTokensDetails = userTokensDetails)
 
                 response.body.string().let {
                     when (response.code) {
                         HTTP_OK -> {
-                            Log.d("4444", " NetworkModule AuthInterceptor первый уровень HTTP_OK")
                             if (it.contains("\"httpStatusCode\"") && it.contains("\"message\"")) {
                                 val jsonResponse = JSONObject(it)
                                 val httpStatusCode = jsonResponse.optString("httpStatusCode")
@@ -69,20 +61,15 @@ class AuthInterceptorNew(
 
                                 when (httpStatusCode.toInt()) {
                                     HTTP_OK -> {
-                                        Log.d("4444", " NetworkModule AuthInterceptor второй уровень HTTP_OK")
                                         val res = JsonParser.parseString(message)
 
                                         val pairOfTokensNew = Gson().fromJson(res, PairOfTokens::class.java)
-                                        Log.d("4444", " NetworkModule AuthInterceptor pairOfTokensNew=" + pairOfTokensNew)
                                         authRepositoryProvider.get().savePairTokens(
                                             pairOfTokens = PairOfTokens(
                                                 accessToken = pairOfTokensNew.accessToken,
                                                 refreshToken = pairOfTokensNew.refreshToken
                                             )
                                         )
-                                       // Log.d("4444", " NetworkModule AuthInterceptor pairOfTokensNew.accessToken=" + pairOfTokensNew.accessToken)
-                                        // не действительный токен
-                                        //val resToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsImV4cCI6MTcxMDg3NTM1OSwidXNlcklkIjoxOH0.LzyxWt8Wq8WpfH7qctO6yNtsCSeobBV62mLNTvEA1-W"
                                         val responseChain: Response = chainContinueRequest(
                                             accessToken = accessToken,
                                             chain = chain
@@ -95,7 +82,6 @@ class AuthInterceptorNew(
                                     }
 
                                     HTTP_NOT_FOUND -> {
-                                        Log.d("4444", " NetworkModule AuthInterceptor второй уровень HTTP_NOT_FOUND")
                                         responseMain = badResponse(
                                             chain = chain,
                                             httpCode = HTTP_NOT_FOUND,
@@ -106,7 +92,6 @@ class AuthInterceptorNew(
                                     }
 
                                     HTTP_UNAUTHORIZED -> {
-                                        Log.d("4444", " NetworkModule AuthInterceptor второй уровень HTTP_UNAUTHORIZED")
                                         responseMain = badResponse(
                                             chain = chain,
                                             httpCode = HTTP_UNAUTHORIZED,
@@ -117,7 +102,6 @@ class AuthInterceptorNew(
                                     }
 
                                     else -> {
-                                    Log.d("4444", " NetworkModule AuthInterceptor второй уровень ELSE")
                                         preferencesDataStoreRepositoryProvider.get()
                                             .saveFailureUpdatePairToken(isFailure = true)
                                     }
@@ -134,12 +118,7 @@ class AuthInterceptorNew(
             }
         } else {
 
-
         }
-
-        Log.d("4444", " finish responseMain?.code=" + responseMain?.code)
-        Log.d("4444", " finish responseMain?.body=" + responseMain?.body)
-        Log.d("4444", " finish responseMain?.message=" + responseMain?.message)
 
         responseMain?.let {
             return it
@@ -150,7 +129,6 @@ class AuthInterceptorNew(
     }
 
     private fun badResponse(chain: Interceptor.Chain, httpCode: Int, message: String): Response {
-        Log.d("4444", "NetworkModule badResponse выполнился")
         return Response.Builder().code(httpCode).message(message).protocol(Protocol.HTTP_1_1).request(chain.request()).build()
     }
 
@@ -176,27 +154,5 @@ class AuthInterceptorNew(
             .post(body)
             .build()
         return okHttpClient.newCall(request).execute()
-    }
-
-    private fun navigateToAuthScreen(context: Context) {
-
-//        val scope = CoroutineScope(Dispatchers.Main)
-//        scope.launch {
-//            val deepLink = Uri.parse("auth_screen")
-//            val taskDetailIntent = Intent(
-//                Intent.ACTION_VIEW,
-//                deepLink,
-////                    this,
-////                    MainScreensActivity::class.java
-//                //MainActivity::class.java
-//            )
-//
-//            val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-//                addNextIntentWithParentStack(taskDetailIntent)
-//                // addParentStack(MainScreensActivity::class.java)
-//                getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-//            }
-//            pendingIntent.send()
-//        }
     }
 }

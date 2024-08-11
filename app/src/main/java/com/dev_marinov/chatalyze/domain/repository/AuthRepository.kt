@@ -22,6 +22,4 @@ interface AuthRepository {
 
     suspend fun logout(token: String, senderPhone: String) : MessageResponse?
     suspend fun deleteProfile(token: String) : MessageResponse?
-
-   // suspend fun navigateToAuthScreen(navigate: Boolean)
 }

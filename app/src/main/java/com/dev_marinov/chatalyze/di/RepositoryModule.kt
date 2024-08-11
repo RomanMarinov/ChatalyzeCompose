@@ -48,10 +48,6 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindFirebaseRegisterRepository(firebaseRegisterRepositoryImpl: FirebaseRegisterRepositoryImpl): FirebaseRegisterRepository
 
-//    @Binds
-//    @Singleton
-//    abstract fun bindNotificationManager(notificationManagerImpl: NotificationManagerImpl) : NotificationManager
-
     @Binds
     @Singleton
     abstract fun bindContactsFromSmartphoneRepository(contactsFromSmartphoneRepositoryImpl: RoomRepositoryImpl)

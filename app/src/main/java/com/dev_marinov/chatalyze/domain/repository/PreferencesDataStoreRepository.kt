@@ -33,10 +33,6 @@ interface PreferencesDataStoreRepository {
     val hideDialogPermissionNotificationFlow: Flow<Boolean>
     suspend fun saveHideDialogPermissionNotification(hide: Boolean)
 
-    // не нужно пока
-//    val getNavigateToAuthScreen: Flow<Boolean>
-//    suspend fun saveNavigateToAuthScreen(navigate: Boolean)
-
     val getExitFromApp: Flow<Boolean>
     suspend fun onExitFromApp(isExit: Boolean)
 

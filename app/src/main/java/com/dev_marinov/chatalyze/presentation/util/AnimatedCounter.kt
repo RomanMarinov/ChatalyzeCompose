@@ -18,8 +18,7 @@ fun AnimatedCounter(
     style: TextStyle = MaterialTheme.typography.h3
 ) { // далее реализуем эту функцию
     var oldCount by remember {
-        // начинается с нашего текущего счета
-        mutableStateOf(count)
+        mutableIntStateOf(count)
     }
     SideEffect {
         oldCount = count
@@ -28,12 +27,8 @@ fun AnimatedCounter(
         val countString = count.toString()
         val oldCountString = oldCount.toString()
         for (i in countString.indices) {
-            // сначала хотим получить ссылку на старый символ и после того как номер изменился
-            // мы теперь хотим получить ссылку на старого персонажа, чтобы знать был ли там старый персонаж
-            // getOrNull если значение равно нулю то мы отобазим здесь текст без анимации
             val oldChar = oldCountString.getOrNull(i)
             val newChar = countString[i]
-//
             val char = if (oldChar == newChar) {
                 oldCountString[i]
             } else {
@@ -43,7 +38,7 @@ fun AnimatedCounter(
                 targetState = char,
                 transitionSpec = {
                     slideInVertically { it } togetherWith slideOutVertically { -it }
-                }
+                }, label = ""
             ) { char ->
                 Text(
                     text = char.toString(),

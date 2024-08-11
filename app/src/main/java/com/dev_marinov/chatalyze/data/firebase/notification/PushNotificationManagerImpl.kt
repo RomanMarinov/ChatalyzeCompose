@@ -64,7 +64,6 @@ class PushNotificationManagerImpl @Inject constructor(
         recipientPhone: String,
         textMessage: String,
     ) {
-        Log.d("4444", " showNotificationMessage")
 
         val scope = CoroutineScope(Dispatchers.IO)
 
@@ -76,16 +75,14 @@ class PushNotificationManagerImpl @Inject constructor(
             sessionState = result.await()
 
             val contact = roomRepository.contactBySenderPhone(sender = senderPhone)
-            // .collect { contact ->
             withContext(Dispatchers.Main) {
-                // проверяю есть ли разрешения для уведомлений (true / false)
                 if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
                     try {
                         unlockScreen()
-
                         createNotificationChannel()
 
-                        val deleteIntent = Intent(context, BroadcastReceiverNotification::class.java)
+                        val deleteIntent =
+                            Intent(context, BroadcastReceiverNotification::class.java)
                         deleteIntent.action = "message_notification_swipe"
                         val pendingIntent = PendingIntent.getBroadcast(
                             context, 0, deleteIntent,
@@ -153,10 +150,6 @@ class PushNotificationManagerImpl @Inject constructor(
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         val isScreenLocked =
             keyguardManager.isDeviceLocked // позволяет получить информацию о состоянии блокировки экрана
-        Log.d(
-            "4444",
-            " BroadcastReceiver Notification hasOverlayPermission=" + hasOverlayPermission + " isScreenLocked=" + isScreenLocked
-        )
 
         if (isScreenLocked) { // экран погашен
             if (hasOverlayPermission) {
@@ -174,15 +167,12 @@ class PushNotificationManagerImpl @Inject constructor(
             runBlocking {
                 stateTemp = res.first()
             }
-            Log.d("4444", " Constants.LifeCycleState.stateTemp=" + stateTemp)
             when (stateTemp) {
                 Constants.EVENT_ON_START -> {
-                    Log.d("4444", " Constants.LifeCycleState.ON_START")
                     showPreviewScreen(senderPhone = senderPhone, recipientPhone = recipientPhone)
                 }
 
                 Constants.EVENT_ON_STOP -> {
-                    Log.d("4444", " Constants.LifeCycleState.ON_STOP")
                     if (hasOverlayPermission) {
                         showPreviewScreen(
                             senderPhone = senderPhone,
@@ -198,7 +188,6 @@ class PushNotificationManagerImpl @Inject constructor(
                 }
 
                 Constants.EVENT_ON_DESTROY -> {
-                    Log.d("4444", " Constants.LifeCycleState.ON_DESTROY")
                     if (hasOverlayPermission) {
                         showPreviewScreen(
                             senderPhone = senderPhone,
@@ -234,11 +223,8 @@ class PushNotificationManagerImpl @Inject constructor(
         senderPhone: String,
         recipientPhone: String,
     ) {
-        Log.d("4444", " выполнился showPreviewScreen")
         unlockScreen()
-
         ringtoneStart()
-
         saveHideNavigationBar(hide = true)
 
         val intent = Intent(context, BroadcastReceiverNotification::class.java)
@@ -249,7 +235,6 @@ class PushNotificationManagerImpl @Inject constructor(
         // intent.putExtra("textMessage", textMessage)
         intent.putExtra("channelID", CHANNEL_ID)
         context.sendBroadcast(intent)
-        //  LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
     }
 
     private fun unlockScreen() {
@@ -278,7 +263,6 @@ class PushNotificationManagerImpl @Inject constructor(
         recipientPhone: String,
         context: Context,
     ) {
-        Log.d("4444", " showPushCall")
 
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
@@ -289,9 +273,7 @@ class PushNotificationManagerImpl @Inject constructor(
                 if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
                     try {
                         unlockScreen()
-
                         ringtoneStart()
-
                         createNotificationChannel()
 
                         val deleteIntent =
@@ -301,9 +283,6 @@ class PushNotificationManagerImpl @Inject constructor(
                             context, 0, deleteIntent,
                             PendingIntent.FLAG_IMMUTABLE
                         ) // вместо PendingIntent.FLAG_IMMUTABLE был 0
-
-                        // https://api.baza.net/domofon/preview/0a2a0820-6774-48ea-80bb-a0fd5d04efe0?ts=1670592955&token=YjZhODY2OWJiZTE3NGNhN2Q1NTQ4MjRmZjM2NzgyZmFiNmEzZjE1OC4xNjcxMTk3NzU1
-                        // val icon = Picasso.get().load(imageUrl).placeholder(R.drawable.img_placeholder_camera_dialog).get()
 
                         val notification =
                             NotificationCompat.Builder(context, CHANNEL_ID)
@@ -355,36 +334,12 @@ class PushNotificationManagerImpl @Inject constructor(
                     }
 
                 } else {
-
                     val message = "Allow notifications for this application"
                     showToastPermission(toastMessage = message)
                 }
             }
-            //   }
         }
     }
-
-
-//    private fun getMissedCallPendingIntent(context: Context): PendingIntent {
-//        Log.d("4444", " типа проверил accessToken")
-//        return NavDeepLinkBuilder(context)
-//            .setComponentName(MainActivity::class.java)
-//            .setGraph(R.navigation.nav_graph)
-//            .setDestination(R.id.historyCallFragment)
-//            .createPendingIntent()
-//    }
-
-    // Must be one or more of: PendingIntent.FLAG_ONE_SHOT,
-    // PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_CANCEL_CURRENT,
-    // PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_IMMUTABLE,
-    // PendingIntent.FLAG_MUTABLE, PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT,
-    // Intent.FILL_IN_ACTION, Intent.FILL_IN_DATA, Intent.FILL_IN_CATEGORIES,
-    // Intent.FILL_IN_COMPONENT, Intent.FILL_IN_PACKAGE, Intent.FILL_IN_SOURCE_BOUNDS,
-    // Intent.FILL_IN_SELECTOR, Intent.FILL_IN_CLIP_DATA
-
-    //  какая то хуйня в deeplink
-    // @SuppressLint("WrongConstant")
-
 
     private fun getMessagePendingIntent2(
         name: String?,
@@ -393,101 +348,28 @@ class PushNotificationManagerImpl @Inject constructor(
         context: Context,
         sessionState: String,
     ): PendingIntent {
-        Log.d("4444", " getMessagePendingIntent2 name=" + name + " sender=" + sender + " recicpient=" + recipient)
-
-//        val intent = Intent(context, MainScreensActivity::class.java)
-//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-//        intent.action = "notification_action"
-//        intent.putExtra("name", name)
-//        intent.putExtra("sender", sender)
-//        intent.putExtra("recipient", recipient)
-//
-//        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-//
-
-
-//                val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
-//      val deepLinkIntent = Intent(
-//          Intent.ACTION_VIEW,
-//          deepLink,
-////          context,
-////          MainScreensActivity::class.java
-//      )
-//
-//      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-//          addNextIntentWithParentStack(deepLinkIntent)
-//          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-//      }
-//      return resultPendingIntent
-
-
-
         return if (sessionState == Constants.SESSION_SUCCESS) {
-
-//                            val deepLink =
-//                    Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
-//                //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
-//
-//                val taskDetailIntent = Intent(
-//                    Intent.ACTION_VIEW,
-//                    deepLink,
-////                    this,
-////                    MainScreensActivity::class.java
-//                    //MainActivity::class.java
-//                )
-//                val pendingIntent: PendingIntent = TaskStackBuilder.create(context.applicationContext).run {
-//                    addNextIntentWithParentStack(taskDetailIntent)
-//                    //addParentStack(MainScreensActivity::class.java)
-//                    getPendingIntent(0,   PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-//                }
-//                pendingIntent
-
-
             Log.d("4444", " зашло в первую")
+            val deepLink =
+                Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
+            val deepLinkIntent = Intent(
+                Intent.ACTION_VIEW,
+                deepLink,
+//          context,
+//          MainScreensActivity::class.java
+            )
 
-//            val componentName = ComponentName(context, MainScreensActivity::class.java)
-//            val activityInfo = context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
-//            activityInfo.documentLaunchMode = ActivityInfo.DOCUMENT_LAUNCH_INTO_EXISTING
-
-            val intent = Intent(context, MainScreensActivity::class.java)
-//            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            //intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            intent.action = "notification_action"
-            intent.putExtra("name", name)
-            intent.putExtra("sender", sender)
-            intent.putExtra("recipient", recipient)
-
-            PendingIntent.getActivity(context, 0, intent,
-                    PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+                addNextIntentWithParentStack(deepLinkIntent)
+                getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+            }
+            resultPendingIntent
         } else {
             val componentName = ComponentName(context, MainScreensActivity::class.java)
-            val activityInfo = context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
+            val activityInfo =
+                context.packageManager.getActivityInfo(componentName, PackageManager.GET_ACTIVITIES)
             activityInfo.documentLaunchMode = ActivityInfo.DOCUMENT_LAUNCH_NONE
-//            val deepLink =
-//                Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
-//            //val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/$name/$sender/$recipient")
-//
-//            val intent = Intent(
-//                Intent.ACTION_VIEW,
-//                deepLink,
-////          context.applicationContext,
-////          MainScreensActivity::class.java
-//            )
-//
-//            // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-//
-////        val notifyIntent = Intent(context, MainScreensActivity::class.java).apply {
-////            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-////        }
-//            return PendingIntent.getActivity(
-//                context.applicationContext, 0, intent,
-//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//            )
 
-            Log.d("4444", " зашло во вторую")
-
-
-//            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$recipient}/{$sender}")
             val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
 
             val deepLinkIntent = Intent(
@@ -498,153 +380,9 @@ class PushNotificationManagerImpl @Inject constructor(
             )
             val stackBuilder = TaskStackBuilder.create(context.applicationContext)
             stackBuilder.addNextIntentWithParentStack(deepLinkIntent)
-
             deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-
-
-
-
-
-
-//            //////////////////
-//            val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{$name}/{$sender}/{$recipient}")
-//      val deepLinkIntent = Intent(
-//          Intent.ACTION_VIEW,
-//          deepLink,
-////          context,
-////          MainScreensActivity::class.java
-//      )
-//
-//      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-//          addNextIntentWithParentStack(deepLinkIntent)
-//          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-//      }
-//      return resultPendingIntent
         }
-
-    }
-
-
-    private fun getMessagePendingIntent(
-        name: String?,
-        sender: String,
-        recipient: String,
-        context: Context,
-    ): PendingIntent {
-
-        //////////////////////////////////
-      /////////////////////////////////
-      val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
-
-      val deepLinkIntent = Intent(
-          Intent.ACTION_VIEW,
-          deepLink,
-//          context,
-//          MainScreensActivity::class.java
-      )
-      val stackBuilder = TaskStackBuilder.create(context.applicationContext)
-      stackBuilder.addNextIntentWithParentStack(deepLinkIntent)
-
-      deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-      return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-    }
-//        //////////////////////////////////////
-////        val typeEvent = Constants.INCOMING_MESSAGE_EVENT
-////        val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{${name}}/{${recipient}}/{${sender}}/{${typeEvent}}")
-////
-////      val deepLinkIntent = Intent(
-////          Intent.ACTION_VIEW,
-////          deepLink,
-//////          context,
-//////          MainScreensActivity::class.java
-////      )
-////
-////
-////      PendingIntent.FLAG_IMMUTABLE
-////      PendingIntent.FLAG_UPDATE_CURRENT
-////      PendingIntent.FLAG_CANCEL_CURRENT
-////      PendingIntent.FLAG_ONE_SHOT
-////
-//
-//        ////////////////////////////////////
-////      val intent = Intent(context, MainScreensActivity::class.java)
-////      intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-////    //    val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{${name}}/{${recipient}}/{${sender}}")
-////        val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
-////      val deepLinkIntent = Intent(
-////          Intent.ACTION_VIEW,
-////          deepLink,
-//////          context,
-//////          MainScreensActivity::class.java
-////      )
-////
-////      val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-////          addNextIntentWithParentStack(deepLinkIntent)
-////          getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-////      }
-////      return resultPendingIntent
-//        ///////////////////////////
-//        // вызывается onStop и onDestroy
-//
-//
-//        // последний хуй
-////////////////////////////////////////
-// //       val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
-////
-////          val deepLink = Uri.parse("scheme_chatalyze2://chat_screen2/{$name}/{$sender}/{$recipient}")
-////
-////        val intent = Intent(
-////            Intent.ACTION_VIEW,
-////            deepLink,
-//////          context,
-//////          MainScreensActivity::class.java
-////        )
-////
-//////        val  packageManager: PackageManager = context.packageManager
-//////        val intent2 = packageManager.getLaunchIntentForPackage("com.dev_marinov.chatalyze.presentation.ui.main_screens_activity")
-////
-////            //intent.setAction(Intent.ACTION_VIEW);
-////            intent.data = deepLink
-////
-////
-////        //intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-////       // intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-////      //  intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-////       // не знаю почему вызывается дестрой
-////       // intent2?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-////
-////        // если requestCode = 2 то не переходит
-////        return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-//
-//        //////////////////////////////////////
-//
-////////        val typeEvent = Constants.INCOMING_MESSAGE_EVENT
-////        val deepLink = Uri.parse("scheme_chatalyze://chat_screen/{${name}}/{${recipient}}/{${sender}}")
-////
-////        val taskDetailIntent = Intent(
-////            Intent.ACTION_VIEW,
-////            deepLink,
-//////            context,
-//////            MainScreensActivity::class.java
-////            //MainActivity::class.java
-////        )
-////
-////      val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-////      val pendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-////            addNextIntentWithParentStack(taskDetailIntent)
-////            addNextIntent(taskDetailIntent)
-////
-////            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-////        }
-////        return pendingIntent
-//    }
-
-    fun addBackStack(context: Context, intent: Intent): PendingIntent? {
-        val stackBuilder = TaskStackBuilder.create(context.applicationContext)
-        stackBuilder.addNextIntentWithParentStack(intent)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun getCallPendingIntent(
@@ -654,9 +392,6 @@ class PushNotificationManagerImpl @Inject constructor(
         context: Context,
     ): PendingIntent {
         val typeEvent = Constants.INCOMING_CALL_EVENT
-
-        //"chatalyze://call_screen/{${RECIPIENT_NAME}}/{${RECIPIENT_PHONE}}/{${SENDER_PHONE}}"
-//        val deepLink = Uri.parse("chatalyze://call_screen/{${"RECIPIENT_NAME"}}/{${recipient}}/{${sender}}\"")
 
         val deepLink =
             Uri.parse("scheme_chatalyze://call_screen/{${name}}/{${recipient}}/{${sender}}/{${typeEvent}}")

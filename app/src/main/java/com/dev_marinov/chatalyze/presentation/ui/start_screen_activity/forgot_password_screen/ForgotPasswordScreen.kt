@@ -1,11 +1,22 @@
 package com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.forgot_password_screen
 
-import android.content.Context
 import android.util.Log
-import android.util.Patterns
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
@@ -13,7 +24,12 @@ import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Mail
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -35,7 +51,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.presentation.util.*
+import com.dev_marinov.chatalyze.presentation.util.CheckEmailTextFieldHelper
+import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.ShowToastHelper
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
+import com.dev_marinov.chatalyze.presentation.util.TextFieldHintEmail
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -57,13 +78,10 @@ fun ForgotPasswordScreen(
 
     val messageEmail = stringResource(id = R.string.email_warning)
     val context = LocalContext.current
-    Log.d("4444", " statusCode=" + statusCode + " notice=" + notice)
 
     LaunchedEffect(statusCode) {
-       // Log.d("4444", " statusCode=" + statusCode + " notice=" + notice)
         if (statusCode == 200) {
             ShowToastHelper.createToast(message = notice, context = context)
-            // переход на другой экран
             navController.navigate(ScreenRoute.CodeScreen.route)
         }
     }
@@ -72,16 +90,13 @@ fun ForgotPasswordScreen(
         modifier = Modifier
             .imePadding()
             .fillMaxSize()
-            //  .padding(top = 200.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
                     softwareKeyboardController?.hide()
                 }
-            ),
-     //   verticalArrangement = Arrangement.Center,
-      //  horizontalAlignment = Alignment.CenterHorizontally
+            )
     ) {
 
         val constraintsTop = ConstraintSet {
@@ -97,12 +112,9 @@ fun ForgotPasswordScreen(
             }
 
             constrain(header) {
-                //top.linkTo(email.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
                 bottom.linkTo(email.top)
-//                width = Dimension.value(40.dp)
-//                height = Dimension.wrapContent
             }
 
             constrain(email) {
@@ -116,12 +128,9 @@ fun ForgotPasswordScreen(
                 top.linkTo(email.bottom)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
-//                bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
-
-
         }
 
         ConstraintLayout(
@@ -130,7 +139,6 @@ fun ForgotPasswordScreen(
                 .fillMaxSize()
                 .padding(top = 8.dp, bottom = 8.dp)
         ) {
-
             Image(
                 painter = painterResource(id = R.drawable.ic_back_to_prev_screen),
                 contentDescription = "back",
@@ -141,7 +149,6 @@ fun ForgotPasswordScreen(
                     .size(30.dp)
                     .clip(RoundedCornerShape(50))
                     .clickable {
-                        Log.d("4444", " clidk back")
                         viewModel.saveEmail("")
                         navController.popBackStack(ScreenRoute.AuthScreen.route, false)
                     }
@@ -171,16 +178,12 @@ fun ForgotPasswordScreen(
                 contentAlignment = Alignment.Center
             ) {
 
-                Log.d("4444", " emailFromPreferences=" + emailFromPreferences)
-
                     TextFieldHintEmail(
                         value = emailFromPreferences.ifEmpty { textEmailState },
                         onValueChanged = {
                             if (it.isNotEmpty()) {
                                 viewModel.saveEmail("")
                             } else {
-
-                               // textEmailState = it
                             }
                              textEmailState = it
                         },
@@ -192,9 +195,6 @@ fun ForgotPasswordScreen(
                             .background(MaterialTheme.colors.surface)
                             .padding(start = 12.dp, end = 16.dp),
                         icon = Icons.Rounded.Mail,
-//                isFocus = {
-//
-//                }
                     )
             }
 

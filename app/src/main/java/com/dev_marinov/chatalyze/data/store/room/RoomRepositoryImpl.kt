@@ -11,6 +11,7 @@ import com.dev_marinov.chatalyze.data.store.room.local.ready_stream.ReadyStreamD
 import com.dev_marinov.chatalyze.data.store.room.local.ready_stream.ReadyStreamEntity
 import com.dev_marinov.chatalyze.domain.repository.RoomRepository
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
+import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
 import com.dev_marinov.chatalyze.presentation.util.IfLetHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -27,33 +28,14 @@ class RoomRepositoryImpl @Inject constructor(
 
     override suspend fun contactBySenderPhone(sender: String): Contact {
         val response = contactsDao.getContactBySenderPhoneFlow(sender = sender)
-
-        Log.d("4444", " contactBySenderPhone response=" + response)
         return Contact(
-            name = response.name,
+            name = response?.name?.let { it }.run { "" },
             phoneNumber = response.phoneNumber,
             photo = response.photo
         )
     }
 
-//    Process: com.dev_marinov.chatalyze, PID: 10815
-//    java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.String com.dev_marinov.chatalyze.data.store.room.local.contacts.ContactsEntity.getName()' on a null object reference
-//    at com.dev_marinov.chatalyze.data.store.room.RoomRepositoryImpl.contactBySenderPhone(RoomRepositoryImpl.kt:33)
-//    at com.dev_marinov.chatalyze.data.store.room.RoomRepositoryImpl$contactBySenderPhone$1.invokeSuspend(Unknown Source:15)
-//    at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
-//    at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
-//    at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:115)
-//    at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:103)
-//    at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:584)
-//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:793)
-//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:697)
-//    at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:684)
-//    Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@37b4435, Dispatchers.IO]
-//
-
     override suspend fun saveContacts(contacts: List<Contact>) {
-       // contactsDao.deleteAll()
-        Log.d("4444", " saveContacts contacts=" + contacts)
         val contactsEntity: List<ContactsEntity> = contacts.mapIndexed { index, contact ->
             ContactsEntity(
                 id = index,
@@ -75,7 +57,6 @@ class RoomRepositoryImpl @Inject constructor(
                 onlineOrOffline = it.onlineOrOffline
             )
         }
-
         onlineUsersDao.insert(onlineUsersEntity = onlineUsersEntity)
     }
 

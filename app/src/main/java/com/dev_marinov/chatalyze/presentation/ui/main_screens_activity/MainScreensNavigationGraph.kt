@@ -28,11 +28,11 @@ import com.dev_marinov.chatalyze.presentation.util.TYPE_EVENT
 @Composable
 fun MainScreensNavigationGraph(navHostController: NavHostController) {
 
-    Log.d("4444", " ChatalyzeNavigationGraph loaded")
     NavHost(navController = navHostController, startDestination = ScreenRoute.ChatsScreen.route) {
         composable(route = ScreenRoute.ChatsScreen.route) {
             ChatsScreen(navController = navHostController)
         }
+
         composable(
             route = ScreenRoute.ChatScreen.route,
             deepLinks = listOf(
@@ -71,7 +71,6 @@ fun MainScreensNavigationGraph(navHostController: NavHostController) {
                 navDeepLink {
                     uriPattern =
                         "app://calls_screen/"
-                    //action = Intent.ACTION_VIEW
                 }
             )
         )

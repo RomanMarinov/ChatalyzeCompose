@@ -93,12 +93,7 @@ fun UnlockAndTurnOnTheScreen() {
             keyguardManager.requestDismissKeyguard(this, null)
         }
     } else {
-//        val window = LocalWindow.current
-//        window.addFlags(
-//            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-//                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-//                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-//        )
+
     }
 }
 
@@ -112,7 +107,6 @@ fun CallScreen(
     typeEvent: String?,
     viewModel: CallScreenViewModel = hiltViewModel(),
 ) {
-    Log.d("4444", " CallScreen загрузился")
 
     val context = LocalContext.current
 
@@ -134,13 +128,8 @@ fun CallScreen(
         }
     }
 
-
-
-
-
     when (typeEventState) {
         Constants.OUTGOING_CALL_EVENT -> { // исходящий
-            Log.d("4444", " CallScreen Constants.OUTGOING_CALL_EVENT")
             OutgoingCallContent(
                 navController = navController,
                 recipientName = recipientNameState,
@@ -154,7 +143,6 @@ fun CallScreen(
         }
 
         Constants.INCOMING_CALL_EVENT -> {
-            //Log.d("4444", " CallScreen Constants.INCOMING_CALL_EVENT")
             IncomingCallContent( // входящий
                 context = context,
                 recipientName = recipientNameState,
@@ -163,7 +151,6 @@ fun CallScreen(
                 navController = navController,
                 senderPhone = senderPhoneState,
                 onAcceptCall = {
-                    Log.d("4444", " CallScreen IncomingCallContent")
 
                     viewModel.sendStateReadyToStream(
                         firebaseCommand =
@@ -185,9 +172,6 @@ fun CallScreen(
                     )
                 },
                 onDeclineCall = {
-                    Log.d("4444", " onDeclineCall")
-                  //  viewModel.saveHideNavigationBar(isHide = false)
-                    //navController.popBackStack()cdwc
                     val uri = "scheme_chatalyze://calls_screen".toUri()
                     val deepLink = Intent(Intent.ACTION_VIEW, uri)
                     val pendingIntent: PendingIntent =
@@ -213,18 +197,7 @@ fun OutgoingCallContent(
     senderPhone: String?,
     viewModel: CallScreenViewModel,
     onDeclineCall: () -> Unit,
-//    composition: LottieComposition?,
-//    progress: Float,
 ) {
-
-
-//
-//    val getReadyStreamOsb by viewModel.getReadyStream.collectAsStateWithLifecycle(null)
-//    val isSessionStateOsb by viewModel.isSessionState.collectAsStateWithLifecycle("")
-//
-//    val getReadyStream by remember { mutableStateOf(getReadyStreamOsb) }
-//    val isSessionState by remember { mutableStateOf(isSessionStateOsb) }
-    val context = LocalContext.current
     val getReadyStream by viewModel.getReadyStream.collectAsStateWithLifecycle(null)
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
 
@@ -235,7 +208,7 @@ fun OutgoingCallContent(
                     topic = "",
                     senderPhone = it[0],
                     recipientPhone = it[1],
-                    textMessage = "",
+                    textMessage = "textMessage",
                     typeFirebaseCommand = Constants.TYPE_FIREBASE_MESSAGE_CALL
                 )
                 viewModel.sendCommandToFirebase(firebaseCommand = firebaseCommand)
@@ -245,7 +218,6 @@ fun OutgoingCallContent(
 
     LaunchedEffect(getReadyStream) {
         getReadyStream?.let { // тут после фб открываем стрим с тем кто готов
-            Log.d("4444", " ГОТОВ ПОСТРИМИТЬСЯ getReadyStream=" + getReadyStream)
 
             if (it.typeFirebaseCommand == Constants.TYPE_FIREBASE_MESSAGE_READY_STREAM) {
                 navController.navigate(

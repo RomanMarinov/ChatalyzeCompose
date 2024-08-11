@@ -33,7 +33,6 @@ class ForgotPasswordScreenViewModel @Inject constructor(
     val notice: StateFlow<String> = _notice
 
     fun sendAndSaveEmail(email: String) {
-        Log.d("4444", " ForgotPasswordScreenViewModel sendEmail=" + email)
         viewModelScope.launch(Dispatchers.IO) {
             val response = authRepository.sendEmail(email = email)
             response?.let {
@@ -51,10 +50,8 @@ class ForgotPasswordScreenViewModel @Inject constructor(
 
     private suspend fun processTheResponse(response: MessageResponse) {
 
-        Log.d("4444", " response=" + response)
         when (response.httpStatusCode) {
             HTTP_OK -> {
-                Log.d("4444", " respons OK")
                 _statusCode.value = response.httpStatusCode
                 _notice.value = response.message
                 delay(1000L)

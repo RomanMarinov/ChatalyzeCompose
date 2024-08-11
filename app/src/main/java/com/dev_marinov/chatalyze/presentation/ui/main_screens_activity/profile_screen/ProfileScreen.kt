@@ -59,23 +59,14 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     navHostController: NavHostController,
     viewModel: ProfileViewModel = hiltViewModel(),
-    // authHostController: NavHostController
 ) {
 
-    Log.d("4444", " ProfileScreen загрузился")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     SystemUiControllerHelper.SetSystemBars(true)
     SystemUiControllerHelper.SetStatusBarColor()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     GradientBackgroundHelper.SetMonochromeBackground()
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
-
-
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
-    // viewModel.onClickHideNavigationBar(false)
-
     val ownPhoneSender by viewModel.ownPhoneSender.collectAsStateWithLifecycle("")
     val ownPhoneSenderState = remember { mutableStateOf("") }
     val statusCode by viewModel.statusCode.collectAsStateWithLifecycle()
@@ -115,24 +106,11 @@ fun ProfileScreen(
 
     val tryAgainLater = stringResource(id = R.string.try_again_later)
 
-//    LaunchedEffect(statusCode) {
-//        if (statusCode == 200) {
-//            navHostController.navigate(ScreenRoute.ChatsScreen.route)
-//            delay(50L)
-//
-//
-//
-//    }
-
     if (statusCode == 200 || statusCode == 404) {
-        //navHostController.navigate(ScreenRoute.ChatsScreen.route)
         scope.launch {
             delay(100L)
         }
         TransitionToAuthScreen()
-//        navHostController.navigate(ScreenRoute.ChatsScreen.route)
-//        delay()
-//        TransitionToAuthScreen()
     } else if (statusCode == 409 || statusCode == 500) {
         ShowToastHelper.createToast(message = tryAgainLater, context = context)
     }
@@ -141,8 +119,6 @@ fun ProfileScreen(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-        //  .background(colorResource(id = R.color.main_violet_light))
-        //  .systemBarsPadding()
     ) {
 
         val constraints = ConstraintSet {
@@ -155,7 +131,6 @@ fun ProfileScreen(
             constrain(headerChatText) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -163,8 +138,6 @@ fun ProfileScreen(
             constrain(ownPhoneSender) {
                 top.linkTo(headerChatText.bottom)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
-                //bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -172,8 +145,6 @@ fun ProfileScreen(
             constrain(btLogOut) {
                 top.linkTo(ownPhoneSender.bottom)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
-                //bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -181,8 +152,6 @@ fun ProfileScreen(
             constrain(btDeleteProfile) {
                 top.linkTo(btLogOut.bottom)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
-                //bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -190,8 +159,6 @@ fun ProfileScreen(
             constrain(btDeleteHistoryCall) {
                 top.linkTo(btDeleteProfile.bottom)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
-                //bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
             }
@@ -243,7 +210,6 @@ fun ProfileScreen(
                 },
                 border = BorderStroke(1.dp, Color.White),
                 shape = RoundedCornerShape(50), // = 50% percent
-                // or shape = CircleShape ,
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet))
             ) {
                 Text(
@@ -262,7 +228,6 @@ fun ProfileScreen(
                 },
                 border = BorderStroke(1.dp, Color.White),
                 shape = RoundedCornerShape(50), // = 50% percent
-                // or shape = CircleShape ,
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet))
             ) {
                 Text(
@@ -281,7 +246,6 @@ fun ProfileScreen(
                 },
                 border = BorderStroke(1.dp, Color.White),
                 shape = RoundedCornerShape(50), // = 50% percent
-                // or shape = CircleShape ,
                 colors = ButtonDefaults.buttonColors(backgroundColor = colorResource(id = R.color.main_violet))
             ) {
                 Text(
@@ -299,7 +263,6 @@ fun ProfileScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TransitionToAuthScreen() {
-   Log.d("4444", " ProfileScreen TransitionToAuthScreen ")
     val context = LocalContext.current
     val deepLinkIntent = Intent(
         Intent.ACTION_VIEW,
@@ -318,12 +281,6 @@ fun TransitionToAuthScreen() {
     }
 
     deepLinkPendingIntent?.send()
-//    val deepLinkPendingIntent = TaskStackBuilder.create(context).run {
-//        addNextIntentWithParentStack(deepLinkIntent)
-//        getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-//    }
-//    deepLinkPendingIntent?.send()
-///////////////////////////
 }
 
 @Composable
@@ -353,7 +310,6 @@ fun DialogProfile(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // .height(200.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.White),
             verticalArrangement = Arrangement.Center,
@@ -362,7 +318,6 @@ fun DialogProfile(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // .height(200.dp)
                     .padding(1.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(colorResource(id = R.color.main_violet_light)),
@@ -382,7 +337,6 @@ fun DialogProfile(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 16.dp)
-                    // .height(200.dp)
                 ) {
                     TextButton(
                         onClick = onDismiss,
@@ -424,5 +378,4 @@ fun DialogProfile(
             }
         }
     }
-
 }

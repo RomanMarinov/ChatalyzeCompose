@@ -61,10 +61,8 @@ class CreatePasswordViewModel @Inject constructor(
     }
 
     private suspend fun processTheResponse(response: MessageResponse) {
-        Log.d("4444", " response=" + response)
         when (response.httpStatusCode) {
             HTTP_OK -> {
-                Log.d("4444", " respons OK")
                 _statusCode.value = response.httpStatusCode
                 _notice.value = response.message
                 delay(1000L)

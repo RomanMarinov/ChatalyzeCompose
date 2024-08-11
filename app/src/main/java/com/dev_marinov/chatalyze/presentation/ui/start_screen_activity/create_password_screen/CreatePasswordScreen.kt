@@ -59,12 +59,7 @@ fun CreatePasswordScreen(
     var textPasswordState by remember { mutableStateOf("") }
     var textPasswordConfirmState by remember { mutableStateOf("") }
     val passwordMismatch = stringResource(id = R.string.password_mismatch)
-    val messagePassword = stringResource(id = R.string.password_warning)
-    val messageEmailPassword = stringResource(id = R.string.email_password_warning)
     val context = LocalContext.current
-    var isFocusTextFiled by remember { mutableStateOf(false) }
-
-    var isClicked by remember { mutableStateOf(false) }
 
     LaunchedEffect(statusCode) {
         when (statusCode) {
@@ -146,14 +141,12 @@ fun CreatePasswordScreen(
                     .size(30.dp)
                     .clip(RoundedCornerShape(50))
                     .clickable {
-                        Log.d("4444", " clidk back")
                         navController.popBackStack(ScreenRoute.ForgotPasswordScreen.route, false)
                     }
             )
 
             Box(
                 modifier = Modifier
-                    // .imePadding()
                     .fillMaxWidth()
                     .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
                     .layoutId("password"),
@@ -176,7 +169,6 @@ fun CreatePasswordScreen(
 
             Box(
                 modifier = Modifier
-                    // .imePadding()
                     .fillMaxWidth()
                     .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp)
                     .layoutId("password_confirm"),

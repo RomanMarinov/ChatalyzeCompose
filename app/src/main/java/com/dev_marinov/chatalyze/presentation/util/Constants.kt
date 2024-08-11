@@ -3,10 +3,8 @@ package com.dev_marinov.chatalyze.presentation.util
 class Constants {
     companion object {
         const val HIDE_BOTTOM_BAR = "HIDE_BOTTOM_BAR"
-        const val CHANGE_IS_SHEET_OPEN = "CHANGE_IS_SHEET_OPEN"
         const val KEY_EMAIL = "KEY_EMAIL"
         const val OWN_PHONE_SENDER = "OWN_PHONE_SENDER"
-        const val IS_GRANTED_PERMISSIONS = "IS_GRANTED_PERMISSIONS"
 
         const val IS_LIFECYCLE_EVENT = "IS_LIFECYCLE_EVENT_ON_START"
         const val EVENT_ON_START = "EVENT_ON_START"
@@ -25,7 +23,6 @@ class Constants {
 
         const val KEY_FIREBASE_TOKEN = "KEY_FIREBASE_TOKEN"
 
-        const val INCOMING_MESSAGE_EVENT = "INCOMING_MESSAGE_EVENT"
         const val INCOMING_CALL_EVENT = "INCOMING_CALL_EVENT"
         const val OUTGOING_CALL_EVENT = "OUTGOING_CALL_EVENT"
 
@@ -40,8 +37,6 @@ class Constants {
 
         const val HIDE_DIALOG_PERMISSION_NOTIFICATION = "HIDE_DIALOG_PERMISSION_NOTIFICATION"
 
-//        const val NAVIGATE_TO_AUTH_SCREEN = "NAVIGATE_TO_AUTH_SCREEN"
-
         const val TYPE_FIREBASE_MESSAGE_MESSAGE = "TYPE_FIREBASE_MESSAGE_MESSAGE"
         const val TYPE_FIREBASE_MESSAGE_CALL = "TYPE_FIREBASE_MESSAGE_CALL"
         const val TYPE_FIREBASE_MESSAGE_READY_STREAM = "TYPE_FIREBASE_MESSAGE_READY_STREAM"
@@ -50,29 +45,9 @@ class Constants {
         const val TYPE_DELETE_PROFILE = "TYPE_DELETE_PROFILE"
         const val TYPE_DELETE_HISTORY_CALLS = "TYPE_DELETE_HISTORY_CALLS"
 
-        const val PART_URL_REGISTER = "register"
-        const val PART_URL_SIGNIN = "signin"
-        const val PART_URL_LOGOUT = "logout"
-        const val PART_URL_FORGOT_PASSWORD_EMAIL = "forgot_password/email"
-        const val PART_URL_FORGOT_PASSWORD_CODE = "forgot_password/code"
-        const val PART_URL_FORGOT_PASSWORD_PASSWORD = "forgot_password/password"
-        const val PART_URL_DELETE_PROFILE = "delete_profile"
-
         const val PART_URL_UPDATE_TOKENS = "/update_two_token"
 
-        //////////////////////
-        const val PART_FIREBASE_COMMAND = "firebase_command"
-       // const val PART_SEND_MESSAGE = "sendMessage"
-        const val PART_CHAT_COMPANION = "chat_companion"
         const val PART_URL_CHATS = "chats"
         const val PART_URL_MESSAGES = "messages"
-
-
-
-
-
-
-
-
     }
 }

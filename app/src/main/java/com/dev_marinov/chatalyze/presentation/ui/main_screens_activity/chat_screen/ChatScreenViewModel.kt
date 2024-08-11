@@ -39,7 +39,6 @@ class ChatScreenViewModel @Inject constructor(
     val onlineUserStateList = roomRepository.onlineUserStateList
 
     val isSessionState = preferencesDataStoreRepository.isSessionState
-    val isGrantedPermissions = preferencesDataStoreRepository.isGrantedPermissions
     val getStateUnauthorized = preferencesDataStoreRepository.getStateUnauthorized
     val refreshToken = authRepository.getRefreshTokensFromDataStore
 
@@ -142,8 +141,6 @@ class ChatScreenViewModel @Inject constructor(
 
             _chatMessage.value = jobResponse.await()
 
-            Log.d("4444", " ChatScreenViewModel getAllMessages result=" + jobResponse.await())
-
             _state.value = state.value.copy(
                 messages = jobResponse.await(),
                 isLoading = false
@@ -153,7 +150,6 @@ class ChatScreenViewModel @Inject constructor(
 
     fun sendMessage() { // клик отправки сообщения на сервер
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("4444", " sendMessage=" + messageText.value)
             if (messageText.value.isNotEmpty()) {
                 val messageToSend = MessageToSend(
                     sender = _sender,

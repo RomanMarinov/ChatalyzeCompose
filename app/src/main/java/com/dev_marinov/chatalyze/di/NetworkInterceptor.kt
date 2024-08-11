@@ -24,7 +24,6 @@ class NetworkInterceptor(
 
     override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
         super.onCapabilitiesChanged(network, networkCapabilities)
-
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -37,7 +36,6 @@ class NetworkInterceptor(
     }
 
     private fun badResponse(chain: Interceptor.Chain, httpCode: Int, message: String): Response {
-        Log.d("4444", "NetworkInterceptor badResponse выполнился")
         return Response.Builder().code(httpCode).message(message).protocol(Protocol.HTTP_1_1).request(chain.request()).build()
     }
 }

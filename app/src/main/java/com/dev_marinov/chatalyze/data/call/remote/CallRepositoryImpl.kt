@@ -26,7 +26,6 @@ class CallRepositoryImpl @Inject constructor(
                 textMessage = firebaseCommand.textMessage,
                 typeFirebaseCommand = firebaseCommand.typeFirebaseCommand
             )
-           // Log.d("4444", " CallRepositoryImpl userCallDto=" + firebaseCommandDTO)
             val response = callApiService.sendCommandToFirebase(firebaseCommandDTO = firebaseCommandDTO)
             return response.body()?.mapToDomain()
         } catch (e: Exception) {
@@ -60,7 +59,6 @@ class CallRepositoryImpl @Inject constructor(
             conversationTime = historyCall.conversationTime,
             createdAt = historyCall.createdAt
         )
-        Log.d("4444", " saveHistoryCalls historyCallsEntity=" + historyCallsEntity)
         historyCallsDao.insert(historyCallsEntity = historyCallsEntity)
     }
 }

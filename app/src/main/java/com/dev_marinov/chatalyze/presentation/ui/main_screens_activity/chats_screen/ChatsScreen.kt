@@ -1,8 +1,11 @@
 package com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen
 
 import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
@@ -12,17 +15,42 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Text
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -42,73 +70,29 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.dev_marinov.chatalyze.BuildConfig
 import com.dev_marinov.chatalyze.R
-import com.dev_marinov.chatalyze.data.auth.dto.UserTokensDetails
-import com.dev_marinov.chatalyze.domain.model.auth.PairOfTokens
+import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.MainScreensActivity
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.CombineChat
 import com.dev_marinov.chatalyze.presentation.ui.main_screens_activity.chats_screen.model.Contact
-import com.dev_marinov.chatalyze.presentation.util.*
-import com.google.gson.Gson
-import com.google.gson.JsonParser
-import kotlinx.coroutines.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import okhttp3.internal.http.HTTP_FORBIDDEN
-import okhttp3.internal.http.HTTP_OK
-import okhttp3.internal.http.HTTP_UNAUTHORIZED
-import org.json.JSONObject
+import com.dev_marinov.chatalyze.presentation.util.Constants
+import com.dev_marinov.chatalyze.presentation.util.CorrectNumberFormatHelper
+import com.dev_marinov.chatalyze.presentation.util.CustomDateTimeHelper
+import com.dev_marinov.chatalyze.presentation.util.EditFormatPhoneHelper
+import com.dev_marinov.chatalyze.presentation.util.GradientBackgroundHelper
+import com.dev_marinov.chatalyze.presentation.util.RememberContacts
+import com.dev_marinov.chatalyze.presentation.util.ScreenRoute
+import com.dev_marinov.chatalyze.presentation.util.SnackBarHostHelper
+import com.dev_marinov.chatalyze.presentation.util.SystemUiControllerHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 private fun openSystemSettingNotification(context: Context) {
-//    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//    context.startActivity(intent)
-
-
     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
         .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
     context.startActivity(intent)
-
-
-//APP_NOTIFICATION_SETTINGS
-    //ACTION_APPLICATION_DETAILS_SETTINGS
-    //ACTION_APP_NOTIFICATION_SETTINGS
-    // "android.settings.APP_NOTIFICATION_SETTINGS"
-
-
-    // ошибка
-//    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-//    val packageName = context.packageName // замените на пакет вашего приложения
-//    val uri = Uri.fromParts("package", packageName, null)
-//    intent.data = uri
-//    context.startActivity(intent)
-
-
-//    val intent = Intent().apply {
-//        when {
-//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
-//                action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-//                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-//            }
-//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-//                action = "android.settings.APP_NOTIFICATION_SETTINGS"
-//                putExtra("app_package", context.packageName)
-//                putExtra("app_uid", context.applicationInfo.uid)
-//            }
-//            else -> {
-//                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-//                addCategory(Intent.CATEGORY_DEFAULT)
-//                data = Uri.parse("package:" + context.packageName)
-//            }
-//        }
-//    }
-//    context.startActivity(intent)
-
-
 }
 
 
@@ -120,37 +104,19 @@ fun ChatsScreen(
     navController: NavHostController,
     viewModel: ChatsScreenViewModel = hiltViewModel(),
 ) {
-    Log.d("4444", " ChatsScreen loaded")
-
-//    object : OnBackPressedCallback(true) {
-//        override fun handleOnBackPressed() {
-//            Log.d("4444", "OnBackPressed")
-//        }
-//    }
-//    BackHandler (true)    {
-//        Log.d("4444", " ChatsScreen нажал блять")
-//    }
-
-
-
-
-
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     SystemUiControllerHelper.SetSystemBars(true)
     SystemUiControllerHelper.SetStatusBarColor()
     SystemUiControllerHelper.SetNavigationBars(isVisible = true)
-    //SystemUiControllerHelper.SetStatusBarColorNoGradient()
     GradientBackgroundHelper.SetMonochromeBackground()
-    // SystemUiControllerHelper.SetStatusBarColorNoGradient()
 
     val chatList = viewModel.chatList.collectAsStateWithLifecycle()
     val contacts = viewModel.filteredContacts.collectAsStateWithLifecycle(initialValue = listOf())
     val combineChatList =
         viewModel.combineChatList.collectAsStateWithLifecycle(initialValue = listOf())
 
-    // раскоментировать
     val isGrantedPermissions by viewModel.isGrantedPermissions.collectAsStateWithLifecycle(false)
     val getOwnPhoneSender by viewModel.getOwnPhoneSender.collectAsStateWithLifecycle("")
     val isTheLifecycleEventNow by viewModel.isTheLifecycleEventNow.collectAsStateWithLifecycle("")
@@ -159,26 +125,22 @@ fun ChatsScreen(
         true
     )
 
-    val getStateNotFoundRefreshToken by viewModel.getStateNotFoundRefreshToken.collectAsStateWithLifecycle(false)
-    val getFailureUpdatePairToken by viewModel.getFailureUpdatePairToken.collectAsStateWithLifecycle(false)
+    val getStateNotFoundRefreshToken by viewModel.getStateNotFoundRefreshToken.collectAsStateWithLifecycle(
+        false
+    )
+    val getFailureUpdatePairToken by viewModel.getFailureUpdatePairToken.collectAsStateWithLifecycle(
+        false
+    )
     val getInternalServerError by viewModel.getInternalServerError.collectAsStateWithLifecycle(false)
 
     var stateHideDialogNotification by remember { mutableStateOf(false) }
 
     val isSessionState by viewModel.isSessionState.collectAsStateWithLifecycle("")
 
-
-    // может из за false не работать но скорей всего работает
     val getChatListFlag by viewModel.getChatListFlag.collectAsStateWithLifecycle(false)
 
-    // сюда добавить статус соедения удачу сокета
     LaunchedEffect(getOwnPhoneSender, isSessionState, isTheLifecycleEventNow) {
-        Log.d("4444", " ChatsScreen isSessionState=" + isSessionState)
         if (isSessionState == Constants.SESSION_SUCCESS) {
-            Log.d(
-                "4444", " ChatsScreen isGrantedPermissions="
-                        + isGrantedPermissions + " lifecycleEventOnStart=" + isTheLifecycleEventNow
-            )
             viewModel.canGetChatList(can = true)
         }
     }
@@ -188,16 +150,12 @@ fun ChatsScreen(
         viewModel.onClickHideNavigationBar(isHide = false)
     }
 
-
-
     if (getChatListFlag) {
         val contactsFlow = RememberContacts(context = context)
         LaunchedEffect(key1 = true) {
             scope.launch {
                 contactsFlow.collect { originalContacts ->
-                    Log.d("4444", " list contact =" + originalContacts)
                     viewModel.createContactsFlow(contacts = originalContacts)
-
                     viewModel.createChatListFlow() // список последних сообщений
                     viewModel.createCombineFlow() // список итоговый комбайн
                 }
@@ -208,7 +166,6 @@ fun ChatsScreen(
     if (!hideDialogPermissionNotificationFlow) {
         if (!stateHideDialogNotification) {
             DialogShowSettingNotification(
-                //viewModel,
                 onDismiss = {
                     stateHideDialogNotification = it
                 },
@@ -221,10 +178,6 @@ fun ChatsScreen(
             )
         }
     }
-
-    // openSystemSettingNotification(context = context)
-
-
 
     val localLifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(
@@ -258,8 +211,6 @@ fun ChatsScreen(
         }
     )
 
-
-//    var ownPhoneSender by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Expanded,
         skipHalfExpanded = true
@@ -281,7 +232,6 @@ fun ChatsScreen(
         }
     }
 
-    // закрытие не через крестик
     LaunchedEffect(Unit) {
         snapshotFlow { sheetState.currentValue }
             .collect {
@@ -307,7 +257,6 @@ fun ChatsScreen(
             constrain(headerChatText) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
                 height = Dimension.wrapContent
@@ -315,7 +264,6 @@ fun ChatsScreen(
 
             constrain(createChatIcon) {
                 top.linkTo(parent.top)
-                //start.linkTo(headerChatText.end)
                 end.linkTo(parent.end)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.wrapContent
@@ -327,7 +275,6 @@ fun ChatsScreen(
             constraintSet = constraints,
             modifier = Modifier
                 .fillMaxWidth()
-                //.background(Color.Red)
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
         ) {
             Text(
@@ -337,112 +284,13 @@ fun ChatsScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .height(50.dp)
-                    // .background(Color.Green)
                     .layoutId("header_chat_text")
-                    .clickable {
-
-
-                        scope.launch(Dispatchers.IO) {
-                            // runBlocking {
-                            try {
-                                val userTokensDetails = UserTokensDetails(
-                                    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsImV4cCI6MTcxMDE1MzQyMCwidXNlcklkIjoxOH0.Hz64un2QQl3tBBtcATtCXLVSylZ8GjrG_zVB14hd004",
-                                    refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsImV4cCI6NDMwMjA2NzAyMCwidXNlcklkIjoxOH0.Cmd22NbbXvO2eqGKFP7QfySREEiQieR8uTnZDKOT9do",
-                                    userId = 18
-                                )
-
-                                val gson = Gson()
-                                val okHttpClient = OkHttpClient()
-                                val json = gson.toJson(userTokensDetails)
-                                val body =
-                                    json.toRequestBody("application/json; charset=utf-8".toMediaType())
-                                val url =
-                                    BuildConfig.API_URL_HTTP + Constants.PART_URL_UPDATE_TOKENS
-                                val request = Request
-                                    .Builder()
-                                    //.addHeader("Authorization", "Bearer $token") // тут не требуется
-                                    .url(url)
-                                    .post(body)
-                                    .build()
-                                val response: Response = okHttpClient
-                                    .newCall(request)
-                                    .execute()
-
-//                                    Log.d("4444", " response.code=" + response.code)
-//                                    Log.d("4444", " response.body.string=" + response.body.string())
-//                                    Log.d("4444", " response.message=" + response.message)
-
-                                response.body
-                                    .string()
-                                    .let {
-                                        when (response.code) {
-                                            HTTP_OK -> {
-                                                Log.d("4444", " говно 1")
-                                                // тут выполняется все код который выполнился удачно на сервере даже если
-                                                // вернул ошибку с токеном или что-то подобное
-                                                // чтобы не заркылся респонс
-                                                if (it.contains("\"httpStatusCode\"") && it.contains(
-                                                        "\"message\""
-                                                    )
-                                                ) {
-                                                    val jsonResponse2 = JSONObject(it)
-                                                    val httpStatusCode =
-                                                        jsonResponse2.optString("httpStatusCode")
-                                                    val message = jsonResponse2.optString("message")
-
-                                                    Log.d(
-                                                        "4444",
-                                                        " httpStatusCode=" + httpStatusCode
-                                                    )
-                                                    Log.d("4444", " message=" + message)
-
-                                                    when (httpStatusCode.toInt()) {
-                                                        HTTP_OK -> {
-                                                            // вернуть полученый четкий респонс или обект наверно
-
-                                                        }
-
-                                                        HTTP_FORBIDDEN, HTTP_UNAUTHORIZED -> {
-                                                            // отправить пользователя на экран аутх
-                                                        }
-                                                    }
-
-                                                    val jsonResponse = JsonParser.parseString(it)
-                                                    val pairOfTokens = gson.fromJson(
-                                                        jsonResponse,
-                                                        PairOfTokens::class.java
-                                                    )
-                                                    Log.d(
-                                                        "4444",
-                                                        " pairOfTokens хуй=" + pairOfTokens
-                                                    )
-                                                } else {
-                                                    Log.d("4444", " хуй а не респонсе")
-                                                }
-                                            }
-
-                                            else -> {
-                                                Log.d("4444", " говно 2")
-                                                // тут выполняется что не позволило выполнить сетевой запрос
-                                                // ТУТ НАДО ТОСТ ПОЛЬЗОВАТЕЛЮ ПОКАЗАТЬ
-
-                                            }
-                                        }
-                                    }
-                            } catch (e: Exception) {
-                                Log.d("4444", " try catch response e=" + e)
-                            }
-                            //   }
-                        }
-                    }
             )
             IconButton(
                 modifier = Modifier
                     .height(50.dp)
-                    // .background(Color.Cyan)
                     .layoutId("create_chat_icon"),
                 onClick = {
-                    Log.d("4444", " contacts.value=" + contacts.value)
                     scope.launch {
                         viewModel.openModalBottomSheet(isOpen = true)
                         delay(500L)
@@ -499,22 +347,8 @@ fun ChatsScreen(
                                     shape = RoundedCornerShape(20.dp)
                                 )
                                 .padding(start = 8.dp, end = 8.dp),
-                            //  state = lazyListState
                         ) {
-//                            items(chatList.value) { item ->
-//                               // Log.d("4444", " chats item=" + item)
-//                                Spacer(modifier = Modifier.height(16.dp))
-//                                ChatsContentItem(
-//                                    navController = navController,
-//                                    chat = item,
-//                                    ownPhoneSender = viewModel.ownPhoneSender,
-//                                    viewModel = viewModel
-//                                )
-//                            }
-
-                            //Log.d("4444", " combineChatList.value=" + combineChatList.value)
                             items(combineChatList.value) { item ->
-                                // Log.d("4444", " chats item=" + item)
                                 Spacer(modifier = Modifier.height(16.dp))
                                 ChatsContentItem(
                                     navController = navController,
@@ -554,18 +388,15 @@ fun ChatsScreen(
                                 .padding(start = 8.dp, end = 8.dp)
                         ) {
                             items(contacts.value) { item ->
-                                Log.d("4444", " item=" + item)
                                 BottomSheetContentItem(
                                     navController = navController,
                                     contact = item,
                                     ownPhoneSender = viewModel.ownPhoneSender
                                 )
                             }
-                            // Добавьте другие элементы списка здесь
                         }
                     }
                 }) {
-
             }
         }
     }
@@ -585,13 +416,7 @@ fun ChatsScreen(
 
     if (getStateNotFoundRefreshToken) {
         SnackBarHostHelper.Show(message = stringResource(id = R.string.not_found_refresh_token))
-        // тут перейти на экран входа
     }
-    // перенес в chatScreen там должен быть
-//    if (getStateUnauthorized) {
-//        SnackBarHostHelper.Show(message = stringResource(id = R.string.unauthorized_access))
-//        // тут перейти на экран входа
-//    }
     if (getFailureUpdatePairToken) {
         SnackBarHostHelper.Show(message = stringResource(id = R.string.failed_to_update_pair_token))
     }
@@ -610,14 +435,11 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
     viewModel: ChatsScreenViewModel
 ) {
 
-    val context = LocalContext.current
-
-    var isOpenDialogExit = remember { mutableStateOf(false) }
+    val isOpenDialogExit = remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     BackHandler(enabled = currentRoute != null) {
-        Log.d("4444", " ChatsScreen currentRoute=" + currentRoute)
         if (currentRoute == ScreenRoute.ChatsScreen.route) {
             if (isSheetOpen) {
                 onSheetOpenChanged(false)
@@ -627,17 +449,9 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
                     }
                 }
             } else {
-                Log.d("4444", " ChatsScreen exitProcess")
                 isOpenDialogExit.value = true
-                //exitProcess(0) // надо крашить прилу
-               // navController.popBackStack()
-                //navController.navigateUp()
-                //navController.popBackStack(navController.graph.startDestinationId, false)
-
             }
         }
-
-
     }
     if (isOpenDialogExit.value) {
         DialogExit(
@@ -649,39 +463,7 @@ fun CustomBackStackOnlyBottomSheetInChatsScreen(
             }
         )
     }
-
 }
-
-// это было для callscreen
-//@OptIn(ExperimentalMaterialApi::class)
-//@Composable
-//fun CustomBackStackOnlyBottomSheetInChatsScreen(
-//    navController: NavHostController,
-//    isSheetOpen: Boolean,
-//    onSheetOpenChanged: (Boolean) -> Unit,
-//    sheetState: ModalBottomSheetState,
-//) {
-//
-//    val scope = rememberCoroutineScope()
-//    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-//    BackHandler(enabled = currentRoute != null) {
-//        Log.d("4444", " ChatsScreen currentRoute=" + currentRoute)
-//        if (currentRoute == ScreenRoute.ChatsScreen.route) {
-//            if (isSheetOpen) {
-//                onSheetOpenChanged(false)
-//                scope.launch {
-//                    withContext(Dispatchers.Main) {
-//                        sheetState.hide()
-//                    }
-//                }
-//            } else {
-//                Log.d("4444", " ChatsScreen exitProcess")
-//                //exitProcess(0) // надо крашить прилу
-//
-//            }
-//        }
-//    }
-//}
 
 @Composable
 fun BottomSheetContentTop(
@@ -692,7 +474,6 @@ fun BottomSheetContentTop(
             .fillMaxWidth()
             .padding(top = 8.dp)
     ) {
-
         val constraints = ConstraintSet {
             val headerText = createRefFor("header_new_chat_text")
             val closeIcon = createRefFor("create_close_new_chat_icon")
@@ -700,7 +481,6 @@ fun BottomSheetContentTop(
             constrain(headerText) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-                //end.linkTo(createChatIcon.start)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.matchParent
                 height = Dimension.wrapContent
@@ -708,9 +488,7 @@ fun BottomSheetContentTop(
 
             constrain(closeIcon) {
                 top.linkTo(parent.top)
-                //start.linkTo(headerChatText.end)
                 end.linkTo(parent.end)
-                // bottom.linkTo(parent.bottom)
                 width = Dimension.value(30.dp) // Заполнить доступное пространство
                 height = Dimension.value(30.dp)
             }
@@ -759,12 +537,10 @@ fun ChatsContentItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                Log.d("4444", " ChatsScreen click item")
                 viewModel.onClickHideNavigationBar(isHide = true)
                 scope.launch {
                     delay(50L) // костыль потому что ui у перехода не красивый
                     withContext(Dispatchers.Main) {
-
                         navController.navigate(
                             route = ScreenRoute.ChatScreen.withArgs(
                                 recipientName = combineChat.name
@@ -783,18 +559,13 @@ fun ChatsContentItem(
                         )
                     }
                 }
-
             },
 
-        // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-//            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column {
             Icon(
                 modifier = Modifier
-                    //.padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
                     .size(30.dp),
                 painter = painterResource(id = R.drawable.ic_user),
                 contentDescription = "",
@@ -804,9 +575,7 @@ fun ChatsContentItem(
 
 
             Icon(
-                // online state
                 modifier = Modifier
-                    // .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
                     .padding(start = 25.dp)
                     .size(10.dp),
                 painter = if (combineChat.onlineOrOffline == "online") painterResource(id = R.drawable.ic_online_state)
@@ -816,19 +585,8 @@ fun ChatsContentItem(
             )
         }
 
-        // как получить имя
-        // сравнить свой номер
-
-
-        Log.d("4444", " ChatsScreen combineChat.recipientName=" + combineChat.name)
         val titleName =
             combineChat.name ?: (EditFormatPhoneHelper.edit(phone = combineChat.recipient))
-
-//        val titleName = combineChat.senderName
-//            ?: (EditFormatPhoneHelper.edit(phone = combineChat.sender).takeUnless {
-//                it == EditFormatPhoneHelper.edit(phone = ownPhoneSender)
-//            }
-//                ?: EditFormatPhoneHelper.edit(phone = combineChat.recipient))
 
         Column(
             modifier = Modifier
@@ -836,7 +594,6 @@ fun ChatsContentItem(
                 .padding(start = 8.dp, end = 8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Log.d("4444", " ChatsScreen combineChat.name=" + combineChat.name)
                 Text( // phone title // перепроверить
                     modifier = Modifier.weight(1f),
                     text = titleName,
@@ -844,20 +601,13 @@ fun ChatsContentItem(
                     fontWeight = FontWeight.Bold
                 )
                 Text( // last message
-//                    text = CustomDateTimeHelper.formatDateTime(combineChat.createdAt),
                     text = CustomDateTimeHelper.formatDateTime(combineChat.createdAt),
-//                    text = combineChat.createdAt.substring(0, 3),
                     color = colorResource(id = R.color.main_yellow_new_chat_screen),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.wrapContentWidth()
                 )
             }
 
-            // это от кого последнее сообщение
-//            Text(
-//                text = "from " + (combineChat.senderName ?: EditFormatPhoneHelper.edit(combineChat.sender)),
-//                color = colorResource(id = R.color.main_yellow_splash_screen),
-//            )
             Text(
                 text = combineChat.textMessage ?: "",
                 color = colorResource(id = R.color.main_yellow_splash_screen),
@@ -882,19 +632,6 @@ fun BottomSheetContentItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable {
-//                navController.navigate(ScreenRoute.ChatScreen.route)
-                // navController.navigate(ScreenRoute.ChatScreen.route + contact.name)
-                // navController.navigate(ScreenRoute.ChatScreen.withArgs(contact.name))
-                Log.d(
-                    "4444", " BottomSheetContentItem recipientName=" + contact.name
-                            + " recipientPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                        contact.phoneNumber
-                    )
-                            + " senderPhone=" + CorrectNumberFormatHelper.getCorrectNumber(
-                        ownPhoneSender
-                    )
-                )
-
                 navController.navigate(
                     route = ScreenRoute.ChatScreen.withArgs(
                         recipientName = contact.name ?: CorrectNumberFormatHelper.getCorrectNumber(
@@ -905,8 +642,6 @@ fun BottomSheetContentItem(
                     )
                 )
             },
-
-        // .border(width = 1.dp, color = Color.Gray, shape = CircleShape),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -938,10 +673,4 @@ fun BottomSheetContentItem(
             )
         }
     }
-}
-
-@Composable
-fun RememberCurrentActivity(): ComponentActivity {
-    val context = LocalContext.current
-    return remember(context) { context as ComponentActivity }
 }
