@@ -16,7 +16,7 @@
 - проверка соединения с интернетом
 
 ## Источник данных сервер с базой данных Postgresql на Docker
-[https://kinopoisk.dev/](https://github.com/RomanMarinov/ChatalyzeBackendKtor)
+[backend repository](https://github.com/RomanMarinov/ChatalyzeBackendKtor)
 
 ## Фреймворки, компоненты, библиотеки, архитектура и прочие технологии 
 Kotlin, Jectpack Compose
