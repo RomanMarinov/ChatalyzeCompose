@@ -48,6 +48,12 @@ Kotlin, Jectpack Compose
 
 
 <div align="center">
+    <video src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%" controls style="display: inline-block;"></video>
+    <video src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%" controls style="display: inline-block;"></video>
+    <img src="https://github.com/GetStream/stream-video-android/assets/24237865/3cc08121-c8c8-4b71-8a96-0cf33b9f2c68" width="32%" style="display: inline-block;"/>
+</div>
+
+<div align="center">
     <video src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%" controls></video>
     <video src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%" controls></video>
     <img src="https://github.com/GetStream/stream-video-android/assets/24237865/3cc08121-c8c8-4b71-8a96-0cf33b9f2c68" width="32%"/>
