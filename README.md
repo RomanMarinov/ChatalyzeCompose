@@ -56,7 +56,7 @@ Kotlin, Jectpack Compose
 
 <p hidden>Описание видео, которое не будет показано.</p>
 <div style="display: flex; justify-content: center;">
-    <video src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%" controls false></video>
+    <video src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%"></video>
     <video src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%" controls></video>
 </div>
 
