@@ -48,7 +48,7 @@ Kotlin, Jectpack Compose
 
 | Tables        | Are           | Cool  |
 | ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned | $1600 |
+|  <video src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%"></video>     | <video src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%" controls></video> | $1600 |
 | col 2 is      | centered      |   $12 |
 | zebra stripes | are neat      |    $1 |
 
