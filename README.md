@@ -45,6 +45,10 @@ Kotlin, Jectpack Compose
 
 ### регистрация
 
+
+
+| <iframe width="250" height="150" src="https://www.youtube.com/embed/your-video-id-1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> | <iframe width="250" height="150" src="https://www.youtube.com/embed/your-video-id-2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> | <iframe width="250" height="150" src="https://www.youtube.com/embed/your-video-id-3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 <div style="display: flex; flex-direction: row;">
     <video style="display: inline-block" src="https://github.com/user-attachments/assets/c82aa779-7c4f-48c8-b84f-603ac13f13d6" width="32%" controls></video>
     <video style="display: inline-block" src="https://github.com/user-attachments/assets/112ba61d-265c-4628-bed8-36155307fabe" width="32%" controls></video>
