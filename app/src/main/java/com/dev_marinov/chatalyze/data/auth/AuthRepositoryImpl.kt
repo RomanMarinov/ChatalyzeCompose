@@ -13,10 +13,10 @@ import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.code_scre
 import com.dev_marinov.chatalyze.presentation.ui.start_screen_activity.create_password_screen.model.ForgotPasswordPassword
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import okhttp3.internal.http.HTTP_BAD_REQUEST
-import okhttp3.internal.http.HTTP_CONFLICT
-import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
-import okhttp3.internal.http.HTTP_OK
+import com.dev_marinov.chatalyze.data.util.HTTP_BAD_REQUEST
+import com.dev_marinov.chatalyze.data.util.HTTP_CONFLICT
+import com.dev_marinov.chatalyze.data.util.HTTP_INTERNAL_SERVER_ERROR
+import com.dev_marinov.chatalyze.data.util.HTTP_OK
 import javax.inject.Inject
 import javax.inject.Singleton
 

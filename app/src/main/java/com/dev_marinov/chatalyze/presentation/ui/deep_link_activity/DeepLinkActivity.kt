@@ -88,10 +88,10 @@ class DeepLinkActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        when (intent?.action) {
+        when (intent.action) {
             "notification_action" -> {
                 val name = intent.getStringExtra("name")
                 val sender = intent.getStringExtra("sender")

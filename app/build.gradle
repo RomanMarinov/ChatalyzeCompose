@@ -1,22 +1,23 @@
 plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     id 'kotlin-kapt'
-    id 'dagger.hilt.android.plugin'
-    id 'org.jetbrains.kotlin.plugin.serialization'
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.serialization)
     id 'kotlin-parcelize'
     id 'com.google.gms.google-services'
-    id "org.jlleitschuh.gradle.ktlint" version "11.0.0"
+    alias(libs.plugins.ktlint)
 }
 
 android {
     namespace 'com.dev_marinov.chatalyze'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.dev_marinov.chatalyze"
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -40,164 +41,135 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
+        buildConfig true
         compose true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.4.0'
     }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += 'META-INF/INDEX.LIST'
+            excludes += 'META-INF/versions/9/OSGI-INF/MANIFEST.MF'
         }
     }
 }
 
 dependencies {
 
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.5.31'
+    implementation libs.kotlin.reflect
 
-    implementation 'androidx.core:core-ktx:1.10.0'
-    implementation 'androidx.activity:activity-compose:1.6.1'
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.activity.compose
 
     // To use constraintlayout in compose
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation 'androidx.privacysandbox.tools:tools-core:1.0.0-alpha02'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation 'androidx.compose.ui:ui-graphics'
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    implementation platform('androidx.compose:compose-bom:2023.03.00')
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
+    implementation libs.androidx.constraintlayout.compose
+    implementation libs.androidx.privacysandbox.tools.core
+    implementation libs.androidx.appcompat
+    implementation libs.google.material
+
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui.graphics
+    implementation libs.compose.ui
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.material
+    implementation libs.compose.material3
+    implementation libs.compose.foundation
+    implementation libs.compose.animation
+    implementation libs.compose.material.icons.extended
+    implementation libs.compose.runtime.livedata
+
+    testImplementation libs.junit4
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.compose.ui.test.junit4
 
     // navigation
-    implementation "androidx.navigation:navigation-compose:2.7.7"
-    implementation "androidx.compose.material:material-icons-extended:1.5.0"
+    implementation libs.androidx.navigation.compose
 
     // ui
-    implementation "com.google.accompanist:accompanist-systemuicontroller:0.31.2-alpha"
-    implementation "com.google.accompanist:accompanist-coil:0.12.0"
-    implementation "com.google.accompanist:accompanist-permissions:0.21.1-beta"
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00')
-    androidTestImplementation platform('androidx.compose:compose-bom:2023.03.00') // не обновлять
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
-    implementation "androidx.compose.ui:ui:$compose_ui_version"
-    implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
-    implementation "androidx.compose.material:material:$compose_ui_version"
-    implementation "androidx.compose.foundation:foundation:$compose_ui_version"
-    implementation "androidx.compose.animation:animation:$compose_ui_version"
-    implementation "io.coil-kt:coil-compose:2.2.2"
-    implementation "io.coil-kt:coil-svg:2.4.0"
-    implementation(platform("androidx.compose:compose-bom:2023.06.01"))
-    implementation 'androidx.compose.material3:material3'
+    implementation libs.accompanist.systemuicontroller
+    implementation libs.accompanist.coil
+    implementation libs.accompanist.permissions
+
+    debugImplementation libs.compose.ui.tooling
+    debugImplementation libs.compose.ui.test.manifest
+
+    implementation libs.coil.compose
+    implementation libs.coil.svg
+
     // Room
-    implementation "androidx.room:room-runtime:2.5.2"
-    kapt "androidx.room:room-compiler:2.5.2"
-    // Kotlin Extensions and Coroutines support for Room
-    implementation "androidx.room:room-ktx:2.5.2"
+    implementation libs.room.runtime
+    kapt libs.room.compiler
+    implementation libs.room.ktx
 
-//    // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    // Coroutines
+    implementation libs.coroutines.core
+    implementation libs.coroutines.android
 
-    // observable
-    implementation 'androidx.compose.runtime:runtime-livedata:1.4.0-rc01'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
-    implementation "androidx.compose.runtime:runtime-livedata:1.5.1"
-    // 2.6.1 не поддерживала asFlow
-
-    // lifecycle
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.2"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    // lifecycleEventObserver
-    //implementation 'com.gradle:gradle-enterprise-gradle-plugin:3.8.1'
+    // observable / lifecycle
+    implementation libs.lifecycle.livedata.ktx
+    implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.lifecycle.viewmodel.compose
+    implementation libs.lifecycle.runtime.compose
+    implementation libs.lifecycle.runtime.ktx
+    implementation libs.lifecycle.extensions
 
     // Dagger - Hilt
-    implementation 'com.google.dagger:hilt-android:2.45'
-    kapt 'com.google.dagger:hilt-android-compiler:2.45'
-    // implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
-    kapt "androidx.hilt:hilt-compiler:1.0.0"
-    implementation "androidx.hilt:hilt-navigation-compose:1.1.0-alpha01"
+    implementation libs.hilt.android
+    kapt libs.hilt.android.compiler
+    kapt libs.androidx.hilt.compiler
+    implementation libs.androidx.hilt.navigation.compose
 
-    // retrofit
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11'
-
-    // preview
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
+    // retrofit / okhttp
+    implementation libs.retrofit
+    implementation libs.retrofit.converter.gson
+    implementation libs.okhttp
+    implementation libs.okhttp.logging.interceptor
 
     // dataStore
-    implementation "androidx.datastore:datastore:1.0.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
-    // dataStore preferences
-    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation libs.datastore.core
+    implementation libs.collections.immutable
+    implementation libs.datastore.preferences
 
     // serialization
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
+    implementation libs.serialization.json
 
     // Ktor client
-    //def ktor_version = "2.3.7"
-    def ktor_version = "2.3.5"
-
-
-   // implementation("io.ktor:ktor-client-apache:$ktor_version")
-    implementation("io.ktor:ktor-client-auth:$ktor_version")
-    implementation "io.ktor:ktor-client-okhttp:$ktor_version"
-    implementation "io.ktor:ktor-client-android:$ktor_version"
-    implementation "io.ktor:ktor-client-core:$ktor_version"
-    implementation "io.ktor:ktor-client-cio:$ktor_version"
-    implementation "io.ktor:ktor-client-serialization:$ktor_version"
-    implementation "io.ktor:ktor-client-websockets:$ktor_version"
-    implementation "io.ktor:ktor-client-logging:$ktor_version"
-    implementation "ch.qos.logback:logback-classic:1.2.6"
-    implementation "io.ktor:ktor-client-content-negotiation:$ktor_version"
-    implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
-
-   // implementation "io.ktor:ktor-client-core:$ktor_version"
-    implementation "io.ktor:ktor-client-json:$ktor_version"
-  //  implementation "io.ktor:ktor-client-logging:$ktor_version"
+    implementation libs.ktor.client.auth
+    implementation libs.ktor.client.okhttp
+    implementation libs.ktor.client.android
+    implementation libs.ktor.client.core
+    implementation libs.ktor.client.cio
+    implementation libs.ktor.client.serialization
+    implementation libs.ktor.client.websockets
+    implementation libs.ktor.client.logging
+    implementation libs.logback.classic
+    implementation libs.ktor.client.content.negotiation
+    implementation libs.ktor.serialization.kotlinx.json
+    implementation libs.ktor.client.json
 
     // animated-navigation
-    implementation("com.exyte:animated-navigation-bar:1.0.0")
+    implementation libs.exyte.animated.navigation.bar
 
     // Stream Video Compose SDK
-    implementation("io.getstream:stream-video-android-compose:0.4.2")
+    implementation libs.stream.video.android.compose
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-datetime:0.4.0'
+    implementation libs.kotlinx.datetime
 
     //firebase notification
-    implementation platform('com.google.firebase:firebase-bom:31.1.1')
-    implementation 'com.google.firebase:firebase-messaging-ktx:23.4.0'
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.messaging
 
     // lottie
-    implementation "com.airbnb.android:lottie-compose:4.0.0"
+    implementation libs.lottie.compose
 
-    // Room
-    implementation "androidx.room:room-runtime:2.6.1"
-    kapt "androidx.room:room-compiler:2.6.1"
-    // Kotlin Extensions and Coroutines support for Room
-    implementation "androidx.room:room-ktx:2.6.1"
-
-    implementation("org.osmdroid:osmdroid-android:6.1.16")
+    // maps
+    implementation libs.osmdroid.android
 }

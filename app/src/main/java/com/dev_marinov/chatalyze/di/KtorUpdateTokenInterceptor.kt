@@ -28,9 +28,9 @@ import io.ktor.http.contentType
 import io.ktor.util.AttributeKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import okhttp3.internal.http.HTTP_NOT_FOUND
-import okhttp3.internal.http.HTTP_OK
-import okhttp3.internal.http.HTTP_UNAUTHORIZED
+import com.dev_marinov.chatalyze.data.util.HTTP_NOT_FOUND
+import com.dev_marinov.chatalyze.data.util.HTTP_OK
+import com.dev_marinov.chatalyze.data.util.HTTP_UNAUTHORIZED
 import org.json.JSONObject
 import javax.inject.Provider
 

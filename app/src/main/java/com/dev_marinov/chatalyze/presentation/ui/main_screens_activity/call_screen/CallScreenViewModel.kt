@@ -17,9 +17,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import okhttp3.internal.http.HTTP_INTERNAL_SERVER_ERROR
-import okhttp3.internal.http.HTTP_NOT_FOUND
-import okhttp3.internal.http.HTTP_OK
+import com.dev_marinov.chatalyze.data.util.HTTP_INTERNAL_SERVER_ERROR
+import com.dev_marinov.chatalyze.data.util.HTTP_NOT_FOUND
+import com.dev_marinov.chatalyze.data.util.HTTP_OK
 import javax.inject.Inject
 
 @HiltViewModel
